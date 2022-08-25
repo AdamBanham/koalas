@@ -6,48 +6,21 @@ This module contains information about the structure of the simplified api for p
 from typing import Iterable, List, Mapping, Set, Tuple
 from copy import deepcopy
 
-class Event():
-    """
-    A simplified representation of an event.
-    """
-
-    def __init__(self, simple_name:str) -> None:
-        self.name = simple_name
-
-    # data model functions
-
-    def __str__(self) -> str:
-        return self.name
-
-    def __repr__(self) -> str:
-        return f"Event('{self.name}')"
-
-    def __eq__(self, __o: object) -> bool:
-        if ( isinstance(__o, Event)):
-            return self.name.__eq__(__o.name)
-        return False
-
-    # accessors
-
-    def get_name(self) -> str:
-        return self.name
-
-    def get_id(self) -> str:
-        return self.id
-
 
 class Trace():
     """
     A simplified representation of a sequence of events
     """
 
-    def __init__(self, sequence: List[Event]) -> None:
+    def __init__(self, sequence: List[str]) -> None:
         self.sequence = deepcopy(sequence)
-        self._hash = hash(tuple(event.name for event in self.sequence))
+        self._hash = hash(tuple(event for event in self.sequence))
 
     # data model functions
 
     def __str__(self) -> str:
+        if len(self.sequence) == 0:
+            return "<>"
         rep = "<"
         for event in self:
             rep = rep + f"{str(event)},"
