@@ -62,11 +62,13 @@ class EventLog():
         # middleman to multi set repr
         self._freqset = dict()
         self._len = 0
+        self._variants = 0
         for trace in traces:
             if (trace in self._freqset.keys()):
                 self._freqset[trace] += 1
             else:
                 self._freqset[trace] = 1
+                self._variants += 1
             self._len += 1
         self.name = name 
 
@@ -85,6 +87,9 @@ class EventLog():
         return self._freqset.items().__iter__()
 
     def __str__(self) -> str:
+        if (self._variants < 1):
+            return "[]"
+
         _str = "["
         for trace,freq in self:
             _str = _str + str(trace) + f"^{freq},"
@@ -97,5 +102,8 @@ class EventLog():
     # accessors 
     def get_name(self) -> str:
         return self.name
+
+    def get_nvariants(self) -> int:
+        return self._variants
 
 
