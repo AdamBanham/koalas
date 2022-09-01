@@ -99,9 +99,8 @@ def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME, label_attribute=X
     extracted_traces = []
     for trace in traces:
         trace_ins = [] # eache element is a EventExtract
-        
-        events = [ event for event in trace.findall("xes:event", XES_XML_NAMESPACE)]
-
+        events = [ event for event in trace.findall("xes:event", 
+                        XES_XML_NAMESPACE)]
         for id,event in enumerate(events):
             label = None 
             sorter = None 
@@ -109,16 +108,15 @@ def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME, label_attribute=X
                 key = child.attrib.get('key')
                 # print(key)
                 if (key == label_attribute):
-                    label = XesAttribute(find_xes_type(child.tag), key, child.attrib.get("value"))
+                    label = XesAttribute(find_xes_type(child.tag), 
+                                        key, child.attrib.get("value"))
                 if (key == sort_attribute):
-                    sorter = XesAttribute(find_xes_type(child.tag), key, child.attrib.get("value"))
+                    sorter = XesAttribute(find_xes_type(child.tag), 
+                                        key, child.attrib.get("value"))
             extract = EventExtract(id, label , sorter)
             trace_ins.append(extract)
-
         sorted_traces = sorted(trace_ins, key=lambda t: t.get_sorter())
-
         trace = Trace([ t.get_label() for t in sorted_traces ])
-
         extracted_traces.append(trace) 
-
     return EventLog(extracted_traces, name)
+
