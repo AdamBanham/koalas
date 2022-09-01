@@ -3,3 +3,8 @@
 - Generating a log ??
     - from a line of strings 
 
+- helpful error messages for reader
+    - what attribute
+    - what event #
+    - what trace #
+    - to encourage helpful repair
