@@ -53,12 +53,16 @@ class Trace():
         return self.id
 
 
+
+DEFAULT_SIMPLE_LOG_NAME="simple"
+
 class EventLog():
     """
     A simplified representation of a language.
     """
 
-    def __init__(self, traces: Iterable[Trace], name:str) -> None:
+    def __init__(self, traces: Iterable[Trace], 
+                 name:str=DEFAULT_SIMPLE_LOG_NAME) -> None:
         # middleman to multi set repr
         self._freqset = dict()
         self._len = 0
@@ -73,11 +77,11 @@ class EventLog():
         self.name = name 
 
     
-    def get_language(self) -> Set[Trace]:
-        return set()
+    def language(self) -> Set[Trace]:
+        return self._freqset.keys()
     
-    def get_stochastic_language(self) -> Mapping[Trace,float]:
-        return dict() 
+    def stochastic_language(self) -> Mapping[Trace,float]:
+        return self._freqset.copy()
 
     # data model functions
     def __len__(self) -> int:
@@ -105,5 +109,10 @@ class EventLog():
 
     def get_nvariants(self) -> int:
         return self._variants
+
+    def __eq__(self,other):
+        if isinstance(other,EventLog):
+            return self.stochastic_language() == other.stochastic_language()
+        return False
 
 
