@@ -63,10 +63,12 @@ class EventExtract:
         return f"{self.event_order}-{self.get_label()}-{self.get_sorter()}"
 
 
-def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME, label_attribute=XES_CONCEPT, debug:bool=True) -> EventLog:
+def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME,
+                    label_attribute=XES_CONCEPT, debug:bool=True) -> EventLog:
     """
     Reads an XES formatted event log and creates a simplified event log object.\n
-    Traces from the event log are sorted by the sort_attribute (time:timestamp by default) before making the sequence of labels (concept:name by default).  
+    Traces from the event log are sorted by the sort_attribute (time:timestamp 
+    by default) before making the sequence of labels (concept:name by default).  
     """
 
     # check that file exists
