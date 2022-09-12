@@ -64,11 +64,25 @@ class EventExtract:
 
 
 def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME,
-                    label_attribute=XES_CONCEPT, debug:bool=True) -> EventLog:
+                    label_attribute=XES_CONCEPT, debug:bool=True,
+                    sort=True) -> EventLog:
     """
     Reads an XES formatted event log and creates a simplified event log object.\n
     Traces from the event log are sorted by the sort_attribute (time:timestamp 
-    by default) before making the sequence of labels (concept:name by default).  
+    by default) before making the sequence of labels (concept:name by default).
+
+    Parameters
+    ----------
+    filepath: `str`
+    \t the filepath to the xes file to read.
+    sort_attribute: `str`=`time:timestamp`
+    \t the xes attribute to sort on.
+    label_attribute: `str`=`concept:name`
+    \t the xes attribute for the process label for an event
+    debug: `bool`=`True`
+    \t whether to print debug messages or not
+    sort: `bool`=`False`
+    \t whether to sort activity labels by another xes attribute or not
     """
 
     # check that file exists
@@ -117,8 +131,11 @@ def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME,
                                         key, child.attrib.get("value"))
             extract = EventExtract(id, label , sorter)
             trace_ins.append(extract)
-        sorted_traces = sorted(trace_ins, key=lambda t: t.get_sorter())
-        trace = Trace([ t.get_label() for t in sorted_traces ])
-        extracted_traces.append(trace) 
+        if (sort):
+            sorted_trace = sorted(trace_ins, key=lambda t: t.get_sorter())
+            trace_ins = Trace([ t.get_label() for t in sorted_trace ])
+        else:
+            trace_ins = Trace([ t.get_label() for t in trace_ins ])
+        extracted_traces.append(trace_ins) 
     return EventLog(extracted_traces, name)
 
