@@ -14,6 +14,7 @@ class Trace():
 
     def __init__(self, sequence: List[str]) -> None:
         self.sequence = deepcopy(sequence)
+        self._len = len(self.sequence)
         self._hash = hash(tuple(event for event in self.sequence))
 
     # data model functions
@@ -35,7 +36,7 @@ class Trace():
 
         return f"Trace({event_repr})"
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[str]:
         for event in self.sequence:
             yield event
 
@@ -46,6 +47,9 @@ class Trace():
 
     def __hash__(self) -> int:
         return self._hash
+
+    def __len__(self) -> int:
+        return self._len
 
     # accessors
 
