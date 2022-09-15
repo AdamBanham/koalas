@@ -62,5 +62,10 @@ class DTLogTest(unittest.TestCase):
         self.fail("Should fail when sort attribute is not found!")
 
 
+    def test_read_bad(self):
+        with self.failUnlessRaises(Exception): 
+            log = read_xes_simple(path.join(".","tests","small_bad.xes")) 
+            print(f"{log}")
+
 if __name__ == '__main__':
     unittest.main()
