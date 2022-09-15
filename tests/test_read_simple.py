@@ -12,7 +12,7 @@ class DTLogTest(unittest.TestCase):
 
     def test_successful_read(self):
         try:
-            log = read_xes_simple(SSMALL, debug=False) 
+            log = read_xes_simple(SSMALL) 
         except:
             self.fail("Failed to parse log")
 
@@ -27,21 +27,21 @@ class DTLogTest(unittest.TestCase):
 
     def test_unsucessful_read(self):
         try:
-            log = read_xes_simple(WSMALL, debug=False)
+            log = read_xes_simple(WSMALL)
         except:
             return
         self.fail()
 
     def test_unsuccessful_label_change(self):
         try:
-            log = read_xes_simple(SSMALL, label_attribute="foo:bah", debug=False) 
+            log = read_xes_simple(SSMALL, label_attribute="foo:bah") 
         except:
             return 
         self.fail("Should fail when label attribute is not found!")
 
     def test_label_change(self):
         try:
-            log = read_xes_simple(OSMALL, label_attribute="name", debug=False) 
+            log = read_xes_simple(OSMALL, label_attribute="name") 
         except:
             self.fail("Failed to parse log after changing label attribute!")
 
@@ -56,7 +56,7 @@ class DTLogTest(unittest.TestCase):
 
     def test_unsucessful_sort_change(self):
         try:
-            log = read_xes_simple(SSMALL, sort_attribute="foo:bah", debug=False) 
+            log = read_xes_simple(SSMALL, sort_attribute="foo:bah") 
         except:
             return 
         self.fail("Should fail when sort attribute is not found!")

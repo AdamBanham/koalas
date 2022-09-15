@@ -4,6 +4,7 @@ This module provides functions to read in an XES formatted event log in various 
 
 from dataclasses import dataclass
 from enum import Enum
+from logging import debug, info, warning
 from os import path
 
 from datetime import datetime
@@ -63,8 +64,7 @@ class EventExtract:
         return f"{self.event_order}-{self.get_label()}-{self.get_sorter()}"
 
 def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
-                    label_attribute=XES_CONCEPT, debug:bool=True,
-                    sort=True) -> EventLog:
+                    label_attribute=XES_CONCEPT, sort=True) -> EventLog:
     """
     Reads an XES formatted event log and creates a simplified event log object.\n
     Traces from the event log are sorted by the sort_attribute (time:timestamp 
@@ -84,8 +84,7 @@ def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
     \t whether to sort activity labels by another xes attribute or not
     """ 
 
-def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT, debug:bool=True,
-                   ) -> EventLog:
+def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
     """
     Reads an XES formatted event log and creates a simplified event log object.\n
     Traces from the event log are kept in document order before making the 
@@ -97,8 +96,6 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT, debug:bool=True,
     \t the filepath to the xes file to read.
     label_attribute: `str`=`concept:name`
     \t the xes attribute for the process label for an event
-    debug: `bool`=`True`
-    \t whether to print debug messages or not
     """
 
     # check that file exists
@@ -118,13 +115,11 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT, debug:bool=True,
     name = "Unknown Event log"
     if log_attrs != None:
         name = log_attrs.attrib.get("value")
-        if debug:
-            print(f"extracted event log name :: {name}")
+        debug(f"extracted event log name :: {name}")
 
     traces = [ trace for trace in log.findall("xes:trace", XES_XML_NAMESPACE)]
 
-    if debug:
-        print(f"parsing {len(traces)} traces ...")
+    debug(f"parsing {len(traces)} traces ...")
     # extract the following from a trace,
     # a sequence of activity labels
     # sort traces by time:timestamp before 
