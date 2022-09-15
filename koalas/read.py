@@ -62,8 +62,7 @@ class EventExtract:
     def __str__(self) -> str:
         return f"{self.event_order}-{self.get_label()}-{self.get_sorter()}"
 
-
-def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME,
+def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
                     label_attribute=XES_CONCEPT, debug:bool=True,
                     sort=True) -> EventLog:
     """
@@ -83,6 +82,23 @@ def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME,
     \t whether to print debug messages or not
     sort: `bool`=`False`
     \t whether to sort activity labels by another xes attribute or not
+    """ 
+
+def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT, debug:bool=True,
+                   ) -> EventLog:
+    """
+    Reads an XES formatted event log and creates a simplified event log object.\n
+    Traces from the event log are kept in document order before making the 
+    sequence of labels (concept:name by default).
+
+    Parameters
+    ----------
+    filepath: `str`
+    \t the filepath to the xes file to read.
+    label_attribute: `str`=`concept:name`
+    \t the xes attribute for the process label for an event
+    debug: `bool`=`True`
+    \t whether to print debug messages or not
     """
 
     # check that file exists
@@ -126,16 +142,9 @@ def read_xes_simple(filepath:str, sort_attribute:str=XES_TIME,
                 if (key == label_attribute):
                     label = XesAttribute(find_xes_type(child.tag), 
                                         key, child.attrib.get("value"))
-                if (key == sort_attribute):
-                    sorter = XesAttribute(find_xes_type(child.tag), 
-                                        key, child.attrib.get("value"))
             extract = EventExtract(id, label , sorter)
             trace_ins.append(extract)
-        if (sort):
-            sorted_trace = sorted(trace_ins, key=lambda t: t.get_sorter())
-            trace_ins = Trace([ t.get_label() for t in sorted_trace ])
-        else:
-            trace_ins = Trace([ t.get_label() for t in trace_ins ])
+        trace_ins = Trace([ t.get_label() for t in trace_ins ])
         extracted_traces.append(trace_ins) 
     return EventLog(extracted_traces, name)
 

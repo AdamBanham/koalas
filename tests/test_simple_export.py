@@ -41,7 +41,7 @@ class DTLogTest(unittest.TestCase):
             self.fail("Failed to export log")
             return
         
-        log2 = read_xes_simple(filepath, sort=False,debug=False)
+        log2 = read_xes_simple(filepath,debug=False)
         self.assertEqual(log, log2)
 
         fdir.cleanup()

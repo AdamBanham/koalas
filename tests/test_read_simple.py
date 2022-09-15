@@ -61,22 +61,6 @@ class DTLogTest(unittest.TestCase):
             return 
         self.fail("Should fail when sort attribute is not found!")
 
-    
-    def test_sort_change(self):
-        try:
-            log = read_xes_simple(OSMALL, sort_attribute="order", debug=False) 
-        except:
-            self.fail("Failed to parse log after changing sort attribute!")
-
-        real_log = EventLog( [
-                Trace(["E","D","C","B","A"]),
-                Trace(["E","D","C","B","A"]),
-                Trace(["D","D","C","B","A"]),
-                Trace(["E","B","A","A","A"]),
-                Trace(["E","E","C","B","A"]),
-            ])
-        self.assertEqual(log, real_log)
-
 
 if __name__ == '__main__':
     unittest.main()
