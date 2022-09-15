@@ -15,14 +15,13 @@ class DTLogTest(unittest.TestCase):
 
     def test_successful_export(self):
         try:
-            log = read_xes_simple(SSMALL, debug=False) 
+            log = read_xes_simple(SSMALL) 
         except:
             self.fail("Failed to parse log")
-
         fdir = TemporaryDirectory()
         try:
             filepath = path.join(fdir.name, "test_log")
-            export_to_xes_simple(filepath, log,debug=False) 
+            export_to_xes_simple(filepath, log) 
         except:
             self.fail("Failed to export log")
         finally:
@@ -30,20 +29,19 @@ class DTLogTest(unittest.TestCase):
 
     def test_equals_export_import(self):
         try:
-            log = read_xes_simple(SSMALL, debug=False) 
+            log = read_xes_simple(SSMALL) 
         except:
             self.fail("Failed to parse log")
-
         fdir = TemporaryDirectory()
         try:
             filepath = path.join(fdir.name, "test_log")
-            export_to_xes_simple(filepath, log, debug=False) 
+            export_to_xes_simple(filepath, log) 
         except:
             fdir.cleanup()
             self.fail("Failed to export log")
             return
         
-        log2 = read_xes_simple(filepath,debug=False)
+        log2 = read_xes_simple(filepath)
         self.assertEqual(log, log2)
 
         fdir.cleanup()
