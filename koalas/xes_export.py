@@ -8,7 +8,6 @@ XES_LOG_TAG = "log"
 XES_LOG_ATTRS = {
     'xes.version' : "1.0",
     'xes.features' : "nested-attributes",
-    'openxes.version' : "1.0RC7",
     'xmlns' : "http://www.xes-standard.org/"
 }
 

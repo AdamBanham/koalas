@@ -48,20 +48,20 @@ class DTLogTest(unittest.TestCase):
 
     def test_xml_valid(self):
         try:
-            log = read_xes_simple(SSMALL, debug=False) 
+            log = read_xes_simple(SSMALL) 
         except:
             self.fail("Failed to parse log")
 
         fdir = TemporaryDirectory()
         try:
             filepath = path.join(fdir.name, "test_log")
-            export_to_xes_simple(filepath, log, debug=False) 
+            export_to_xes_simple(filepath, log) 
         except:
             fdir.cleanup()
             self.fail("Failed to export log")
             return
 
-        schema = xmlschema.XMLSchema(path.join(".","tests","xes-ieee-1849-2016.xsd"), namespace="http://www.xes-standard.org/")
+        schema = xmlschema.XMLSchema(path.join(".","tests","xes-ieee-1849-2016.xsd"))
         schema.validate(filepath)
 
 
