@@ -114,9 +114,48 @@ class EventLog():
     def get_nvariants(self) -> int:
         return self._variants
 
+    # membership test
+    def __contains__(self, other):
+        if isinstance(other, Trace):
+            return other in self._freqset.keys()
+        raise NotImplemented("Membership test not defined for :: " + type(other))
+
+    # Rich comparisons 
+    # https://peps.python.org/pep-0207/#classes
+    # ==, <, <=, >, >=
     def __eq__(self,other):
         if isinstance(other,EventLog):
             return self.stochastic_language() == other.stochastic_language()
         return False
+
+    def __lt__(self,other):
+        pass 
+
+    def __le__(self,other):
+        pass 
+
+    def __gt__(self,other):
+        pass 
+
+    def __ge__(self,other):
+        pass 
+    
+    # Emulating numeric types
+    # do we need these? could be cool for extra bits
+    # <<, >>, &, ^, |
+    def __lshift__(self, other):
+        pass 
+
+    def __rshift__(self, other):
+        pass 
+
+    def __and__(self, other):
+        pass
+
+    def __xor__(self, other):
+        pass
+
+    def __or__(self, other):
+        pass
 
 
