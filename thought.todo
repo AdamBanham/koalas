@@ -11,3 +11,6 @@
     - what event #
     - what trace #
     - to encourage helpful repair
+
+- decorators 
+    - debug parameter to turn on and off logging
