@@ -1,7 +1,7 @@
 """
 This module has the arttributes and tags for xml documents for exporting.
 """
-
+from typing import List
 from xml.etree.ElementTree import Element 
 
 XES_LOG_TAG = "log"
@@ -37,6 +37,29 @@ class XesLogExtension(Element):
                 'name' : name,
                 'prefix' : prefix,
                 'uri' : uri
+            },
+            **{}
+        )
+
+XES_CLASSIFIER_TAG = "classifier"
+class XesLogClassifier(Element):
+    """
+    Creates an xml element, for stating xes classifiers used in a log.
+
+    Parameters
+    ----------
+    name: `str`
+    \t name of extensions
+    keys: `List[str]`
+    \t the list of attributes that this classifier uses
+    """
+
+    def __init__(self, name:str, keys:List[str] ) -> None:
+        super().__init__(
+            XES_CLASSIFIER_TAG,
+            {
+                'name' : name,
+                'keys' : " ".join(keys),
             },
             **{}
         )
