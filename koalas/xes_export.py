@@ -13,7 +13,7 @@ XES_LOG_ATTRS = {
 
 # XES log sub elements
 XES_EXTENSION_TAG = 'extension'
-XES_EXT_CONCEPT_NAME = "Concept"
+XES_EXT_CONCEPT_NAME = "concept"
 XES_EXT_CONCEPT_PREFIX = "concept"
 XES_EXT_CONCEPT_URI = "http://www.xes-standard.org/concept.xesext"
 class XesLogExtension(Element):
