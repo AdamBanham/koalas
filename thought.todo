@@ -14,3 +14,13 @@
 
 - decorators 
     - debug parameter to turn on and off logging
+
+- validate XML files output by lib against XSD schema for XES
+    - appears that BPIC logs and OpenXES do not conform to the schema
+    - mostly due to extra attributes
+    - find a way to resolve this by possibly 
+        1. ensuring our output strictly validates
+        2. creating a patched XSD schema that accomodates OpenXES and the BPIC logs
+    - probably follow Postel's principle: be strict in what we emit (conform to XES schema) but tolerant in what we accept (deal with variants, don\'t choke
+ 
+
