@@ -46,8 +46,7 @@ class DTLogTest(unittest.TestCase):
 
         fdir.cleanup()
 
-    # Schema behaviour not currently working
-    def nottest_xml_valid(self):
+    def test_xml_valid(self):
         try:
             log = read_xes_simple(SSMALL) 
         except:
@@ -62,8 +61,17 @@ class DTLogTest(unittest.TestCase):
             self.fail("Failed to export log")
             return
 
-        schema = xmlschema.XMLSchema(path.join(".","tests","xes-ieee-1849-2016.xsd"))
-        schema.validate(filepath)
-
-
-
+        schema = xmlschema.XMLSchema(
+            path.join(".","tests","xes-ieee-1849-2016.xsd"),
+            namespace="http://www.xes-standard.org/"
+        )
+        try:
+            schema.validate(
+                filepath, 
+                namespaces={ 'xes' : "http://www.xes-standard.org/"},
+            )
+            fdir.cleanup()
+            return 
+        except Exception as e: 
+            fdir.cleanup()
+            self.fail("Failed to validate exported xes")
