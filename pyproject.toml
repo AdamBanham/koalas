@@ -18,8 +18,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-  "xmlschema"
+
+[project.optional-dependencies]
+tests = [
+  'xmlschema'
+]
+dev = [ 
+  'xmlschema'
 ]
 
 [tool.setuptools]
