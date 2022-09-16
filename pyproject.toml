@@ -18,11 +18,16 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "xmlschema"
+]
 
 [tool.setuptools]
 packages = [
 "koalas"
 ]
+
+
 
 
 [project.urls]
