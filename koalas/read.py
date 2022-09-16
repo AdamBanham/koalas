@@ -4,7 +4,7 @@ This module provides functions to read in an XES formatted event log in various 
 
 from dataclasses import dataclass
 from enum import Enum
-from logging import debug, info, warning
+
 from os import path
 
 from datetime import datetime
@@ -12,6 +12,7 @@ from datetime import datetime
 from xml.etree.ElementTree import parse
 
 from koalas.simple import EventLog, Trace
+from koalas._logging import debug, info, enable_logging
 from koalas.xes import XES_CONCEPT,XES_TIME,XES_XML_NAMESPACE
 
 
@@ -63,6 +64,7 @@ class EventExtract:
     def __str__(self) -> str:
         return f"{self.event_order}-{self.get_label()}-{self.get_sorter()}"
 
+@enable_logging
 def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
                     label_attribute=XES_CONCEPT, sort=True) -> EventLog:
     """
@@ -84,6 +86,7 @@ def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
     \t whether to sort activity labels by another xes attribute or not
     """ 
 
+@enable_logging
 def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
     """
     Reads an XES formatted event log and creates a simplified event log object.\n
@@ -119,7 +122,7 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
 
     traces = [ trace for trace in log.findall("xes:trace", XES_XML_NAMESPACE)]
 
-    debug(f"parsing {len(traces)} traces ...")
+    info(f"parsing {len(traces)} traces ...")
     # extract the following from a trace,
     # a sequence of activity labels
     # sort traces by time:timestamp before 
