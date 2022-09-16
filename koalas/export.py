@@ -14,11 +14,12 @@ from koalas.xes_export import XES_CONCEPT
 from koalas.xes_export import XesTrace,XesEvent
 
 import os 
+from logging import debug
 from xml.etree import ElementTree as ET
 
 EXPORT_SIMPLE_TRACE_FORMAT = "trace {id:d}"
 
-def export_to_xes_simple(filepath:str, log:EventLog, debug:bool=True) -> None:
+def export_to_xes_simple(filepath:str, log:EventLog) -> None:
     """
     This exports a simple event log structure out into an XES format but consider
     the following before using:
@@ -38,8 +39,7 @@ def export_to_xes_simple(filepath:str, log:EventLog, debug:bool=True) -> None:
     if (not os.path.exists(os.path.dirname(filepath))):
         os.makedirs(os.path.dirname(filepath),exist_ok=True)
 
-        if(debug):
-            print(f"made directory for :: {filepath}")
+        debug(f"made directory for :: {filepath}")
 
     with open(filepath,"wb") as flog:
         # add log element
@@ -92,5 +92,4 @@ def export_to_xes_simple(filepath:str, log:EventLog, debug:bool=True) -> None:
         ET.indent(xml_tree, space="\t", level=0)
         xml_tree.write(flog, encoding="utf-8", method="xml", xml_declaration=True)
     
-    if (debug):
-        print(f"exported log to :: {filepath}")
+    debug(f"exported log to :: {filepath}")
