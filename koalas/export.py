@@ -4,7 +4,7 @@ event logs constructs to the XES format.
 """
 from koalas.simple import EventLog
 
-from koalas.xes_export import XesLogExtension
+from koalas.xes_export import XesLogExtension, XesLogClassifier
 from koalas.xes_export import XES_LOG_TAG,XES_LOG_ATTRS
 from koalas.xes_export import XES_EXT_CONCEPT_NAME,XES_EXT_CONCEPT_PREFIX, XES_EXT_CONCEPT_URI
 
@@ -46,13 +46,19 @@ def export_to_xes_simple(filepath:str, log:EventLog, debug:bool=True) -> None:
         xml_log = ET.Element( XES_LOG_TAG, XES_LOG_ATTRS)
         # make xml docuement
         xml_tree = ET.ElementTree(xml_log)
-        # add default extension for concept:name
+        # (1) add default extension for concept:name
         xml_log.append(XesLogExtension(XES_EXT_CONCEPT_NAME,
             XES_EXT_CONCEPT_PREFIX,
             XES_EXT_CONCEPT_URI)
         )
+        # (2) add any globals
+        # (3) add any classifiers
+        xml_log.append(XesLogClassifier("activity-classifier", [XES_CONCEPT]))
+        # (4) add any properties 
         # add concept:name to log
         xml_log.append(XesString(XES_CONCEPT, log.get_name()))
+        # add meta_exporter to log as koalas
+        xml_log.append(XesString("meta:exporter", "koalas"))
 
         # add traces
         trace_id = 1
