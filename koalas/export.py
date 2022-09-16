@@ -46,13 +46,13 @@ def export_to_xes_simple(filepath:str, log:EventLog, debug:bool=True) -> None:
         xml_log = ET.Element( XES_LOG_TAG, XES_LOG_ATTRS)
         # make xml docuement
         xml_tree = ET.ElementTree(xml_log)
-        # add concept:name to log
-        xml_log.append(XesString(XES_CONCEPT, log.get_name()))
         # add default extension for concept:name
         xml_log.append(XesLogExtension(XES_EXT_CONCEPT_NAME,
             XES_EXT_CONCEPT_PREFIX,
             XES_EXT_CONCEPT_URI)
         )
+        # add concept:name to log
+        xml_log.append(XesString(XES_CONCEPT, log.get_name()))
 
         # add traces
         trace_id = 1
