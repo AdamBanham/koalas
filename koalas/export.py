@@ -6,7 +6,8 @@ from koalas.simple import EventLog
 
 from koalas.xes_export import XesLogExtension, XesLogClassifier
 from koalas.xes_export import XES_LOG_TAG,XES_LOG_ATTRS
-from koalas.xes_export import XES_EXT_CONCEPT_NAME,XES_EXT_CONCEPT_PREFIX, XES_EXT_CONCEPT_URI
+from koalas.xes_export import XES_EXT_CONCEPT_NAME,XES_EXT_CONCEPT_PREFIX 
+from koalas.xes_export import XES_EXT_CONCEPT_URI
 
 from koalas.xes_export import XesString
 from koalas.xes_export import XES_CONCEPT
