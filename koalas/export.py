@@ -3,6 +3,7 @@ This module provides functions to export out languages and different types of
 event logs constructs to the XES format.
 """
 from koalas.simple import EventLog
+from koalas._logging import debug,info, enable_logging, get_logger
 
 from koalas.xes_export import XesLogExtension, XesLogClassifier
 from koalas.xes_export import XES_LOG_TAG,XES_LOG_ATTRS
@@ -15,11 +16,12 @@ from koalas.xes_export import XES_CONCEPT
 from koalas.xes_export import XesTrace,XesEvent
 
 import os 
-from logging import debug
+import logging
 from xml.etree import ElementTree as ET
 
 EXPORT_SIMPLE_TRACE_FORMAT = "trace {id:d}"
 
+@enable_logging
 def export_to_xes_simple(filepath:str, log:EventLog) -> None:
     """
     This exports a simple event log structure out into an XES format but consider
@@ -36,11 +38,13 @@ def export_to_xes_simple(filepath:str, log:EventLog) -> None:
       directory path if does not exist.
     """
 
+    info(f"exporting log of size :: {len(log)}")
+
     # check filepath
     if (not os.path.exists(os.path.dirname(filepath))):
         os.makedirs(os.path.dirname(filepath),exist_ok=True)
 
-        debug(f"made directory for :: {filepath}")
+        info(f"made directory for :: {filepath}")
 
     with open(filepath,"wb") as flog:
         # add log element
@@ -63,6 +67,7 @@ def export_to_xes_simple(filepath:str, log:EventLog) -> None:
 
         # add traces
         trace_id = 1
+        debug("starting trace conversion")
         for trace,count in log.__iter__():
             events = []
             # add a trace, count times
@@ -72,13 +77,17 @@ def export_to_xes_simple(filepath:str, log:EventLog) -> None:
 
                 # only generate events once
                 if (len(events) != len(trace)):
-                    # generate subelements
-                    for act in trace.__iter__():
-                        ev = XesEvent()
-                        # add concept for event
-                        ev.append(XesString(XES_CONCEPT, act))
-                        # keep event
-                        events.append(ev)  
+                  debug(f"Generating events for variant :: {trace} x {count}")
+                  # generate subelements
+                  for act in trace.__iter__():
+                      ev = XesEvent()
+                      # add concept for event
+                      ev.append(XesString(XES_CONCEPT, act))
+                      # keep event
+                      events.append(ev)  
+
+                  if (get_logger().isEnabledFor(logging.DEBUG)):
+                    debug(f"Generated sequence of events :: {[ ET.tostring(e) for e in events ]}")
 
                 # add events as subelements
                 for ev in events:
@@ -88,9 +97,9 @@ def export_to_xes_simple(filepath:str, log:EventLog) -> None:
                 xml_log.append(xml_trace)
 
                 trace_id += 1
-
+        debug(f"exported traces :: {trace_id-1}")
         # write out xml to file
         ET.indent(xml_tree, space="\t", level=0)
         xml_tree.write(flog, encoding="utf-8", method="xml", xml_declaration=True)
     
-    debug(f"exported log to :: {filepath}")
+    info(f"exported log to :: {filepath}")
