@@ -12,7 +12,7 @@ authors = [
 description = "A process mining library that focuses on providing pythonic interactions with event logs and languages"
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -20,9 +20,6 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-tests = [
-  'xmlschema'
-]
 dev = [ 
   'xmlschema'
 ]
