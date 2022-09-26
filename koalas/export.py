@@ -2,6 +2,8 @@
 This module provides functions to export out languages and different types of
 event logs constructs to the XES format.
 """
+from koalas import __version__
+
 from koalas.simple import EventLog
 from koalas._logging import debug,info, enable_logging, get_logger
 
@@ -64,7 +66,7 @@ def export_to_xes_simple(filepath:str, log:EventLog) -> None:
         xml_log.append(XesString(XES_CONCEPT, log.get_name()))
         # add meta_exporter to log as koalas
         xml_log.append(XesString("meta:exporter", "koalas"))
-
+        xml_log.append(XesString("meta:exporter:version", f"{__version__}"))
         # add traces
         trace_id = 1
         debug("starting trace conversion")
