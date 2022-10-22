@@ -1,15 +1,12 @@
-# Koalas Process Mining
+# Koalas: A Process Mining Project
 
 # Development
-
 To install the library as a local copy, such that edits to source will be automatically translated into your intercepter use the following command:
 `py -m pip install -e .[dev]`
-
 
 ## Test
 To run tests use the following command
 `py -m pip install -e .[dev] && py -m unittest`
-
 
 # Values of the team
 
