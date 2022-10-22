@@ -6,6 +6,8 @@ import logging
 from logging import Logger
 from functools import wraps
 
+LOG_FRMT = '%(asctime)s|%(filename)-18s|%(funcName)-25s|%(levelname)-8s|: %(message)s'
+
 def get_logger() -> Logger:
     """
     This will get/create the unique logger for koalas.
@@ -17,7 +19,7 @@ def get_logger() -> Logger:
     # only do setup if needed
     if (not logger.hasHandlers()):
         logger.setLevel(logging.ERROR)
-        fmt = '%(asctime)s|%(filename)-18s|%(funcName)-25s|%(levelname)-8s|: %(message)s'
+        fmt = LOG_FRMT
         fmt_date = '%Y-%m-%dT%T'
         formatter = logging.Formatter(fmt, fmt_date)
         handler = logging.StreamHandler()

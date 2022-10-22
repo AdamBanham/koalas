@@ -1,6 +1,6 @@
 """
-This module contains information about the structure of the simplified api for process data,
- being how to represent an event, a trace and an event log.
+This module contains information about the structure of the simplified api 
+for process data, being how to represent an event, a trace and an event log.
 """
 
 from typing import Iterable, List, Mapping, Set, Tuple
@@ -118,14 +118,16 @@ class EventLog():
     def __contains__(self, other):
         if isinstance(other, Trace):
             return other in self._freqset.keys()
-        raise NotImplemented("Membership test not defined for :: " + type(other))
+        raise NotImplemented("Membership test not defined for :: "
+         + type(other))
 
     # Rich comparisons 
     # https://peps.python.org/pep-0207/#classes
     # ==, <, <=, >, >=
     def __eq__(self,other):
         if isinstance(other,EventLog):
-            return self.stochastic_language() == other.stochastic_language()
+            return self.stochastic_language() == \
+             other.stochastic_language()
         return False
 
     def __lt__(self,other):

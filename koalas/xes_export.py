@@ -91,7 +91,6 @@ class XesString(Element):
             **{}
         )
 
-
 # XES trace element
 XES_TRACE_TAG = "trace"
 class XesTrace(Element):
@@ -118,4 +117,3 @@ class XesEvent(Element):
 
     def __init__(self,) -> None:
         super().__init__(XES_EVENT_TAG, {}, **{})
-

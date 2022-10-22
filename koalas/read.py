@@ -68,9 +68,10 @@ class EventExtract:
 def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
                     label_attribute=XES_CONCEPT, sort=True) -> EventLog:
     """
-    Reads an XES formatted event log and creates a simplified event log object.\n
-    Traces from the event log are sorted by the sort_attribute (time:timestamp 
-    by default) before making the sequence of labels (concept:name by default).
+    Reads an XES formatted event log and creates a simplified event log
+    object. Traces from the event log are sorted by the sort_attribute
+    (time:timestamp by default) before making the sequence of labels
+    (concept:name by default).
 
     Parameters
     ----------
@@ -89,9 +90,9 @@ def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
 @enable_logging
 def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
     """
-    Reads an XES formatted event log and creates a simplified event log object.\n
-    Traces from the event log are kept in document order before making the 
-    sequence of labels (concept:name by default).
+    Reads an XES formatted event log and creates a simplified event log 
+    object. Traces from the event log are kept in document order before 
+    making the sequence of labels (concept:name by default).
 
     Parameters
     ----------
@@ -120,7 +121,8 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
         name = log_attrs.attrib.get("value")
         debug(f"extracted event log name :: {name}")
 
-    traces = [ trace for trace in log.findall("xes:trace", XES_XML_NAMESPACE)]
+    traces = [ trace for trace in log.findall("xes:trace",
+     XES_XML_NAMESPACE)]
 
     info(f"parsing {len(traces)} traces ...")
     # extract the following from a trace,
