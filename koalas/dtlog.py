@@ -8,6 +8,8 @@ from koalas.simple import EventLog, Trace
 DEFAULT_DELIM=" "
 
 def convertTrace(trace: str, delimiter=DEFAULT_DELIM) -> Iterable[str]:
+    if (len(trace) < 1):
+        return Trace(list())
     return Trace(trace.split(delimiter))
 
 """
