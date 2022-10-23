@@ -141,3 +141,10 @@ class FlowLanguage():
             rep += str(pair)
         return rep
 
+    def __repr__(self) -> str:
+        repr = "FlowLanguage([\n\t"
+        for pair in self._relations.values():
+            rep += f"{str(pair.__repr__())}\n\t"
+        repr += "])"
+
+
