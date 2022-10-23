@@ -108,10 +108,12 @@ class EventLog():
             # compute directly flow relations
             self._relations = FlowLanguage([])
             start = time()
+            computed_times = []
             info("Starting computation of relations")
-            for trace,freq in self._freqset.items():
+            for tid,(trace,freq) in enumerate(self._freqset.items()):
                 if (len(trace) < 1):
                     continue
+                compute_time = time()
                 relations = []
                 # build initial flow
                 debug(f"{trace=} @ {freq=}")
@@ -133,6 +135,18 @@ class EventLog():
                 # update lang
                 self._relations  = self._relations + \
                     FlowLanguage(relations)
+                
+                if (len(computed_times) < 30):
+                    computed_times.append(time() - compute_time)
+                else:
+                    computed_times.pop(0)
+                    computed_times.append(time() - compute_time)
+
+                if (tid > 0 and (tid % 100) == 0):
+                    avg_time = sum(computed_times)/len(computed_times)
+                    info(f"computed {tid}/{self._len} @ " + 
+                     f"{avg_time:2f}sec/variant"
+                    )
 
             # relations computed 
             info(f"Computed relations in {(time()-start)*1000:.0f}ms")
