@@ -3,6 +3,7 @@ This modules handles creating directly flows pairs from a
 language.
 """
 
+from copy import deepcopy
 from time import time
 from typing import Iterable,Dict,List
 
@@ -122,9 +123,9 @@ class FlowLanguage():
     # data model functions
     def __add__(self, other:object) -> object:
         if (isinstance(other, FlowLanguage)):
-            relations = list(self._relations.values()) \
-                + list(other._relations.values())
-            return FlowLanguage(relations) 
+            new_flang = deepcopy(self)
+            new_flang._introduce_pairs(other._relations.values())
+            return new_flang
         raise NotImplemented("Flow language addition not support with" +\
              f" :: {type(other)}")
 
@@ -144,7 +145,8 @@ class FlowLanguage():
     def __repr__(self) -> str:
         repr = "FlowLanguage([\n\t"
         for pair in self._relations.values():
-            rep += f"{str(pair.__repr__())}\n\t"
+            repr += f"{str(pair.__repr__())}\n\t"
         repr += "])"
+        return repr
 
 
