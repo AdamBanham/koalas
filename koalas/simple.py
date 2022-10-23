@@ -8,6 +8,8 @@ from copy import deepcopy
 from time import time
 
 from koalas._logging import info,debug, enable_logging
+from koalas.directly import DirectlyFlowsPair,FlowLanguage
+from koalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
 
 class Trace():
     """
@@ -98,6 +100,47 @@ class EventLog():
     def stochastic_language(self) -> Mapping[Trace,float]:
         "Get a stochastic language from this language"
         return self._freqset.copy()
+
+    @enable_logging
+    def directly_flow_relations(self) -> FlowLanguage:
+        "Get the directly flow relations for this language"
+        if (self._relations == None):
+            # compute directly flow relations
+            self._relations = FlowLanguage([])
+            start = time()
+            info("Starting computation of relations")
+            for trace,freq in self._freqset.items():
+                if (len(trace) < 1):
+                    continue
+                relations = []
+                # build initial flow
+                debug(f"{trace=} @ {freq=}")
+                debug(f"{DIRECTLY_SOURCE} to {trace[0]=} @ {freq}")
+                relations.append(DirectlyFlowsPair(left=DIRECTLY_SOURCE, 
+                 right=trace[0], freq=freq))
+
+                # build body flows
+                for src,trg in zip(trace[:-1],trace[1:]):
+                    debug(f"{src=} to {trg=} @ {freq=}")
+                    relations.append(DirectlyFlowsPair(left=src,
+                     right=trg, freq=freq))
+
+                # build exit flow 
+                debug(f"{trace[-1]=} to {DIRECTLY_END} @ {freq}")
+                relations.append(DirectlyFlowsPair(left=trace[-1], 
+                 right=DIRECTLY_END, freq=freq))
+
+                # update lang
+                self._relations  = self._relations + \
+                    FlowLanguage(relations)
+
+            # relations computed 
+            info(f"Computed relations in {(time()-start)*1000:.0f}ms")
+            return self._relations
+        else:
+            info("Already computed relations, returning existing" + 
+             "computation.")
+            return self._relations
 
     # data model functions
     def __len__(self) -> int:
