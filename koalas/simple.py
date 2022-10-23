@@ -5,7 +5,9 @@ for process data, being how to represent an event, a trace and an event log.
 
 from typing import Iterable, List, Mapping, Set, Tuple
 from copy import deepcopy
+from time import time
 
+from koalas._logging import info,debug, enable_logging
 
 class Trace():
     """
@@ -68,12 +70,15 @@ class EventLog():
     A simplified representation of a language.
     """
 
+    @enable_logging
     def __init__(self, traces: Iterable[Trace], 
                  name:str=DEFAULT_SIMPLE_LOG_NAME) -> None:
         # middleman to multi set repr
         self._freqset = dict()
         self._len = 0
         self._variants = 0
+        info("Computing language...")
+        start = time()
         for trace in traces:
             if (trace in self._freqset.keys()):
                 self._freqset[trace] += 1
@@ -81,7 +86,9 @@ class EventLog():
                 self._freqset[trace] = 1
                 self._variants += 1
             self._len += 1
+        info(f"Computed language in {(time()-start)*1000:.0f}ms")
         self.name = name 
+        self._relations = None
 
     
     def language(self) -> Set[Trace]:
