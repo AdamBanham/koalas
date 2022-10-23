@@ -40,6 +40,9 @@ class Trace():
         for event in self.sequence:
             yield event
 
+    def __getitem__(self,key:int) -> str:
+        return self.sequence[key]
+
     def __eq__(self, __o: object) -> bool:
         if ( isinstance(__o, Trace )  ):
             return self.sequence.__eq__(__o.sequence)
