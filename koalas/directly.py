@@ -53,8 +53,10 @@ class DirectlyFlowsPair():
         return f"({self._left} -> {self._right})^{self._freq}"
 
     def __repr__(self) -> str:
-        return f"DirectlyFlowsPair(left={self._left}"+\
-            f",right={self._right},freq={self._freq})"
+        left = self._left.replace("'","\\'")
+        right = self._right.replace("'","\\'")
+        return f"DirectlyFlowsPair(left='{left}'"+ \
+            f",right='{right}',freq={self._freq})"
 
     def __hash__(self) -> int:
         return self._hash
@@ -167,7 +169,7 @@ class FlowLanguage():
     def __repr__(self) -> str:
         repr = "FlowLanguage([\n\t"
         for pair in self._relations.values():
-            repr += f"{str(pair.__repr__())}\n\t"
+            repr += f"{str(pair.__repr__())},\n\t"
         repr += "])"
         return repr
 
