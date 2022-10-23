@@ -143,9 +143,10 @@ class EventLog():
                     computed_times.append(time() - compute_time)
 
                 if (tid > 0 and (tid % 100) == 0):
-                    avg_time = sum(computed_times)/len(computed_times)
-                    info(f"computed {tid}/{self._len} @ " + 
-                     f"{avg_time:2f}sec/variant"
+                    avg_time = (sum(computed_times)/ 
+                     len(computed_times))* 1000
+                    info(f"computed {tid}/{self._variants} @ " + 
+                     f"{avg_time:.1f}ms/variant"
                     )
 
             # relations computed 
