@@ -66,7 +66,8 @@ def enable_logging(func):
     - debug_level: sets the level of logging to show. 
     """
     # add to docstrings so 
-    func.__doc__  += enable_logging.__doc__
+    if (func.__doc__ != None):
+        func.__doc__  += enable_logging.__doc__
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -74,17 +75,11 @@ def enable_logging(func):
         func_params = func.__code__.co_varnames[:func.__code__.co_argcount]
         # grab all of the kwargs that are not accepted by func
         extra = set(kwargs.keys()) - set(func_params)
-        debug = False
+        debug = kwargs.pop("debug",False)
+        level = kwargs.pop("debug_level", logging.INFO)
         # set logger settings
-        if ("debug" in extra):
-            # remove from kwargs
-            debug = kwargs.pop("debug")
+        if debug:
             # set debug on at info level
-            get_logger().setLevel(logging.INFO)
-        if (debug and "debug_level" in extra):
-            # remove from kwargs
-            level = kwargs.pop("debug_level")
-            # set debug on at given level
             get_logger().setLevel(level)
         # run function as intended
         val = func(*args, **kwargs)
