@@ -8,8 +8,9 @@ from enum import Enum
 from os import path
 
 from datetime import datetime
+from typing import List
 
-from xml.etree.ElementTree import parse
+from xml.etree.ElementTree import Element, parse
 
 from koalas.simple import EventLog, Trace
 from koalas._logging import debug, info, enable_logging
@@ -121,8 +122,24 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
         name = log_attrs.attrib.get("value")
         debug(f"extracted event log name :: {name}")
 
-    traces = [ trace for trace in log.findall("xes:trace",
+    # check with namespace
+    ns_traces = [ trace for trace in log.findall("xes:trace",
      XES_XML_NAMESPACE)]
+    #  check without namespace
+    nns_traces = [ trace for trace in log.findall("trace",
+     XES_XML_NAMESPACE)]
+    #  decide what to do with namespace
+    use_namespace = True
+    if (len(ns_traces) == nns_traces):
+        traces = ns_traces 
+        del nns_traces
+    elif (len(ns_traces) < len(nns_traces)):
+        traces = nns_traces
+        use_namespace = False
+        del ns_traces 
+    else: 
+        traces = ns_traces
+        del ns_traces
 
     info(f"parsing {len(traces)} traces ...")
     # extract the following from a trace,
@@ -131,8 +148,7 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
     extracted_traces = []
     for trace in traces:
         trace_ins = [] # eache element is a EventExtract
-        events = [ event for event in trace.findall("xes:event", 
-                        XES_XML_NAMESPACE)]
+        events = find_element(trace, "event", use_namespace)
         for id,event in enumerate(events):
             label = None 
             sorter = None 
@@ -148,3 +164,9 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
         extracted_traces.append(trace_ins) 
     return EventLog(extracted_traces, name)
 
+def find_element(root:Element, find:str, use_namespace:bool) -> List[Element]:
+    if (use_namespace):
+        return [ event for event in root.findall(f"xes:{find}", 
+                        XES_XML_NAMESPACE)]
+    else: 
+        return [ event for event in root.findall(f"{find}")]
