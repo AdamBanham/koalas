@@ -78,7 +78,7 @@ class FlowLanguage():
         self._activities = set()
         self._pairs = 0
         start = time()
-        info("Computing new flow language")
+        debug("Computing new flow language")
         for pair in pairs:
             self._activities.add(pair.left())
             self._activities.add(pair.right())
@@ -91,7 +91,29 @@ class FlowLanguage():
             if (pair.right() == DIRECTLY_END):
                 self._update_state(pair,self._ends, "ends")
         self._pairs = len(self._relations.items())
-        info(f"Computed new flow language in {(time() - start)*1000:.1f}ms")
+        debug("Computed new flow language in" +
+         f" {(time() - start)*1000:.1f}ms")
+        debug(f"Computed :: {str(self)}")
+
+    def _introduce_pairs(self, pairs: List[DirectlyFlowsPair]):
+        """
+        Internal function to update a state spaces with new paris.
+        """
+        start = time()
+        debug("Computing new flow language")
+        for pair in pairs:
+            self._activities.add(pair.left())
+            self._activities.add(pair.right())
+            # add to general collection
+            self._update_state(pair,self._relations, "collection")
+            # add to starts if needed
+            if (pair.left() == DIRECTLY_SOURCE):
+                self._update_state(pair,self._starts, "starts")
+            # add to ends if needed
+            if (pair.right() == DIRECTLY_END):
+                self._update_state(pair,self._ends, "ends")
+        self._pairs = len(self._relations.items())
+        debug(f"Computed new flow language in {(time() - start)*1000:.1f}ms")
         debug(f"Computed :: {str(self)}")
 
     def _update_state(self, pair:DirectlyFlowsPair, state:Dict, state_name:str):
