@@ -85,9 +85,11 @@ class EventLog():
 
     
     def language(self) -> Set[Trace]:
+        "Get a trace language from this language"
         return self._freqset.keys()
     
     def stochastic_language(self) -> Mapping[Trace,float]:
+        "Get a stochastic language from this language"
         return self._freqset.copy()
 
     # data model functions
