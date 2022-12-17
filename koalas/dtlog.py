@@ -12,14 +12,14 @@ def convertTrace(trace: str, delimiter=DEFAULT_DELIM) -> Iterable[str]:
         return Trace(list())
     return Trace(trace.split(delimiter))
 
-"""
-Files are of the form
-	 
-LOG   :: TRACE {TRACE_DELIMITER TRACE}
-TRACE :: EVENT {EVENT_DELIMITER EVENT}
-EVENT :: <string label>
-"""
 def convert(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
+    """
+    This function converts a sequence of `"a b c"` into traces,
+    and then creates an event log. Examplar uses are the following:
+    \n
+    `convert("a b c", "a b", "a")`\n
+    `convert(*[ t for t in traces])`\n
+    """
     return EventLog( map( convertTrace, traces ) )
 
 
