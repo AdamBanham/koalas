@@ -20,9 +20,16 @@ class Trace():
         self.sequence = deepcopy(sequence)
         self._len = len(self.sequence)
         self._hash = hash(tuple(event for event in self.sequence))
+        self._acts = set(self.sequence)
+    
+    # accessors
+    def get_id(self) -> str:
+        return self.id
+
+    def seen_activities(self) -> Set[str]:
+        return self._acts
 
     # data model functions
-
     def __str__(self) -> str:
         if len(self.sequence) == 0:
             return "<>"
@@ -58,13 +65,6 @@ class Trace():
     def __len__(self) -> int:
         return self._len
 
-    # accessors
-
-    def get_id(self) -> str:
-        return self.id
-
-
-
 DEFAULT_SIMPLE_LOG_NAME="simple"
 
 class EventLog():
@@ -79,6 +79,9 @@ class EventLog():
         self._freqset = dict()
         self._len = 0
         self._variants = 0
+        self._acts = set([])
+        self._start_acts = set([])
+        self._end_acts = set([])
         self._traces = None
         info("Computing language...")
         start = time()
@@ -86,6 +89,12 @@ class EventLog():
             if (trace in self._freqset.keys()):
                 self._freqset[trace] += 1
             else:
+                self._acts = self._acts.union(
+                    trace.seen_activities()
+                )
+                if (len(trace) > 0):
+                    self._start_acts.add(trace[0])
+                    self._end_acts.add(trace[-1])
                 self._freqset[trace] = 1
                 self._variants += 1
             self._len += 1
@@ -94,7 +103,18 @@ class EventLog():
         self.name = name 
         self._relations = None
 
-    
+    def seen_activities(self) -> Set[str]:
+        "Get a language of process activities from this language"
+        return deepcopy(self._acts)
+
+    def seen_start_activities(self) -> Set[str]:
+        "Get a set of start activities from this language"
+        return deepcopy(self._start_acts)
+
+    def seen_end_activities(self) -> Set[str]:
+        "Get a set of end activities from this language"
+        return deepcopy(self._end_acts)
+
     def language(self) -> Set[Trace]:
         "Get a trace language from this language"
         return self._freqset.keys()
