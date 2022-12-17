@@ -79,6 +79,7 @@ class EventLog():
         self._freqset = dict()
         self._len = 0
         self._variants = 0
+        self._traces = None
         info("Computing language...")
         start = time()
         for trace in traces:
@@ -88,6 +89,7 @@ class EventLog():
                 self._freqset[trace] = 1
                 self._variants += 1
             self._len += 1
+        self._traces = set([ t for t in self._freqset.keys() ])
         info(f"Computed language in {(time()-start)*1000:.0f}ms")
         self.name = name 
         self._relations = None
@@ -194,22 +196,46 @@ class EventLog():
     # Rich comparisons 
     # https://peps.python.org/pep-0207/#classes
     # ==, <, <=, >, >=
-    def __eq__(self,other):
+    def __eq__(self,other) -> bool:
         if isinstance(other,EventLog):
             return self.stochastic_language() == \
              other.stochastic_language()
         return False
 
-    def __lt__(self,other):
+    def __lt__(self,other) -> bool:
+        """
+        Tests whether this event log is a proper subset of 
+        another event log.
+        """
+        if isinstance(other,EventLog):
+            this_traces = self._traces
+            other_traces = other._traces
+            if (this_traces.issubset(other_traces)):
+                diff_set = other_traces.difference(
+                    this_traces )
+                return len(diff_set) > 0
+            return False
+        raise NotImplementedError("Subset comparsion" +
+         f" between an EventLog (simple) and {type(other)}" +
+          " is not defined.") 
+
+    def __le__(self,other) -> bool:
+        """
+        Tests whether this event log is a subset of 
+        another event log.
+        """ 
+        if isinstance(other,EventLog):
+            this_traces = self._traces
+            other_traces = other._traces
+            return this_traces.issubset(other_traces)
+        raise NotImplementedError("Subset comparsion" +
+         f" between an EventLog (simple) and {type(other)}" +
+          " is not defined.") 
+
+    def __gt__(self,other) -> bool:
         pass 
 
-    def __le__(self,other):
-        pass 
-
-    def __gt__(self,other):
-        pass 
-
-    def __ge__(self,other):
+    def __ge__(self,other) -> bool:
         pass 
     
     # Emulating numeric types
