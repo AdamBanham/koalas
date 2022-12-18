@@ -18,6 +18,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [ 
+  "tqdm"
+]
 
 [project.optional-dependencies]
 dev = [ 
@@ -28,9 +31,6 @@ dev = [
 packages = [
 "koalas"
 ]
-
-
-
 
 [project.urls]
 "Homepage" = "TODO"
