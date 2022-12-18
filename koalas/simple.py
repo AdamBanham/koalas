@@ -117,7 +117,7 @@ class EventLog():
 
     def language(self) -> Set[Trace]:
         "Get a trace language from this language"
-        return self._freqset.keys()
+        return set(list(self._freqset.keys()))
     
     def stochastic_language(self) -> Mapping[Trace,float]:
         "Get a stochastic language from this language"
@@ -197,7 +197,10 @@ class EventLog():
         return _str
 
     def __repr__(self) -> str:
-        return self.__str__()
+        rep = "EventLog(\n"
+        for trace, freq in self:
+            rep += "\t[" + trace.__repr__() + f"] * {freq}+\n"
+        return rep[:-2] + "\n)"
 
     # accessors 
     def get_name(self) -> str:

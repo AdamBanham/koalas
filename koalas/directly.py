@@ -394,8 +394,7 @@ class FollowLanguage():
         repr = "FlowLanguage([\n\t"
         for pair in self._relations.values():
             repr += f"{str(pair.__repr__())},\n\t"
-        repr += "])"
-        return repr
+        return repr[:-2] + "\n])"
 
 class SetArray():
     """
