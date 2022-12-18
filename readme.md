@@ -1,4 +1,5 @@
 # Koalas: A Process Mining Project
+[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)
 
 # Development
 To install the library as a local copy, such that edits to source will be automatically translated into your intercepter use the following command:
