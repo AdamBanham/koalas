@@ -14,7 +14,7 @@ from koalas._logging import enable_logging,info,debug
 DIRECTLY_SOURCE = "SOURCE"
 DIRECTLY_END = "END"
 
-class DirectlyFlowsPair():
+class DirectlyFollowPair():
     """
     This class describes one directly flow relation between
     two process activities seen in a language.
@@ -46,8 +46,8 @@ class DirectlyFlowsPair():
         "Decrease support for relation"
         self._freq -= count
     
-    def copy(self) -> object:
-        return DirectlyFlowsPair(self._left, self._right, self._freq)
+    def copy(self) -> 'DirectlyFollowPair':
+        return DirectlyFollowPair(self._left, self._right, self._freq)
 
     # data model functions
     def __str__(self) -> str:
@@ -63,16 +63,16 @@ class DirectlyFlowsPair():
         return self._hash
 
     def __eq__(self, __o: object) -> bool:
-        if (isinstance(__o, DirectlyFlowsPair)):
+        if (isinstance(__o, DirectlyFollowPair)):
             return self.__hash__() == __o.__hash__()
         return False
 
-class DirectlyFlowWalk():
+class DirectlyFollowWalk():
     """
     A walk of FlowLanguage, which describes the absolute power of the walk.
     """
 
-    def __init__(self,start:DirectlyFlowsPair) -> None:
+    def __init__(self,start:DirectlyFollowPair) -> None:
         self._pow = start.frequency()
         self._loops = []
         self._nodes = [start.left(), start.right()]
@@ -80,7 +80,7 @@ class DirectlyFlowWalk():
         self._hash = hash(tuple([0]))
         self._hash = self._compute_hash()
 
-    def append(self, next:DirectlyFlowsPair) -> object:
+    def append(self, next:DirectlyFollowPair) -> object:
         if (next.left() != self._walk[-1].right()):
             raise ValueError("Given pair does not connect to last.")
         if (next.right() in self._nodes):
@@ -95,21 +95,21 @@ class DirectlyFlowWalk():
         "Return how frequent this walk is."
         return self._pow
 
-    def get(self) -> List[DirectlyFlowsPair]:
+    def get(self) -> List[DirectlyFollowPair]:
         "Return the connected walks of pairs"
         return deepcopy(self._walk)
 
-    def last(self) -> DirectlyFlowsPair:
+    def last(self) -> DirectlyFollowPair:
         "Returns the last seen pair in the walk."
         return self._walk[-1].copy()
 
-    def should_cross(self, next:DirectlyFlowsPair) -> bool:
+    def should_cross(self, next:DirectlyFollowPair) -> bool:
         "Returns if the walks should cross this path."
         if (next in self._loops):
             return False 
         return len([ p for p in self._walk if p == next]) <= 2
 
-    def check_membership(self, checkfor:DirectlyFlowsPair) -> bool:
+    def check_membership(self, checkfor:DirectlyFollowPair) -> bool:
         "Check if this walk has crossed this pair before."
         return checkfor in self._walk
 
@@ -142,7 +142,7 @@ class DirectlyFlowWalk():
         return self._hash
 
     def __eq__(self, __o: object) -> bool:
-        if (isinstance(__o, DirectlyFlowWalk)):
+        if (isinstance(__o, DirectlyFollowWalk)):
             return self.__hash__() == __o.__hash__()
         return False
 
@@ -152,12 +152,12 @@ class DirectlyFlowWalk():
             repr += f".append({pair.__repr__()})"
         return repr 
 
-class FlowLanguage():
+class FollowLanguage():
     """
-    A language of directly flow relations.
+    A language of directly follows relations.
     """
 
-    def __init__(self, pairs:Iterable[DirectlyFlowsPair]) -> None:
+    def __init__(self, pairs:Iterable[DirectlyFollowPair]) -> None:
         self._relations = {}
         self._starts = {}
         self._ends = {}
@@ -184,7 +184,7 @@ class FlowLanguage():
          f" {(time() - start)*1000:.1f}ms")
         debug(f"Computed :: {str(self)}")
 
-    def _introduce_pairs(self, pairs: List[DirectlyFlowsPair]):
+    def _introduce_pairs(self, pairs: List[DirectlyFollowPair]):
         """
         Internal function to update a state spaces with new paris.
         """
@@ -205,7 +205,8 @@ class FlowLanguage():
         debug(f"Computed new flow language in {(time() - start)*1000:.1f}ms")
         debug(f"Computed :: {str(self)}")
 
-    def _update_state(self, pair:DirectlyFlowsPair, state:Dict, state_name:str):
+    def _update_state(self, pair:DirectlyFollowPair, state:Dict,
+        state_name:str):
         """
         Internal function to update a state space with a pair.
         A pair may be used differently in each state space, so
@@ -223,15 +224,15 @@ class FlowLanguage():
             debug(f"{state_name} :: added : {pair}")
             state[pair] = pair.copy()
 
-    def starts(self) -> List[DirectlyFlowsPair]:
+    def starts(self) -> List[DirectlyFollowPair]:
         "Returns all starting directly flow pairs."
         return list(self._starts.values())
 
-    def ends(self) -> List[DirectlyFlowsPair]:
+    def ends(self) -> List[DirectlyFollowPair]:
         "Returns all ending directly flow pairs."
         return list(self._ends.values())
 
-    def get(self, target:str) -> List[DirectlyFlowsPair]:
+    def get(self, target:str) -> List[DirectlyFollowPair]:
         "Returns all pairs with left as target."
         relations = list()
         for pair in self:
@@ -239,11 +240,11 @@ class FlowLanguage():
                 relations.append(pair)
         return relations
 
-    def contains(self, pair:DirectlyFlowsPair) -> bool:
+    def contains(self, pair:DirectlyFollowPair) -> bool:
         "Checks if pair is found in this language"
         return pair in self._relations.keys()
 
-    def find(self, pair:DirectlyFlowsPair) -> DirectlyFlowsPair:
+    def find(self, pair:DirectlyFollowPair) -> DirectlyFollowPair:
         "Finds the equivalent pair in this language"
         if (not self.contains(pair)):
             raise ValueError("pair not found in language")
@@ -251,7 +252,7 @@ class FlowLanguage():
             return self._relations[pair].copy()
 
     @enable_logging
-    def approx_walks(self, attempts:int=10000) -> List[DirectlyFlowWalk]:
+    def approx_walks(self, attempts:int=10000) -> List[DirectlyFollowWalk]:
         """
         Returns approximates walks from flow language based on frequency.
         Return list of walks will be unique but may not cover all directly flows
@@ -271,7 +272,7 @@ class FlowLanguage():
             walk = None
             for starting,chance in sfreq:
                 if (flip <= chance):
-                    walk = DirectlyFlowWalk(starting)
+                    walk = DirectlyFollowWalk(starting)
                     break
             failed = False
             # begin flipping and choosing
@@ -308,7 +309,7 @@ class FlowLanguage():
 
 
     @enable_logging
-    def walks(self) -> List[DirectlyFlowWalk]:
+    def walks(self) -> List[DirectlyFollowWalk]:
         """Returns all walks possible in the language. Warning may not finish 
         compute in finite time or in finite memory. """
         # check computation
@@ -323,7 +324,7 @@ class FlowLanguage():
             deadlock_count = 0
             # add starting points
             for pair in self.starts():
-                walker = DirectlyFlowWalk(pair)
+                walker = DirectlyFollowWalk(pair)
                 que.append(walker)
             # iterative build walks
             info(f"starting que size {len(que)}...")
@@ -369,14 +370,14 @@ class FlowLanguage():
 
     # data model functions
     def __add__(self, other:object) -> object:
-        if (isinstance(other, FlowLanguage)):
+        if (isinstance(other, FollowLanguage)):
             new_flang = deepcopy(self)
             new_flang._introduce_pairs(other._relations.values())
             return new_flang
         raise NotImplemented("Flow language addition not support with" +\
              f" :: {type(other)}")
 
-    def __iter__(self) -> Iterable[DirectlyFlowsPair]:
+    def __iter__(self) -> Iterable[DirectlyFollowPair]:
         for pair in self._relations.values():
             yield pair
 
@@ -386,8 +387,8 @@ class FlowLanguage():
     def __str__(self) -> str:
         rep = ""
         for pair in self._relations.values():
-            rep += str(pair)
-        return rep
+            rep += str(pair)+", "
+        return "[ " + rep[:-2] + " ]"
 
     def __repr__(self) -> str:
         repr = "FlowLanguage([\n\t"

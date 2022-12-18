@@ -8,7 +8,7 @@ from copy import deepcopy
 from time import time
 
 from koalas._logging import info,debug, enable_logging
-from koalas.directly import DirectlyFlowsPair,FlowLanguage
+from koalas.directly import DirectlyFollowPair,FollowLanguage
 from koalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
 
 class Trace():
@@ -124,11 +124,11 @@ class EventLog():
         return self._freqset.copy()
 
     @enable_logging
-    def directly_flow_relations(self) -> FlowLanguage:
+    def directly_follow_relations(self) -> FollowLanguage:
         "Get the directly flow relations for this language"
         if (self._relations == None):
             # compute directly flow relations
-            self._relations = FlowLanguage([])
+            self._relations = FollowLanguage([])
             start = time()
             computed_times = []
             info("Starting computation of relations")
@@ -140,23 +140,23 @@ class EventLog():
                 # build initial flow
                 debug(f"{trace=} @ {freq=}")
                 debug(f"{DIRECTLY_SOURCE} to {trace[0]=} @ {freq}")
-                relations.append(DirectlyFlowsPair(left=DIRECTLY_SOURCE, 
+                relations.append(DirectlyFollowPair(left=DIRECTLY_SOURCE, 
                  right=trace[0], freq=freq))
 
                 # build body flows
                 for src,trg in zip(trace[:-1],trace[1:]):
                     debug(f"{src=} to {trg=} @ {freq=}")
-                    relations.append(DirectlyFlowsPair(left=src,
+                    relations.append(DirectlyFollowPair(left=src,
                      right=trg, freq=freq))
 
                 # build exit flow 
                 debug(f"{trace[-1]=} to {DIRECTLY_END} @ {freq}")
-                relations.append(DirectlyFlowsPair(left=trace[-1], 
+                relations.append(DirectlyFollowPair(left=trace[-1], 
                  right=DIRECTLY_END, freq=freq))
 
                 # update lang
                 self._relations  = self._relations + \
-                    FlowLanguage(relations)
+                    FollowLanguage(relations)
                 
                 if (len(computed_times) < 30):
                     computed_times.append(time() - compute_time)

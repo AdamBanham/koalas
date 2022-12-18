@@ -13,7 +13,7 @@ from enum import Enum
 from copy import deepcopy,copy
 
 from koalas.simple import EventLog
-from koalas.directly import DirectlyFlowsPair
+from koalas.directly import DirectlyFollowPair
 
 class AlphaRelationType(Enum):
     DF = ">"
@@ -320,21 +320,21 @@ class AlphaMinerInstance():
                     src=src,target=target
                 )
         # find directly flows lang
-        flang = log.directly_flow_relations()
+        flang = log.directly_follow_relations()
         # update relations
         for col in self._matrix.values():
             for relation in col.values():
                 src = relation.src
                 target = relation.target
                 # test flow relation from src to target
-                pair = DirectlyFlowsPair(src, target, 1)
+                pair = DirectlyFollowPair(src, target, 1)
                 if (flang.contains(pair)):
                     fpair = flang.find(pair)
                     if fpair.frequency() >= self._min_inst:
                         # print(f"adding follows ({src},{target}) to {relation}")
                         relation.add_follows(src, target)
                 # test flow relation from target to src
-                pair = DirectlyFlowsPair(target, src, 1)
+                pair = DirectlyFollowPair(target, src, 1)
                 if (flang.contains(pair)):
                     fpair = flang.find(pair)
                     if fpair.frequency() >= self._min_inst:

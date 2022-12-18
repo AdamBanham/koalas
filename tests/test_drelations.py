@@ -2,7 +2,7 @@ import unittest
 from logging import DEBUG
 
 from koalas.dtlog import convert
-from koalas.directly import DirectlyFlowsPair as DFPair, FlowLanguage
+from koalas.directly import DirectlyFollowPair as DFPair, FollowLanguage
 from koalas.directly import DIRECTLY_END,DIRECTLY_SOURCE
 from koalas.simple import EventLog
 
@@ -91,7 +91,7 @@ class DTLogTest(unittest.TestCase):
      debug=False):
         try:
             # check for computable and size
-            flang = log.directly_flow_relations(debug=debug,
+            flang = log.directly_follow_relations(debug=debug,
              debug_level=DEBUG) 
             self.assertEqual(len(flang), size, 
              f"expected language to be of size {size}")
@@ -100,7 +100,7 @@ class DTLogTest(unittest.TestCase):
         except Exception:
             self.fail()  
 
-    def check_directly_pairs(self,flang:FlowLanguage, pairs):
+    def check_directly_pairs(self,flang:FollowLanguage, pairs):
         # check pairs
         computed_pairs = list(flang._relations.values())
         for pair in pairs:
@@ -113,7 +113,7 @@ class DTLogTest(unittest.TestCase):
 
     def test_empty_lang(self):
         try:
-            flang = empty_lang.directly_flow_relations()
+            flang = empty_lang.directly_follow_relations()
             self.assertEqual(len(flang), 0, 
             "expected language to be empty")
         except Exception:
@@ -135,6 +135,6 @@ class DTLogTest(unittest.TestCase):
          empty_traces_pairs)  
 
     def test_addition(self):
-        flang = simple_lang.directly_flow_relations()
+        flang = simple_lang.directly_follow_relations()
         double_flang = flang + flang
         self.check_directly_pairs(double_flang, addition_pairs) 
