@@ -2,7 +2,6 @@
 This modules handles creating directly flows pairs from a 
 language.
 """
-
 from tqdm import tqdm
 
 from copy import deepcopy
@@ -12,9 +11,6 @@ from tempfile import TemporaryFile
 from random import randint
 
 from koalas._logging import enable_logging,info,debug
-
-
-
 DIRECTLY_SOURCE = "SOURCE"
 DIRECTLY_END = "END"
 
@@ -235,13 +231,24 @@ class FlowLanguage():
         "Returns all ending directly flow pairs."
         return list(self._ends.values())
 
-    def get(self, target:DirectlyFlowsPair) -> List[DirectlyFlowsPair]:
+    def get(self, target:str) -> List[DirectlyFlowsPair]:
         "Returns all pairs with left as target."
         relations = list()
         for pair in self:
             if (pair.left() == target):
                 relations.append(pair)
         return relations
+
+    def contains(self, pair:DirectlyFlowsPair) -> bool:
+        "Checks if pair is found in this language"
+        return pair in self._relations.keys()
+
+    def find(self, pair:DirectlyFlowsPair) -> DirectlyFlowsPair:
+        "Finds the equivalent pair in this language"
+        if (not self.contains(pair)):
+            raise ValueError("pair not found in language")
+        else:
+            return self._relations[pair].copy()
 
     @enable_logging
     def approx_walks(self, attempts:int=10000) -> List[DirectlyFlowWalk]:
