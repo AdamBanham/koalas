@@ -1,6 +1,9 @@
 # Koalas: A Process Mining Project
 [![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)   [![Testing](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml)
 
+
+Koalas provides data structures for process mining research in a well-organized pythonic style.
+
 # Development
 To install the library as a local copy, such that edits to source will be automatically translated into your intercepter use the following command:
 `py -m pip install -e .[dev]`
