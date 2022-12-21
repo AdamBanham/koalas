@@ -6,10 +6,10 @@ from koalas.discovery.alpha_miner import AlphaRelation,AlphaPair
 from koalas.discovery.alpha_miner import AlphaPlace,AlphaFlowRelation
 from koalas.discovery.alpha_miner import AlphaTransition
 from koalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
-from koalas.dtlog import convert
+from koalas.generate import gen_log
 
 # simple log tests
-LOG = convert( 
+LOG = gen_log( 
             "a b d",
             "a c d",
             "a b",
@@ -59,7 +59,7 @@ MATRIX = {
 }
 
 # following p173 and L5 in Process Mining (2016;2ND ED)
-BOOK_LOG = convert( 
+BOOK_LOG = gen_log( 
     "a b e f",
     "a b e f",
     "a b e c d b f",

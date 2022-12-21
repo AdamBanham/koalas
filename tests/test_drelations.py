@@ -1,14 +1,14 @@
 import unittest
 from logging import DEBUG
 
-from koalas.dtlog import convert
+from koalas.generate import gen_log
 from koalas.directly import DirectlyFollowPair as DFPair, FollowLanguage
 from koalas.directly import DIRECTLY_END,DIRECTLY_SOURCE
 from koalas.simple import EventLog
 
-empty_lang = convert()
+empty_lang = gen_log()
 
-simple_lang = convert(
+simple_lang = gen_log(
     "a b c",
     "a b c",
     "a d c"
@@ -22,7 +22,7 @@ simple_pairs = [
     DFPair("c", DIRECTLY_END, 3),
 ]
 
-many_starts = convert(
+many_starts = gen_log(
     "a e",
     "b e",
     "c e",
@@ -40,7 +40,7 @@ many_starts_pairs = [
     DFPair("e", DIRECTLY_END, 4),
 ]
 
-many_ends = convert(
+many_ends = gen_log(
     "a b",
     "a c",
     "a d",
@@ -58,7 +58,7 @@ many_ends_pairs = [
     DFPair("e", DIRECTLY_END, 1),
 ]
 
-empty_traces_lang = convert(
+empty_traces_lang = gen_log(
     "a b c",
     "a b c",
     "a d c",
