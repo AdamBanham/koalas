@@ -186,6 +186,7 @@ class ComplexEventLog():
         self._start_acts = set([])
         self._end_acts = set([])
         self._traces = None
+        self._map = deepcopy(data)
         info("Computing language...")
         start = time()
         for trace in traces:
@@ -276,6 +277,10 @@ class ComplexEventLog():
     def get_population_size(self) -> int:
         " returns the number of traces instances in this collection."
         return self._pop_size
+    
+    def data(self) -> Mapping[str,object]:
+        " returns a data mapping for this collection, i.e. log-level attributes."
+        return self._map
     
     # data model functions
     def __len__(self) -> int:
