@@ -80,8 +80,8 @@ def find_element(root:Element, find:str, use_namespace:bool) -> List[Element]:
         return [ event for event in root.findall(f"{find}")]
 
 @enable_logging
-def read_xes_complex(filepath:str, sort_attribute:str=XES_TIME,
-                    label_attribute=XES_CONCEPT, sort=True) -> ComplexEventLog:
+def read_xes_complex(filepath:str,
+                    label_attribute=XES_CONCEPT) -> ComplexEventLog:
     """
     Reads an XES formatted event log and creates a simplified event log
     object. Traces from the event log are sorted by the sort_attribute
