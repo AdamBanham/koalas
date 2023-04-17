@@ -194,12 +194,11 @@ class ComplexEventLog():
             strace = trace.simplify()
             if (strace in self._instances):
                 collector = self._instances[strace]
-                if trace not in collector:
-                    self._pop_size += 1
-                    collector.add(trace)
+                self._pop_size += 1
+                collector.append(trace)
             else:
-                self._instances[strace] = set()
-                self._instances[strace].add(trace)
+                self._instances[strace] = list()
+                self._instances[strace].append(trace)
                 self._pop_size += 1
             trace = strace
             if (trace in self._freqset.keys()):
@@ -249,7 +248,7 @@ class ComplexEventLog():
         "Get a simplified stochastic language from this language."
         return self._freqset.copy()
     
-    def get_instances(self) -> Mapping[Trace, Set[ComplexTrace]]:
+    def get_instances(self) -> Mapping[Trace, List[ComplexTrace]]:
         """ 
         Get a map between seen simple traces and instances 
         of complex traces.
@@ -286,8 +285,8 @@ class ComplexEventLog():
     def __len__(self) -> int:
         return self.get_population_size()
     
-    def __iter__(self) -> Iterable[Tuple[Trace,Set[ComplexTrace]]]:
-        for strace, collector in self._instances.items:
+    def __iter__(self) -> Iterable[Tuple[Trace,List[ComplexTrace]]]:
+        for strace, collector in self._instances.items():
             yield deepcopy(strace), deepcopy(collector)
 
 
