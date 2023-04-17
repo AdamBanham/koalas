@@ -224,7 +224,7 @@ class ComplexEventLog():
         activities. Returns a new instance of simple event log.
         """
         simple_traces = []
-        for trace, freq in self._freqset:
+        for trace, freq in self._freqset.items():
             simple_traces = simple_traces + ([ trace ] * freq)
         return EventLog(simple_traces, self.name)
 
