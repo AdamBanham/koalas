@@ -45,9 +45,15 @@ class ComplexEvent():
             return deepcopy(self._map[key])
         else:
             return "UNDEFINED"
+        
+    def _pretty_map(self) -> str:
+        str_map = "{"
+        for key,val in self.data().items():
+            str_map += f" '{key}' : {val},"
+        return str_map[:-1] + "}"
 
     def __str__(self) -> str:
-        label = self.STR_FORMAT.format(act=self._act,map=self._map)
+        label = self.STR_FORMAT.format(act=self._act,map=self._pretty_map())
         return label
 
     def __repr__(self) -> str:
