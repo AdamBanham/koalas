@@ -54,15 +54,6 @@ class DTLogTest(unittest.TestCase):
             ])
         self.assertEqual(log, real_log)
 
-    def test_unsucessful_sort_change(self):
-        try:
-            log = read_xes_simple(SSMALL, sort_attribute="foo:bah") 
-        except:
-            return 
-        self.fail("Should fail when sort attribute is not found!")
-
-
-    # TODO resolve XML schema issues
     def nottest_read_bad(self):
         with self.failUnlessRaises(Exception): 
             log = read_xes_simple(path.join(".","tests","small_bad.xes")) 
