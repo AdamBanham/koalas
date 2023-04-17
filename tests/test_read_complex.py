@@ -71,21 +71,25 @@ class DTLogTest(unittest.TestCase):
                             'A',
                             {
                                 'time:timestamp' : datetime.fromisoformat("2122-01-01T01:00:00.000+10:00"),
-                                'res' : 1
+                                'res' : 0,
+                                'life' : False,
                             }
                         ),
                         ComplexEvent(
                             'B',
                             {
                                 'time:timestamp' : datetime.fromisoformat("2122-01-01T02:00:00.000+10:00"),
-                                'res' : 1
+                                'res' : 1,
+                                'cost:life' : 0.246,
+                                'life' : False,
                             }
                         ),
                         ComplexEvent(
                             'C',
                             {
                                 'time:timestamp' : datetime.fromisoformat("2122-01-01T03:00:00.000+10:00"),
-                                'res' : 1
+                                'res' : 1,
+                                'life' : True
                             }
                         )
                     ],
@@ -94,7 +98,9 @@ class DTLogTest(unittest.TestCase):
             ],
             data= {'concept:name' : 'A simple complex log',
                    'extracted' : datetime.fromisoformat("2122-01-05T01:00:00.000+10:00"),
-                   'exporter:ver' : 1}
+                   'exporter:ver' : 1,
+                   'percent:life' : 0.754,
+                   'life' : True }
         )
         self.maxDiff = None
         self.assertEqual(log.__repr__(), real_log.__repr__())
