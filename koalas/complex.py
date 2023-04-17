@@ -102,7 +102,7 @@ class ComplexTrace():
         """ 
         returns a simplifed representation of this trace without data.
         """
-        return Trace([ s.activty() for s in self])
+        return Trace([ s.activity() for s in self])
     
     # data model functions
     def __str__(self) -> str:
