@@ -16,11 +16,15 @@ from koalas.complex import ComplexEvent, ComplexTrace, ComplexEventLog
 from koalas._logging import debug, info, enable_logging
 from koalas.xes import XES_CONCEPT,XES_TIME,XES_XML_NAMESPACE
 
+from koalas.xes_export import XES_STRING_TAG, XES_TIME_TAG , XES_INT_TAG
+from koalas.xes_export import XES_FLOAT_TAG, XES_BOOLEAN_TAG
 
 class XesType(Enum):
-    STRING = "string"
-    DATE = "date"
-    INT = "int"
+    STRING = XES_STRING_TAG
+    DATE = XES_TIME_TAG
+    INT = XES_INT_TAG
+    FLOAT = XES_FLOAT_TAG
+    BOOLEAN = XES_BOOLEAN_TAG
     UNKNOWN = "NaN"
 
 
@@ -31,6 +35,10 @@ def find_xes_type(tag:str) -> XesType:
         return XesType.DATE
     elif XesType.INT.value in tag: 
         return XesType.INT
+    elif XesType.FLOAT.value in tag:
+        return XesType.FLOAT
+    elif XesType.BOOLEAN.value in tag:
+        return XesType.BOOLEAN
 
     return XesType.UNKNOWN
 
@@ -44,10 +52,19 @@ class XesAttribute:
         if self.type == XesType.STRING:
             return self.value.__str__()
         elif self.type == XesType.DATE:
-            return datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%f%z")
+            return datetime.fromisoformat(self.value)
         elif self.type == XesType.INT:
             return int(self.value.__str__())
-
+        elif self.type == XesType.FLOAT:
+            pass_one = float(self.value.__str__())
+            pass_two = f"{pass_one:.8f}"
+            return float(pass_two)
+        elif self.type == XesType.BOOLEAN:
+            val = str(self.value).lower()
+            if (val == 'true' or val == '1'):
+                return True
+            elif (val == 'false' or val == '0'):
+                return False
         return self.value.__str__()
 
 @dataclass
