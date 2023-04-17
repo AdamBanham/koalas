@@ -289,4 +289,35 @@ class ComplexEventLog():
         for strace, collector in self._instances.items():
             yield deepcopy(strace), deepcopy(collector)
 
+    def __str__(self) -> str:
+        if (self._variants < 1):
+            return "[]"
+
+        _str = "[\n"
+        for strace,complexes in self:
+            for complex in complexes:
+                _str = _str + "\t" + str(complex)+":"+str(complex.data())+",\n"
+        _str = _str[:-2] + "\n]"
+        return _str
+    
+    def __repr__(self) -> str:
+        repr = "ComplexEventLog(\n\t[\n"
+        # add complex traces
+        for _, complexes in self:
+            for complex in complexes:
+                repr = repr + "\t" + complex.__repr__() +",\n"
+        repr = repr +"\t],\n"
+        # add data for event log
+        repr = repr + "\tdata="+self._map.__repr__()+"\n"
+        return repr + ")"
+    
+    def __eq__(self, __o: object) -> bool:
+        if (isinstance(__o, ComplexEventLog)):
+            if (__o.get_nvariants() == self.get_nvariants()):
+                if (__o.get_population_size() == self.get_population_size()):
+                    return self.get_instances() == __o.get_instances()  
+        elif (isinstance(__o, EventLog)):
+            return self.simplify() == __o
+        # fall through
+        return False
 
