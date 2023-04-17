@@ -116,9 +116,14 @@ class ComplexTrace():
             return rep
 
     def __repr__(self) -> str:
-        repr = "ComplexTrace([ComplexEvent('a',{})],{})"
-        # TODO
-        return repr
+        repr = "ComplexTrace(\n\t[\n" 
+        # add events in sequence
+        for ev in self:
+            repr += "\t\t" + ev.__repr__() + ",\n"
+        repr += "\t],\n"
+        # add map
+        repr += "\tdata= "+ self.data().__repr__() +"\n" 
+        return repr + ")"
     
     def __iter__(self) -> Iterable[ComplexEvent]:
         for event in self._sequence:
