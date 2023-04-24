@@ -33,5 +33,5 @@ packages = [
 ]
 
 [project.urls]
-"Homepage" = "TODO"
-"Bug Tracker" = "TODO"
+"Homepage" = "https://github.com/AdamBanham/koalas"
+"Bug Tracker" = "https://github.com/AdamBanham/koalas/issues"
