@@ -1,12 +1,16 @@
 import unittest
+from os import path
 
 from pmkoalas.simple import Trace
 from pmkoalas.complex import ComplexEvent
+from pmkoalas.read import read_xes_simple,read_xes_complex
 
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex,TransitionTreeRoot
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow,TransitionTreePopulationFlow
 from pmkoalas.models.transitiontree import TransitionTreeGuard
+from pmkoalas.models.transitiontree import Offer
+from pmkoalas.models.transitiontree import construct_from_log
 
 # dummy transition tree
 D1_ROOT = TransitionTreeRoot()
@@ -49,8 +53,79 @@ D1_FLOWS = set([
         [ ComplexEvent('c', {'a1': 3, 'a2': 0.25}) ]                             
     ),
 ])
+D1_STRICT = set([ D1_ROOT, D1_VERTS[3], D1_VERTS[4] ])
 D1_VERTS = set(D1_VERTS)
+D1_OFFERS = set([ 
+    Offer(v.sigma_sequence(), set([ f.activity() for f in v.outgoing(D1_FLOWS)]))
+    for v 
+    in D1_VERTS
+])
+D1_CHOICES = set([ 
+    Offer(v.sigma_sequence(), set([ f.activity() for f in v.outgoing(D1_FLOWS)]))
+    for v 
+    in D1_STRICT
+])
 D1_TREE = TransitionTree(D1_VERTS, D1_ROOT, D1_FLOWS)
+D1_ATTRS = set([
+    'a1', 'a2', 'a3'
+])
+
+SSMALL = path.join(".","tests","small_01.xes")
+SSMALL_ROOT = TransitionTreeRoot()
+SSMALL_VERTS = [
+    SSMALL_ROOT,
+    TransitionTreeVertex(2, Trace(['A'])),
+    TransitionTreeVertex(3, Trace(['A','A'])),
+    TransitionTreeVertex(4, Trace(['A','B'])),
+    TransitionTreeVertex(5, Trace(['A','A','A'])),
+    TransitionTreeVertex(6, Trace(['A','B','C'])),
+    TransitionTreeVertex(7, Trace(['A','A','A','B'])),
+    TransitionTreeVertex(8, Trace(['A','B','C','D'])),
+    TransitionTreeVertex(9, Trace(['A','B','C','E'])),
+    TransitionTreeVertex(10, Trace(['A','A','A','B','E'])),
+    TransitionTreeVertex(11, Trace(['A','B','C','D','E'])),
+    TransitionTreeVertex(12, Trace(['A','B','C','D','D'])),
+    TransitionTreeVertex(13, Trace(['A','B','C','E','E'])),
+]
+SSMALL_FLOWS = set([
+    TransitionTreePopulationFlow(SSMALL_ROOT, 'A', SSMALL_VERTS[1], 
+        [ ComplexEvent('A', {}), ] * 5                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[1], 'A', SSMALL_VERTS[2], 
+        [ ComplexEvent('A', {}), ] * 1                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[1], 'B', SSMALL_VERTS[3], 
+        [ ComplexEvent('B', {}), ] * 4                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[2], 'A', SSMALL_VERTS[4], 
+        [ ComplexEvent('A', {}), ] * 1                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[3], 'C', SSMALL_VERTS[5], 
+        [ ComplexEvent('C', {}), ] * 4                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[4], 'B', SSMALL_VERTS[6], 
+        [ ComplexEvent('B', {}), ] * 1                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[5], 'D', SSMALL_VERTS[7], 
+        [ ComplexEvent('D', {}), ] * 3                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[5], 'E', SSMALL_VERTS[8], 
+        [ ComplexEvent('D', {}), ] * 1                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[6], 'E', SSMALL_VERTS[9], 
+        [ ComplexEvent('E', {}), ] * 1                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[7], 'D', SSMALL_VERTS[11], 
+        [ ComplexEvent('D', {}), ] * 1                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[7], 'E', SSMALL_VERTS[10], 
+        [ ComplexEvent('E', {}), ] * 2                             
+    ),
+    TransitionTreePopulationFlow(SSMALL_VERTS[8], 'E', SSMALL_VERTS[12], 
+        [ ComplexEvent('E', {}), ] * 1                             
+    ),
+])
+SSMALL_VERTS = set(SSMALL_VERTS)
 
 class TraceTest(unittest.TestCase):
 
@@ -119,15 +194,14 @@ class TraceTest(unittest.TestCase):
         # test flows
         self.assertEqual(tree.flows(), D1_FLOWS)
         # test strict vertices
-        #TODO 
+        self.assertEqual(tree.strict_vertices(), D1_STRICT) 
         # test offers
-        #TODO
+        self.assertEqual(tree.offers(), D1_OFFERS)
         # test choices
-        #TODO
+        self.assertEqual(tree.choices(), D1_CHOICES)
 
     def test_validate_attributes(self):
-        # TODO
-        pass 
+        self.assertEqual(D1_TREE.attributes(), D1_ATTRS) 
 
     def test_populations(self):
         # TODO
@@ -136,5 +210,25 @@ class TraceTest(unittest.TestCase):
     def test_guards(self):
         # TODO 
         pass 
+
+    def test_simple_log_construction(self):
+        try :
+            tree = construct_from_log(read_xes_simple(SSMALL))
+            self.assertTrue(isinstance(tree, TransitionTree))
+            self.assertEqual(tree.vertices() , SSMALL_VERTS)
+            self.assertEqual(tree.flows() , SSMALL_FLOWS)
+        except Exception as e:
+            self.fail("Failed to construct a transition tree with simple log"+ 
+                      f" :: {e}") 
+
+    def test_complex_log_construction(self):
+        try :
+            tree = construct_from_log(read_xes_complex(SSMALL))
+            self.assertTrue(isinstance(tree, TransitionTree))
+            self.assertEqual(tree.vertices() , SSMALL_VERTS)
+            self.assertEqual(tree.flows() , SSMALL_FLOWS)
+        except Exception as e:
+            self.fail("Failed to construct a transition tree with complex log"+ 
+                      f" :: {e}")  
 
 
