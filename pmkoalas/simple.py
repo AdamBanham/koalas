@@ -3,7 +3,7 @@ This module contains information about the structure of the
 simplified api for process data, being how to represent an event, 
 a trace and an event log.
 """
-
+from __future__ import annotations # required for typing checks
 from typing import Iterable, List, Mapping, Set, Tuple
 from copy import deepcopy
 from time import time
@@ -11,6 +11,12 @@ from time import time
 from pmkoalas._logging import info, debug, enable_logging
 from pmkoalas.directly import DirectlyFollowPair,FollowLanguage
 from pmkoalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
+
+# only evaluate these classes if we are type checking/hinting 
+# prevents cyclic imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pmkoalas.models.transitiontree import TransitionTree
 
 class Trace():
     """
@@ -124,6 +130,11 @@ class EventLog():
     def stochastic_language(self) -> Mapping[Trace,float]:
         "Get a stochastic language from this language"
         return self._freqset.copy()
+    
+    def transition_transition_tree(self) -> 'TransitionTree':
+        "Construct a transition tree for this log."
+        from pmkoalas.models.transitiontree import construct_from_log
+        return construct_from_log(self)
 
     @enable_logging
     def directly_follow_relations(self) -> FollowLanguage:

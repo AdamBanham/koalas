@@ -4,13 +4,19 @@ api for process data, being how to represent an event,
 a trace and an event log in complex form, which considers the
 data perspective.
 """
-
+from __future__ import annotations # required for typing checks
 from typing import Mapping, Iterable, Set, List, Tuple
 from copy import deepcopy
 from time import time
 
 from pmkoalas._logging import info, debug, enable_logging
 from pmkoalas.simple import Trace, EventLog
+
+# only evaluate these classes if we are type checking/hinting 
+# prevents cyclic imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pmkoalas.models.transitiontree import TransitionTree
 
 class ComplexEvent():
     """
@@ -286,6 +292,11 @@ class ComplexEventLog():
     def data(self) -> Mapping[str,object]:
         " returns a data mapping for this collection, i.e. log-level attributes."
         return self._map
+    
+    def transition_transition_tree(self) -> 'TransitionTree':
+        "Construct a transition tree for this log."
+        from pmkoalas.models.transitiontree import construct_from_log
+        return construct_from_log(self)
     
     # data model functions
     def __len__(self) -> int:
