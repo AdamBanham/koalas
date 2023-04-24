@@ -12,8 +12,8 @@ from typing import Set,Tuple,Dict,List,Union
 from enum import Enum
 from copy import deepcopy,copy
 
-from koalas.simple import EventLog
-from koalas.directly import DirectlyFollowPair
+from pmkoalas.simple import EventLog
+from pmkoalas.directly import DirectlyFollowPair
 
 class AlphaRelationType(Enum):
     DF = ">"

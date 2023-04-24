@@ -8,9 +8,9 @@ from typing import Iterable, List, Mapping, Set, Tuple
 from copy import deepcopy
 from time import time
 
-from koalas._logging import info, debug, enable_logging
-from koalas.directly import DirectlyFollowPair,FollowLanguage
-from koalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
+from pmkoalas._logging import info, debug, enable_logging
+from pmkoalas.directly import DirectlyFollowPair,FollowLanguage
+from pmkoalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
 
 class Trace():
     """

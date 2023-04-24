@@ -10,7 +10,7 @@ from typing import Iterable,Dict,List,Set
 from tempfile import TemporaryFile
 from random import randint
 
-from koalas._logging import enable_logging,info,debug
+from pmkoalas._logging import enable_logging,info,debug
 DIRECTLY_SOURCE = "SOURCE"
 DIRECTLY_END = "END"
 
@@ -119,7 +119,7 @@ class DirectlyFollowWalk():
 
     def convert_to_trace(self) -> object:
         "Converts this walk into a simple trace."
-        from koalas.simple import Trace
+        from pmkoalas.simple import Trace
         return Trace([ step.right() for step in self._walk[:-1] ])
 
     def _compute_hash(self):

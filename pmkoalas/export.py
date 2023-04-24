@@ -2,21 +2,21 @@
 This module provides functions to export out languages and different types 
 of event logs constructs to the XES format.
 """
-from koalas import __version__
+from pmkoalas import __version__
 
-from koalas.simple import EventLog
-from koalas.complex import ComplexEventLog
-from koalas._logging import debug,info, enable_logging, get_logger
+from pmkoalas.simple import EventLog
+from pmkoalas.complex import ComplexEventLog
+from pmkoalas._logging import debug,info, enable_logging, get_logger
 
-from koalas.xes_export import XesLogExtension, XesLogClassifier
-from koalas.xes_export import XES_LOG_TAG,XES_LOG_ATTRS
-from koalas.xes_export import XES_EXT_CONCEPT_NAME,XES_EXT_CONCEPT_PREFIX 
-from koalas.xes_export import XES_EXT_CONCEPT_URI
+from pmkoalas.xes_export import XesLogExtension, XesLogClassifier
+from pmkoalas.xes_export import XES_LOG_TAG,XES_LOG_ATTRS
+from pmkoalas.xes_export import XES_EXT_CONCEPT_NAME,XES_EXT_CONCEPT_PREFIX 
+from pmkoalas.xes_export import XES_EXT_CONCEPT_URI
 
-from koalas.xes_export import XesString, XesInt, XesTime, XesFloat, XesBoolean
-from koalas.xes_export import XES_CONCEPT
+from pmkoalas.xes_export import XesString, XesInt, XesTime, XesFloat, XesBoolean
+from pmkoalas.xes_export import XES_CONCEPT
 
-from koalas.xes_export import XesTrace,XesEvent
+from pmkoalas.xes_export import XesTrace,XesEvent
 
 import os 
 import logging

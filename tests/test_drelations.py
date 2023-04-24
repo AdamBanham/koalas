@@ -1,10 +1,10 @@
 import unittest
 from logging import DEBUG
 
-from koalas.dtlog import convert
-from koalas.directly import DirectlyFollowPair as DFPair, FollowLanguage
-from koalas.directly import DIRECTLY_END,DIRECTLY_SOURCE
-from koalas.simple import EventLog
+from pmkoalas.dtlog import convert
+from pmkoalas.directly import DirectlyFollowPair as DFPair, FollowLanguage
+from pmkoalas.directly import DIRECTLY_END,DIRECTLY_SOURCE
+from pmkoalas.simple import EventLog
 
 empty_lang = convert()
 

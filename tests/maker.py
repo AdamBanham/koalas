@@ -1,5 +1,5 @@
 from typing import Iterable
-from koalas.simple import Trace,EventLog
+from pmkoalas.simple import Trace,EventLog
 
 from string import ascii_uppercase as language
 from random import choice, randint
