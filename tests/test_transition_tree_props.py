@@ -1,12 +1,12 @@
 import unittest
 
-from koalas.simple import Trace
-from koalas.complex import ComplexEvent
+from pmkoalas.simple import Trace
+from pmkoalas.complex import ComplexEvent
 
-from koalas.models.transitiontree import TransitionTree
-from koalas.models.transitiontree import TransitionTreeVertex,TransitionTreeRoot
-from koalas.models.transitiontree import TransitionTreeGuardFlow,TransitionTreePopulationFlow
-from koalas.models.transitiontree import TransitionTreeGuard
+from pmkoalas.models.transitiontree import TransitionTree
+from pmkoalas.models.transitiontree import TransitionTreeVertex,TransitionTreeRoot
+from pmkoalas.models.transitiontree import TransitionTreeGuardFlow,TransitionTreePopulationFlow
+from pmkoalas.models.transitiontree import TransitionTreeGuard
 
 # dummy transition tree
 D1_ROOT = TransitionTreeRoot()

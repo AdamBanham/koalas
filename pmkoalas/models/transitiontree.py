@@ -8,8 +8,8 @@ from typing import Set, List, Tuple, Union
 from copy import deepcopy
 from dataclasses import dataclass
 
-from koalas.simple import Trace
-from koalas.complex import ComplexEvent
+from pmkoalas.simple import Trace
+from pmkoalas.complex import ComplexEvent
 
 class TranstionTreeEarlyComplete():
     """
