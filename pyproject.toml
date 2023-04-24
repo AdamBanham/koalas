@@ -3,11 +3,11 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "koalas"
+name = "pmkoalas"
 version = "0.0.1"
 authors = [
-  { name="Example Author", email="author@example.com" },
-  { name="Example Author", email="author@example.com" },
+  { name="Adam Banham", email="adam_banham@hotmail.com" },
+  { name="Adam Burke", email="author@example.com" },
 ]
 description = "A process mining library that focuses on providing pythonic interactions with event logs and languages"
 readme = "README.md"
@@ -29,7 +29,7 @@ dev = [
 
 [tool.setuptools]
 packages = [
-"koalas"
+"pmkoalas"
 ]
 
 [project.urls]
