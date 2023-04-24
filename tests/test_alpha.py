@@ -1,12 +1,12 @@
 import unittest
 from copy import deepcopy
 
-from koalas.discovery.alpha_miner import AlphaMinerInstance
-from koalas.discovery.alpha_miner import AlphaRelation,AlphaPair
-from koalas.discovery.alpha_miner import AlphaPlace,AlphaFlowRelation
-from koalas.discovery.alpha_miner import AlphaTransition
-from koalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
-from koalas.dtlog import convert
+from pmkoalas.discovery.alpha_miner import AlphaMinerInstance
+from pmkoalas.discovery.alpha_miner import AlphaRelation,AlphaPair
+from pmkoalas.discovery.alpha_miner import AlphaPlace,AlphaFlowRelation
+from pmkoalas.discovery.alpha_miner import AlphaTransition
+from pmkoalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
+from pmkoalas.dtlog import convert
 
 # simple log tests
 LOG = convert( 

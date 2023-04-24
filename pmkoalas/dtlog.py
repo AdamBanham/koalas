@@ -2,7 +2,7 @@
 Parses delimited traces into koalas EventLog objects.
 """
 from typing import Iterable
-from koalas.simple import EventLog, Trace
+from pmkoalas.simple import EventLog, Trace
 
 
 DEFAULT_DELIM=" "

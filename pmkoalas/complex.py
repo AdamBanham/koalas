@@ -9,8 +9,8 @@ from typing import Mapping, Iterable, Set, List, Tuple
 from copy import deepcopy
 from time import time
 
-from koalas._logging import info, debug, enable_logging
-from koalas.simple import Trace, EventLog
+from pmkoalas._logging import info, debug, enable_logging
+from pmkoalas.simple import Trace, EventLog
 
 class ComplexEvent():
     """

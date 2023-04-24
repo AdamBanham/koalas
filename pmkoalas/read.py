@@ -11,13 +11,13 @@ from copy import deepcopy
 
 from xml.etree.ElementTree import Element, parse
 
-from koalas.simple import EventLog, Trace
-from koalas.complex import ComplexEvent, ComplexTrace, ComplexEventLog
-from koalas._logging import debug, info, enable_logging
-from koalas.xes import XES_CONCEPT,XES_TIME,XES_XML_NAMESPACE
+from pmkoalas.simple import EventLog, Trace
+from pmkoalas.complex import ComplexEvent, ComplexTrace, ComplexEventLog
+from pmkoalas._logging import debug, info, enable_logging
+from pmkoalas.xes import XES_CONCEPT,XES_TIME,XES_XML_NAMESPACE
 
-from koalas.xes_export import XES_STRING_TAG, XES_TIME_TAG , XES_INT_TAG
-from koalas.xes_export import XES_FLOAT_TAG, XES_BOOLEAN_TAG
+from pmkoalas.xes_export import XES_STRING_TAG, XES_TIME_TAG , XES_INT_TAG
+from pmkoalas.xes_export import XES_FLOAT_TAG, XES_BOOLEAN_TAG
 
 class XesType(Enum):
     STRING = XES_STRING_TAG
