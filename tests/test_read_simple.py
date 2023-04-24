@@ -1,8 +1,8 @@
 import unittest
 from os import path 
 
-from koalas.read import read_xes_simple
-from koalas.simple import EventLog,Trace
+from pmkoalas.read import read_xes_simple
+from pmkoalas.simple import EventLog,Trace
 
 SSMALL = path.join(".","tests","small_01.xes")
 WSMALL = path.join(".","tests","small_02.xes")

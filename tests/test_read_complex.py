@@ -2,9 +2,9 @@ import unittest
 from os import path 
 from datetime import datetime
 
-from koalas.read import read_xes_simple,read_xes_complex
-from koalas.simple import EventLog,Trace
-from koalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
+from pmkoalas.read import read_xes_simple,read_xes_complex
+from pmkoalas.simple import EventLog,Trace
+from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
 
 SSMALL = path.join(".","tests","small_01.xes")
 WSMALL = path.join(".","tests","small_02.xes")

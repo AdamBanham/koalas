@@ -1,6 +1,6 @@
 import unittest
-from koalas.simple import Trace,EventLog
-from koalas.dtlog import convert
+from pmkoalas.simple import Trace,EventLog
+from pmkoalas.dtlog import convert
 
 class TraceTest(unittest.TestCase):
     def test_init(self):

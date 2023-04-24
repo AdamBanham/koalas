@@ -2,8 +2,8 @@ import unittest
 from os import path 
 from tempfile import TemporaryDirectory
 
-from koalas.read import read_xes_simple
-from koalas.export import export_to_xes_simple
+from pmkoalas.read import read_xes_simple
+from pmkoalas.export import export_to_xes_simple
 
 import xmlschema
 

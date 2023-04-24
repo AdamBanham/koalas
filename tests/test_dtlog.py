@@ -1,6 +1,6 @@
 
 import unittest
-from koalas.dtlog import *
+from pmkoalas.dtlog import *
 
 class DTLogTest(unittest.TestCase):
     def test_convert_empty(self):
