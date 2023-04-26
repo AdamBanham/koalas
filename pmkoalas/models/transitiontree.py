@@ -358,6 +358,65 @@ class TransitionTree():
         return out
 
     # utility functions
+    def generate_dot(self, filepath:str) -> None:
+        "Generates a dot file (for graphviz) for the transition tree."
+        # string formats for nodes and arcs
+        FILE_HEADER = """digraph G {
+    rankdir="LR";
+    bgcolor="transparent";
+    forcelabels="true";
+    pack="true";
+    pad="1.0";
+    compound="true";
+    node[fixedsize="true", width="0.75", height="0.75", fontname="serif", fontcolor="white", fillcolor="purple",style="filled",shape="circle", label=""];
+    edge[fontname="serif", fontcolor="black", labelfloat="true", minlen="3", fontsize="12", labeldistance="2.5"];\n\n"""
+        ROOT_VERT = """\t\t{id} [label={html}, shape="doublecircle",];\n"""
+        VERT = """\t\t{id} [label={html}];\n"""
+        FLOW = """\t\t{offer} -> {next} [taillabel="{label}"];\n"""
+        HALT_FLOW = """\t\t{offer} -> {next} [taillabel="&#8855;", color="red"];\n"""
+        FILE_FOOTER = """\n}"""
+        # check if file exists
+        dirname = path.dirname(filepath)
+        if not path.exists(dirname):
+            mkdir(dirname)
+        with open(filepath, "w") as f:
+            # add header
+            f.write(FILE_HEADER)
+            # add root
+            root = self.root()
+            f.write( 
+                ROOT_VERT.format(id=root.id(), html=root.html_label())
+            )
+            # walk from root, adding vertices and flows
+            flows = root.outgoing(self.flows())
+            while len(flows) > 0:
+                verts = [ flow.next() for flow in flows]
+                for v in verts:
+                    f.write( 
+                        VERT.format(id=v.id(), html=v.html_label())
+                    )
+                for flow in flows:
+                    if flow.activity() != TranstionTreeEarlyComplete().activity():
+                        f.write( 
+                            FLOW.format(
+                                offer=flow.offering().id(),
+                                next=flow.next().id(),
+                                label=flow.activity()
+                            )
+                        )
+                    else:
+                        f.write( 
+                            HALT_FLOW.format(
+                                offer=flow.offering().id(),
+                                next=flow.next().id(),
+                            )
+                        )
+                flows = []
+                for v in verts:
+                    flows += v.outgoing(self.flows())
+            # close and write footer
+            f.write(FILE_FOOTER)
+
 
     # comparision functions
 
