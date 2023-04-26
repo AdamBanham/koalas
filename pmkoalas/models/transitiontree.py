@@ -446,7 +446,7 @@ def construct_from_simple_log(log:'EventLog') -> TransitionTree:
                 next = verts[Trace(pseq + [act])]
             else:
                 vid += 1
-                last = len(Trace(pseq + [act])) == len(trace)
+                last = False
                 next = TransitionTreeVertex(
                     vid,
                     Trace(pseq + [act]),
@@ -461,16 +461,45 @@ def construct_from_simple_log(log:'EventLog') -> TransitionTree:
             )
             flows.add(flow)
             pseq.append(act)
+        # add halt offering
+        offering = verts[Trace(pseq)]
+        act = TranstionTreeEarlyComplete().activity()
+        if Trace(pseq + [act]) in verts.keys():
+                next = verts[Trace(pseq + [act])]
+        else:
+            vid += 1
+            last = True
+            next = TransitionTreeVertex(
+                vid,
+                Trace(pseq + [act]),
+                end=last 
+            )
+            verts[Trace(pseq + [act])] = next
+        flow = TransitionTreePopulationFlow( 
+                offering,
+                act,
+                next,
+                [ComplexEvent(act, dict())] * freq
+            )
+        flows.add(flow)
     # handle back
     verts = set([ v for v in verts.values()])
     return TransitionTree(verts, vroot, flows)
 
 def construct_from_complex_log(log:'ComplexEventLog') -> TransitionTree:
     """ Constructs a transition tree using a complex event log. """
+    # intial variables for tree
     vroot = TransitionTreeRoot()
     vid = 1
     verts = dict( [(Trace([]), vroot)])
     flows = set()
+    # helper func to handle concat assignments
+    def map_join(c:dict, n:dict) -> dict:
+        out = dict()
+        out.update(c)
+        out.update(n)
+        return out
+    # finding all vertices and flows
     for trace,instances in log:
         pseq = []
         for id in range(0,len(trace)):
@@ -480,7 +509,7 @@ def construct_from_complex_log(log:'ComplexEventLog') -> TransitionTree:
                 next = verts[Trace(pseq + [act])]
             else:
                 vid += 1
-                last = len(Trace(pseq + [act])) == len(trace)
+                last = False
                 next = TransitionTreeVertex(
                     vid,
                     Trace(pseq + [act]),
@@ -494,7 +523,14 @@ def construct_from_complex_log(log:'ComplexEventLog') -> TransitionTree:
                 list()
             )
             # build population from instances
-            pops = [ i[id] for i in instances ] 
+            assignments = [ 
+                reduce(map_join,([ dict() ] + [ i[k].data() ]))
+                for i
+                in instances
+                for k 
+                in range(0, id-1)
+            ]
+            pops = [ ComplexEvent(act, assign) for assign in assignments ] 
             # check for existing population and update population
             if flow in flows:
                 old_flow = [ f for f in flows if f == flow][0]
@@ -508,6 +544,47 @@ def construct_from_complex_log(log:'ComplexEventLog') -> TransitionTree:
             )
             flows.add(flow)
             pseq.append(act)
+        # add halt offering
+        offering = verts[Trace(pseq)]
+        act = TranstionTreeEarlyComplete().activity()
+        if Trace(pseq + [act]) in verts.keys():
+                next = verts[Trace(pseq + [act])]
+        else:
+            vid += 1
+            last = True
+            next = TransitionTreeVertex(
+                vid,
+                Trace(pseq + [act]),
+                end=last 
+            )
+            verts[Trace(pseq + [act])] = next
+        # build population from instances
+        assignments = [ 
+            reduce(map_join,([ dict() ] + [ i[k].data() ]))
+            for i
+            in instances
+            for k 
+            in range(0, id)
+        ]
+        pops = [ ComplexEvent(act, assign) for assign in assignments ] 
+        # check for existing population and update population
+        flow = TransitionTreePopulationFlow( 
+                offering,
+                act,
+                next,
+                list()
+        )
+        if flow in flows:
+            old_flow = [ f for f in flows if f == flow][0]
+            pops = pops + old_flow.population()
+            flows.remove(flow)
+        flow = TransitionTreePopulationFlow( 
+            offering,
+            act,
+            next,
+            pops
+        )
+        flows.add(flow)
     # handle back
     verts = set([ v for v in verts.values()])
     return TransitionTree(verts, vroot, flows)
