@@ -63,6 +63,11 @@ class TransitionTreeVertex():
                 out.add(f)
         return out
     
+    def html_label(self) -> str:
+        "returns a html like label with suffix."
+        id = self.id().split("_")[-1]
+        return f"<v<sub>{id}</sub>>"
+    
     # data model functions
     def __str__(self) -> str:
         return self.id()
@@ -86,6 +91,10 @@ class TransitionTreeRoot(TransitionTreeVertex):
 
     def is_root(self) -> bool:
         return True
+    
+    def html_label(self) -> str:
+        "returns a html like label with suffix."
+        return "<v<sub>r</sub>>"
 
 class TransitionTreeFlow():
     """
