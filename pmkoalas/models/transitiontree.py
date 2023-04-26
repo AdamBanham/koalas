@@ -7,6 +7,8 @@ This module outlines a data structure for transitions tree as proposed by Hidder
 from typing import Set, List, Tuple, Union
 from copy import deepcopy
 from dataclasses import dataclass
+from functools import reduce
+from os import path,mkdir
 
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.complex import ComplexEvent, ComplexEventLog
