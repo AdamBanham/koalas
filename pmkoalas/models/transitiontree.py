@@ -19,6 +19,9 @@ class TranstionTreeEarlyComplete():
     def __init__(self) -> None:
         pass
 
+    def activity(self) -> str:
+        return "\u2297"
+
 class TransitionTreeVertex():
     """
     Data class for a vertex in a transition tree.
