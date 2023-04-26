@@ -418,8 +418,7 @@ class TransitionTree():
                     flows += v.outgoing(self.flows())
             # close and write footer
             f.write(FILE_FOOTER)
-
-
+            
     # comparision functions
 
 def construct_from_log(log:Union['EventLog','ComplexEventLog']) -> TransitionTree:
