@@ -22,14 +22,10 @@ D1_VERTS = [
     TransitionTreeVertex(3, Trace(['b'])),
     TransitionTreeVertex(4, Trace(['a','c'])),
     TransitionTreeVertex(5, Trace(['b','c'])),
-    TransitionTreeVertex(6, Trace(['a','c','d'])),
-    TransitionTreeVertex(7, Trace(['a','c','e'])),
-    TransitionTreeVertex(8, Trace(['b','c','d'])),
-    TransitionTreeVertex(9, Trace(['b','c','e'])),
-    TransitionTreeVertex(6, Trace(['a','c','d', HALT_ACT]), True),
-    TransitionTreeVertex(7, Trace(['a','c','e', HALT_ACT]), True),
-    TransitionTreeVertex(8, Trace(['b','c','d', HALT_ACT]), True),
-    TransitionTreeVertex(9, Trace(['b','c','e', HALT_ACT]), True),
+    TransitionTreeVertex(6, Trace(['a','c','d']), True),
+    TransitionTreeVertex(7, Trace(['a','c','e']), True),
+    TransitionTreeVertex(8, Trace(['b','c','d']), True),
+    TransitionTreeVertex(9, Trace(['b','c','e']), True),
 ]
 D1_FLOWS = set([
     TransitionTreePopulationFlow(D1_ROOT, 'a', D1_VERTS[1], 
@@ -57,19 +53,6 @@ D1_FLOWS = set([
     ),
     TransitionTreePopulationFlow(D1_VERTS[4], 'e', D1_VERTS[8], 
         [ ComplexEvent('c', {'a1': 3, 'a2': 0.25}) ]                             
-    ),
-
-    TransitionTreePopulationFlow(D1_VERTS[5], HALT_ACT, D1_VERTS[9], 
-        [ ComplexEvent('d', {}) ]                             
-    ),
-    TransitionTreePopulationFlow(D1_VERTS[6], HALT_ACT, D1_VERTS[10], 
-        [ ComplexEvent('e', {}) ]                             
-    ),
-    TransitionTreePopulationFlow(D1_VERTS[7], HALT_ACT, D1_VERTS[11], 
-        [ ComplexEvent('c', {}) ]                             
-    ),
-    TransitionTreePopulationFlow(D1_VERTS[8], HALT_ACT, D1_VERTS[12], 
-        [ ComplexEvent('c', {}) ]                             
     ),
 ])
 D1_STRICT = set([ D1_ROOT, D1_VERTS[3], D1_VERTS[4] ])
@@ -101,14 +84,10 @@ SSMALL_VERTS = [
     TransitionTreeVertex(7, Trace(['A','A','A','B'])),
     TransitionTreeVertex(8, Trace(['A','B','C','D'])),
     TransitionTreeVertex(9, Trace(['A','B','C','E'])),
-    TransitionTreeVertex(10, Trace(['A','A','A','B','E'])),
-    TransitionTreeVertex(11, Trace(['A','B','C','D','E'])),
-    TransitionTreeVertex(12, Trace(['A','B','C','D','D'])),
-    TransitionTreeVertex(13, Trace(['A','B','C','E','E'])),
-    TransitionTreeVertex(14, Trace(['A','A','A','B','E', HALT_ACT])),
-    TransitionTreeVertex(15, Trace(['A','B','C','D','E', HALT_ACT])),
-    TransitionTreeVertex(16, Trace(['A','B','C','D','D', HALT_ACT])),
-    TransitionTreeVertex(17, Trace(['A','B','C','E','E', HALT_ACT])),
+    TransitionTreeVertex(10, Trace(['A','A','A','B','E']), True),
+    TransitionTreeVertex(11, Trace(['A','B','C','D','E']), True),
+    TransitionTreeVertex(12, Trace(['A','B','C','D','D']), True),
+    TransitionTreeVertex(13, Trace(['A','B','C','E','E']), True),
 ]
 SSMALL_FLOWS = set([
     TransitionTreePopulationFlow(SSMALL_ROOT, 'A', SSMALL_VERTS[1], 
@@ -145,19 +124,6 @@ SSMALL_FLOWS = set([
         [ ComplexEvent('E', {}), ] * 2                             
     ),
     TransitionTreePopulationFlow(SSMALL_VERTS[8], 'E', SSMALL_VERTS[12], 
-        [ ComplexEvent('E', {}), ] * 1                             
-    ),
-
-    TransitionTreePopulationFlow(SSMALL_VERTS[9], HALT_ACT, SSMALL_VERTS[13], 
-        [ ComplexEvent('E', {}), ] * 1                             
-    ),
-    TransitionTreePopulationFlow(SSMALL_VERTS[11], HALT_ACT, SSMALL_VERTS[15], 
-        [ ComplexEvent('D', {}), ] * 1                             
-    ),
-    TransitionTreePopulationFlow(SSMALL_VERTS[10], HALT_ACT, SSMALL_VERTS[14], 
-        [ ComplexEvent('E', {}), ] * 2                             
-    ),
-    TransitionTreePopulationFlow(SSMALL_VERTS[12], HALT_ACT, SSMALL_VERTS[16], 
         [ ComplexEvent('E', {}), ] * 1                             
     ),
 ])
