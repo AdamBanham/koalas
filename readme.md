@@ -5,7 +5,7 @@
 `pmkoalas` provides data structures for process mining research in a well-organized pythonic style.
 
 # Development
-To install the library as a local copy, such that edits to source will be automatically translated into your intercepter use the following command:
+To install the library as a local copy, such that edits to source will be automatically translated into your interpreter use the following command:
 `py -m pip install -e .[dev]`
 
 ## Test
