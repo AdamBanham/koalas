@@ -15,5 +15,7 @@ To run tests use the following command
 # Values of the team
 
 ## Postel's law
+
+"Be liberal in what you accept, and conservative in what you send"
+
 [https://en.wikipedia.org/wiki/Jon_Postel](cite)
-Perhaps his most famous legacy is from RFC760, which includes a robustness principle often called Postel's law: "an implementation should be conservative in its sending behavior, and liberal in its receiving behavior" (reworded in RFC 1122 as "Be liberal in what you accept, and conservative in what you send").
