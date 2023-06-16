@@ -5,25 +5,12 @@
 `pmkoalas` provides data structures for process mining research in a well-organized pythonic style.
 
 # Development
-
-## Developing Koalas
-
-Create and activate an environment.
-
-`pip install .`
-
-### Tests
-
-`python -m unittest`
-
-## Developing With Koalas
-
-To install the library as a local copy, such that edits to source will be automatically translated into your interpreter use the following command:
+To install dependencies:
 `py -m pip install -e .[dev]`
 
-### Tests
-To run tests use the following command
-`py -m pip install -e .[dev] && py -m unittest`
+## Test
+To run tests:
+`py -m unittest`
 
 # Values of the team
 
