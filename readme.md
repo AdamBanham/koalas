@@ -6,10 +6,12 @@
 
 # Development
 To install dependencies:
+
 `py -m pip install -e .[dev]`
 
 ## Test
 To run tests:
+
 `py -m unittest`
 
 # Values of the team
