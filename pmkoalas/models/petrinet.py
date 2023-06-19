@@ -80,7 +80,7 @@ class Place:
                else f'({self.name}({self._pid}))'
 
     def __repr__(self):
-        return 'Place:' + str(self)
+        return f'Place({self.name},pid={self.pid})'
 
 
 class Transition:
