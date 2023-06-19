@@ -6,7 +6,6 @@
 # during testing.
 #
 
-import operator
 import xml.etree.ElementTree as ET
 
 ENCODING='unicode'
