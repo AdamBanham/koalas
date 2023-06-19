@@ -56,15 +56,15 @@ class Place:
             self._pid = pid
 
     @property 
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def pid(self):
+    def pid(self) -> str:
         return self._pid
 
     @property
-    def nodeId(self):
+    def nodeId(self) -> str:
         return self._pid
 
     def __eq__(self,other):
