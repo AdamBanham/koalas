@@ -106,27 +106,27 @@ class Transition:
         self._silent = silent
 
     @property 
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def silent(self):
+    def silent(self) -> bool:
         return self._silent
 
     @property
-    def tid(self):
+    def tid(self) -> str:
         return self._tid
 
     @property
-    def nodeId(self):
+    def nodeId(self) -> str:
         return self._tid
 
     @property
-    def weight(self):
+    def weight(self) -> float:
         return self._weight
 
     @weight.setter
-    def weight(self,value):
+    def weight(self,value:float) -> None:
         self._weight = value
 
     def __eq__(self,other):
