@@ -1,15 +1,17 @@
 
-# 
-# Weighted Petri net with place and transition labels.
-# 
-# Allows explicit place or transition ids for simpler comparison, especially
-# during testing.
-#
+''' 
+Weighted Petri net with place and transition labels.
 
+Allows explicit place or transition ids for simpler comparison, especially
+during testing.
+'''
+from collections.abc import Iterable
+from typing import Union
 import xml.etree.ElementTree as ET
 
 ENCODING='unicode'
 
+# Candidate to move to a utility package
 def steq(self,other):
     if type(other) is type(self):
         return self.__dict__ == other.__dict__
@@ -17,77 +19,8 @@ def steq(self,other):
 
 
 
-class LabelledPetriNet:
-    def __init__(self,places,transitions,arcs,label=None):
-        self._places = places
-        self._transitions = transitions
-        self._arcs = arcs
-        self._label = label
 
-    @property 
-    def places(self):
-        return self._places
-
-    @property
-    def transitions(self):
-        return self._transitions
-
-    @property
-    def arcs(self):
-        return self._arcs
-
-    @property
-    def label(self):
-        return self._label
-
-    def __eq__(self,other):
-        if isinstance(other,self.__class__):
-            return self._label  == other._label and \
-                   self._places == other._places and \
-                   self._transitions == other._transitions and \
-                   self._arcs   == self._arcs
-        return False
-
-    def reprcontents(self):
-        return f"places: {self._places} transitions: {self._transitions} arcs: {self._arcs}"
-
-    def __repr__(self):
-        return f"LabelledPetriNet:{self._label} " + self.reprcontents()
-
-    def __str__(self):
-        return "LabelledPetriNet(" + self._label + ")\n" \
-            +  " Places: " + str(self.places) + "\n" \
-            +  " Trans: " + str(self.transitions) + "\n" \
-            +  " Arcs: " + str(self.arcs)
-    
-
-class MutableLabelledPetriNet(LabelledPetriNet):
-    def __init__(self,label=None):
-        super(MutableLabelledPetriNet,self).__init__(set(),set(),set(),label)
-
-    def addPlace(self,place):
-        self._places.add(place)
-
-    def addTransition(self,tran):
-        self._transitions.add(tran)
-
-    def addArc(self,arc):
-        self._arcs.add(arc)
-
-    def addArcForNodes(self,fromNode,toNode):
-        self.addArc(Arc(fromNode,toNode))
-
-    def __repr__(self):
-        return f"MutableLabelledPetriNet:{self._label} " + self.reprcontents()
-
-    def __eq__(self,other):
-        if isinstance(other,LabelledPetriNet):
-            return self._label  == other._label and \
-                   self._places == other._places and \
-                   self._transitions == other._transitions and \
-                   self._arcs   == self._arcs
-        return False
-
+# Candidate to move to a utility package
 def verbosecmp(obj1,obj2):
     if obj1 == obj2:
         return "Same"
@@ -233,6 +166,91 @@ class Arc:
 
     def __repr__(self):
         return 'Arc:' + str(self)
+
+
+
+'''
+Petri net with a label. Create the components first and call the constructor.
+'''
+class LabelledPetriNet:
+    def __init__(self,places:Iterable[Place],transitions:Iterable[Transition],
+                 arcs:Iterable[Arc],label:str=None):
+        self._places = set(places)
+        self._transitions = set(transitions)
+        self._arcs = set(arcs)
+        if label is None:
+            self._label = 'Petri net'
+        else:
+            self._label = label
+
+    @property 
+    def places(self) -> Iterable[Place]:
+        return frozenset(self._places)
+
+    @property
+    def transitions(self) -> Iterable[Transition]:
+        return frozenset(self._transitions)
+
+    @property
+    def arcs(self) -> Iterable[Arc]:
+        return frozenset(self._arcs)
+
+    @property
+    def label(self) -> str:
+        return self._label
+
+    def __eq__(self,other) -> bool:
+        if isinstance(other,self.__class__):
+            return self._label  == other._label and \
+                   self._places == other._places and \
+                   self._transitions == other._transitions and \
+                   self._arcs   == self._arcs
+        return False
+
+    def reprcontents(self) -> str:
+        return f"places: {self._places} transitions: {self._transitions} arcs: {self._arcs}"
+
+    def __repr__(self) -> str:
+        return f"LabelledPetriNet:{self._label} " + self.reprcontents()
+
+    def __str__(self) -> str:
+        return "LabelledPetriNet(" + self._label + ")\n" \
+            +  " Places: " + str(self.places) + "\n" \
+            +  " Trans: " + str(self.transitions) + "\n" \
+            +  " Arcs: " + str(self.arcs)
+    
+
+'''
+Petri net intended to be modified after creation. Eg, create the net then call 
+addPlace(), addTransition, and so on.
+'''
+class MutableLabelledPetriNet(LabelledPetriNet):
+    def __init__(self,label:str=None):
+        super(MutableLabelledPetriNet,self).__init__(set(),set(),set(),label)
+
+    def addPlace(self,place:Place):
+        self._places.add(place)
+
+    def addTransition(self,tran:Transition):
+        self._transitions.add(tran)
+
+    def addArc(self,arc:Arc):
+        self._arcs.add(arc)
+
+    def addArcForNodes(self,fromNode:Union[Place,Transition],
+                             toNode:Union[Place,Transition]):
+        self.addArc(Arc(fromNode,toNode))
+
+    def __repr__(self):
+        return f"MutableLabelledPetriNet:{self._label} " + self.reprcontents()
+
+    def __eq__(self,other):
+        if isinstance(other,LabelledPetriNet):
+            return self._label  == other._label and \
+                   self._places == other._places and \
+                   self._transitions == other._transitions and \
+                   self._arcs   == self._arcs
+        return False
 
 
 

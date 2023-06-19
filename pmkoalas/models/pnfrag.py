@@ -103,18 +103,18 @@ class PetriNetFragmentParser:
         self.labelLookup = {}
         self.idLookup = {}
 
-    def createNet(self,label, netText) -> LabelledPetriNet:
+    def createNet(self,label:str, netText:str) -> LabelledPetriNet:
         net = MutableLabelledPetriNet(label=label)
         self.init()
         self.addToNet(net,netText)
         return net
 
-    def addToNet(self,net,netText):
+    def addToNet(self, net:LabelledPetriNet, netText: str):
         self.tokenize(netText)
         self.net = net
         self.parse()
 
-    def tokenize(self,tstr):
+    def tokenize(self,tstr: str):
         self.tokens = []
         ctstr = tstr.strip()
         while (ctstr != ""):
@@ -139,7 +139,7 @@ class PetriNetFragmentParser:
         if(self.lookahead.tokenInfo != TokenInfo.TERMINAL):
             raise ParseException(f"Unexpected symbol {self.lookahead} found")
 
-    def checkExistingNode(self,label,nodeType):
+    def checkExistingNode(self,label: str, nodeType):
         if not label in self.labelLookup:
             return None
         n = self.labelLookup[label]
@@ -147,7 +147,7 @@ class PetriNetFragmentParser:
             raise ParseException(f"New node {label} duplicates existing node of wrong type")
         return n
 
-    def checkExistingNodeById(self,nid,nodeType):
+    def checkExistingNodeById(self, nid, nodeType):
         if not nid in self.idLookup:
             return None
         n = self.idLookup[nid]
@@ -155,13 +155,13 @@ class PetriNetFragmentParser:
             raise ParseException(f"New node {nid} duplicates existing node of wrong type")
         return n
 
-    def checkExistingPlace(self,label):
+    def checkExistingPlace(self, label: str):
         return self.checkExistingNode(label,Place)
 
     def checkExistingPlaceById(self,pid):
         return self.checkExistingNodeById(pid,Place)
 
-    def checkExistingTransition(self,label):
+    def checkExistingTransition(self,label: str):
         return self.checkExistingNode(label,Transition)
 
     def checkExistingTransitionById(self,tranId):

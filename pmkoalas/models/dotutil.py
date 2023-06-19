@@ -7,7 +7,7 @@ from logging import info
 
 DFENC='utf-8'
 
-def dotToImg(dot,dotf,imgf,outformat,dfenc=DFENC):
+def dotToImg(dot:str,dotf:str,imgf:str,outformat:str,dfenc:str=DFENC):
     with open(dotf,'w',encoding=dfenc) as outf:
         outf.write(dot)
         outf.write('\n')
@@ -17,7 +17,7 @@ def dotToImg(dot,dotf,imgf,outformat,dfenc=DFENC):
     cmdout = subprocess.run(['dot','-T' + outformat,'-o' + tfnamei, tfnamed])
     shutil.copy(tfnamei,imgf)
 
-def exportDOTToImage(vard,oname,dotStr,outformat='png'):
+def exportDOTToImage(vard:str,oname:str,dotStr:str,outformat:str='png'):
     dotf = os.path.join(vard,oname+'.dot')
     imgpnf = os.path.join(vard,oname+'_pn.' + outformat)
     info(f"Generating diagram {oname} ... ")
