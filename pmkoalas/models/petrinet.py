@@ -17,11 +17,13 @@ def steq(self,other):
         return self.__dict__ == other.__dict__
     return False
 
-
-
-
-# Candidate to move to a utility package
 def verbosecmp(obj1,obj2):
+    """
+    This function produces a verbose statement about the given equality of
+    the two objects.
+
+    Returns a string statement about this equality.    
+    """
     if obj1 == obj2:
         return "Same"
     result = ""
