@@ -3,6 +3,7 @@ import string
 import tempfile
 import unittest
 
+from pmkoalas.models.petrinet import Place, Transition, Arc
 from pmkoalas.models.pnfrag import *
 from logging import *
 
@@ -43,6 +44,28 @@ class PetriNetTest(unittest.TestCase):
 
     # Note many tests on the construction and operation of Petri nets are in 
     # test_pnfrag
+
+    def test_repr_place(self):
+        # test that places can be reproduced
+        p = Place("p1")
+        p2 = eval(p.__repr__())
+        self.assertEqual(p, p2, "reproduced places does not match given place.")
+
+    def test_repr_transition(self):
+        # test that transitions can be reproduced
+        t = Transition("t1")
+        t2 = eval(t.__repr__())
+        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        t = Transition("t1", silent=True)
+        t2 = eval(t.__repr__())
+        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        t = Transition("t1", weight=0.5)
+        t2 = eval(t.__repr__())
+        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        t = Transition("t1", weight=0.25,silent=True)
+        t2 = eval(t.__repr__())
+        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+
 
     def test_exportToDOT(self):
         parser = PetriNetFragmentParser()
