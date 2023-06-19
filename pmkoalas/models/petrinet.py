@@ -72,19 +72,19 @@ class Place:
     def nodeId(self) -> str:
         return self._pid
 
-    def __eq__(self,other):
+    def __eq__(self,other) -> bool:
         if type(other) == type(self):
             return self.name == other.name and self.pid == other.pid
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self._name,self._pid))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'({self.name})'  if self._pid is None \
                else f'({self.name}({self._pid}))'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Place("{self.name}",pid="{self.pid}")'
 
 
@@ -129,20 +129,20 @@ class Transition:
     def weight(self,value:float) -> None:
         self._weight = value
 
-    def __eq__(self,other):
+    def __eq__(self,other) -> bool:
         if type(self) == type(other):
             return self.name == other.name and self.tid == other.tid and  \
                    self.weight == other.weight and self._silent == other._silent
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self._name,self._tid,self._weight,self._silent))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'[{self.name} {self.weight}]'  if self._tid is None \
                else f'[{self.name}({self._tid}) {self.weight}]'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Transition("{self.name}",tid="{self.tid}",weight={self.weight},' \
                + f'silent={self.silent})'
 
