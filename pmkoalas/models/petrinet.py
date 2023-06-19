@@ -41,7 +41,12 @@ def verbosecmp(obj1:object,obj2:object) -> str:
 
 
 class Place:
-    def __init__(self,name,pid=None):
+    """
+    This a hashable and identifable place for a petri net.
+    A place has a name and an identifier.
+    """
+
+    def __init__(self,name:str,pid:str=None):
         self._name = name
         self._pid = pid
 
