@@ -8,6 +8,7 @@ during testing.
 from collections.abc import Iterable
 from typing import Union
 import xml.etree.ElementTree as ET
+from uuid import uuid4
 
 ENCODING='unicode'
 
@@ -48,7 +49,11 @@ class Place:
 
     def __init__(self,name:str,pid:str=None):
         self._name = name
-        self._pid = pid
+        # create an identifier.
+        if (pid == None):
+            self._pid = str(uuid4())
+        else:
+            self._pid = pid
 
     @property 
     def name(self):
