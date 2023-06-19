@@ -85,7 +85,7 @@ class Place:
                else f'({self.name}({self._pid}))'
 
     def __repr__(self):
-        return f'Place({self.name},pid={self.pid})'
+        return f'Place("{self.name}",pid="{self.pid}")'
 
 
 class Transition:
@@ -143,7 +143,8 @@ class Transition:
                else f'[{self.name}({self._tid}) {self.weight}]'
 
     def __repr__(self):
-        return 'Transition:' + str(self)
+        return f'Transition("{self.name}",tid="{self.tid}",weight={self.weight},' \
+               + f'silent={self.silent})'
 
 
 SILENT_TRANSITION_DEFAULT_NAME='tau'
