@@ -9,6 +9,7 @@ For an depth understanding or introduction to Petri Nets, see:
     - [Reference B]
     - [Reference C]
 '''
+
 from collections.abc import Iterable
 from typing import Union
 import xml.etree.ElementTree as ET
@@ -88,17 +89,21 @@ class Place:
 
 
 class Transition:
-    def __init__(self,name,tid=None,weight=None,silent=None):
+    """
+    This is hashable and identifable transition for a Petri net.
+    A transition has a name, an identifier, a possible weight and can be silent.
+    """
+
+    def __init__(self,name:str,tid:str=None,weight:float=1.0,silent:bool=False):
         self._name = name
-        self._tid = tid
-        if weight is None:
-            self._weight = 1
+        # create an identifier.
+        if (tid == None):
+            self._tid = str(uuid4())
         else:
-            self._weight = weight
-        if not silent:
-            self._silent = False
-        else:
-            self._silent = True
+            self._tid = tid
+        # add extras
+        self._weight = weight
+        self._silent = silent
 
     @property 
     def name(self):
