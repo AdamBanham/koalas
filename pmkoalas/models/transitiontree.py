@@ -374,11 +374,12 @@ class TransitionTree():
     pack="true";
     pad="1.0";
     compound="true";
-    node[fixedsize="true", width="0.75", height="0.75", fontname="serif", fontcolor="white", fillcolor="purple",style="filled",shape="circle", label=""];
-    edge[fontname="serif", fontcolor="black", labelfloat="true", minlen="3", fontsize="12", labeldistance="2.5"];\n\n"""
-        ROOT_VERT = """\t\t{id} [label={html}, shape="doublecircle",];\n"""
+    node[fixedsize="true", width="0.75", height="0.75", fontname="serif", fontsize="24", fontcolor="white", fillcolor="cadetblue",style="filled",shape="circle", label=""];
+    edge[fontname="serif", fontcolor="black", labelfloat="true", minlen="3", fontsize="24", labeldistance="4"];\n\n"""
+        ROOT_VERT = """\t\t{id} [label={html}, shape="doublecircle", fillcolor="aquamarine4"];\n"""
+        TERM_VERT = """\t\t{id} [label={html}, shape="tripleoctagon", fillcolor="olivedrab4"];\n"""
         VERT = """\t\t{id} [label={html}];\n"""
-        FLOW = """\t\t{offer} -> {next} [taillabel="{label}"];\n"""
+        FLOW = """\t\t{offer} -> {next} [taillabel=<[{label},]>, headlabel=<<font color="darkgrey">f<sub>{id}</sub></font>>];\n"""
         HALT_FLOW = """\t\t{offer} -> {next} [taillabel="&#8855;", color="red"];\n"""
         FILE_FOOTER = """\n}"""
         # check if file exists
