@@ -44,8 +44,6 @@ def verbosecmp(obj1:object,obj2:object) -> str:
                         + f"  {obj1.__dict__[k]} vs\n  {obj2.__dict__[k]}\n"
     return result
 
-
-
 class Place:
     """
     This a hashable and identifable place for a petri net.
@@ -86,7 +84,6 @@ class Place:
 
     def __repr__(self) -> str:
         return f'Place("{self.name}",pid="{self.pid}")'
-
 
 class Transition:
     """
@@ -146,7 +143,6 @@ class Transition:
         return f'Transition("{self.name}",tid="{self.tid}",weight={self.weight},' \
                + f'silent={self.silent})'
 
-
 SILENT_TRANSITION_DEFAULT_NAME='tau'
 def silentTransition(name=None,tid=None,weight=None):
     tn = SILENT_TRANSITION_DEFAULT_NAME
@@ -159,7 +155,6 @@ def silentTransition(name=None,tid=None,weight=None):
     if weight:
         tw = weight
     return Transition(name=tn,weight=tw,tid=ttid,silent=True)
-
 
 class Arc:
     """
@@ -194,21 +189,20 @@ class Arc:
         return f'Arc(fromNode={self.fromNode.__repr__()},' \
                + f'toNode={self.toNode.__repr__()})'
 
-
-
-'''
-Petri net with a label. Create the components first and call the constructor.
-'''
 class LabelledPetriNet:
+    """
+    This is a data structure for a class of Petri Nets.
+    This class consists of places, transitions and direct arcs between them.
+    The class contract implies that places and transitions have labels/names and
+    identifiers.
+    """
+
     def __init__(self,places:Iterable[Place],transitions:Iterable[Transition],
-                 arcs:Iterable[Arc],name:str=None):
+                 arcs:Iterable[Arc],name:str='Petri net'):
         self._places = set(places)
         self._transitions = set(transitions)
         self._arcs = set(arcs)
-        if name is None:
-            self._name = 'Petri net'
-        else:
-            self._name = name
+        self._name = name
 
     @property 
     def places(self) -> Iterable[Place]:
