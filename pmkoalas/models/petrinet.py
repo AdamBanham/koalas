@@ -356,7 +356,7 @@ def exportToPNMLObj(net:LabelledPetriNet) -> ET.Element:
     root = ET.Element('pnml')
     netNode = ET.SubElement(root,'net', 
             attrib={'type':PNML_URL,
-                    'id':net.label} )
+                    'id':net.name} )
     page = ET.SubElement(netNode,'page', id="page1")
     for place in net.places:
         placeNode = ET.SubElement(page,'place', attrib={'id':str(place.pid) } )
