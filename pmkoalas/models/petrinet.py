@@ -207,6 +207,7 @@ class LabelledPetriNet:
         if name is None:
             self._name = 'Petri net'
         else:
+            self._name = name
 
     @property 
     def places(self) -> Iterable[Place]:
