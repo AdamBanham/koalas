@@ -2,6 +2,7 @@
 import string
 import tempfile
 import unittest
+from random import choice
 
 from pmkoalas.models.petrinet import Place, Transition, Arc
 from pmkoalas.models.pnfrag import *
@@ -144,6 +145,30 @@ class PetriNetTest(unittest.TestCase):
         )
         net2 = eval(net.__repr__())
         self.assertEqual(net, net2, "reproduced net does not match given net")
+
+    def test_references_on_net(self):
+        # test that references to containers are not reused
+        places = set( Place(f"p{i}") for i in range(5))
+        transitions = set( Transition(f"t{i}") for i in range(6))
+        arcs = set()
+        net = LabelledPetriNet(places=places, transitions=transitions, arcs=arcs)
+        # check that removing or adding to original or returned does not change anything
+        ## add a place
+        onet = eval(net.__repr__())
+        places.add(Place("p7"))
+        self.assertNotEqual(places, net.places, "reference container is reused on structure.")
+        self.assertEqual(net, onet, "struture has changed.")
+        ## remove transition
+        transitions = [t for t in transitions if not t.name.endswith('5') ]
+        self.assertNotEqual(net.transitions, transitions, "reference container is reused on structure.")
+        self.assertEqual(net, onet, "structure has changed.")
+        ## add a arc
+        p = choice(list(places))
+        t = choice(list(transitions))
+        arc = Arc(p, t)
+        arcs.add(arc)
+        self.assertNotEqual(net.arcs, arcs, "reference container is reused on structure.")
+        self.assertEqual(net, onet, "structure has changed.")
 
     def test_exportToDOT(self):
         parser = PetriNetFragmentParser()
