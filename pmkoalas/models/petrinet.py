@@ -192,10 +192,11 @@ class Arc:
 class LabelledPetriNet:
     """
     This is a data structure for a class of Petri Nets.
-    This class consists of places, transitions and direct arcs between them.
-    The class contract implies that places and transitions have labels/names and
-    identifiers.
-    Each instance of this class, has a name or title for the net.
+    This class consists of places, transitions and directed arcs 
+    between them.
+    The class contract implies that places and transitions have 
+    labels/names and identifiers.Each instance of this class, 
+    has a name or title for the net.
     """
 
     def __init__(self,places:Iterable[Place],transitions:Iterable[Transition],
