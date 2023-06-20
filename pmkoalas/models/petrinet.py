@@ -190,8 +190,9 @@ class Arc:
     def __str__(self) -> str:
         return f'{self.fromNode} -> {self.toNode}' 
 
-    def __repr__(self):
-        return 'Arc:' + str(self)
+    def __repr__(self) -> str:
+        return f'Arc(fromNode={self.fromNode.__repr__()},' \
+               + f'toNode={self.toNode.__repr__()})'
 
 
 

@@ -66,6 +66,25 @@ class PetriNetTest(unittest.TestCase):
         t2 = eval(t.__repr__())
         self.assertEqual(t, t2, "reproduced transition does not match given transition.")
 
+    def test_repr_arc(self):
+        # test that arcs can be reproduced
+        t = Transition("t1")
+        t2 = Transition("t2", weight=1.0, silent=True)
+        p = Place("p1")
+        p2 = Place("p2")
+        # testing
+        arc = Arc(p, t)
+        arc2 = eval(arc.__repr__())
+        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        arc = Arc(t, p2)
+        arc2 = eval(arc.__repr__())
+        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        arc = Arc(p, t2)
+        arc2 = eval(arc.__repr__())
+        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        arc = Arc(t2, p2)
+        arc2 = eval(arc.__repr__())
+        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
 
     def test_exportToDOT(self):
         parser = PetriNetFragmentParser()
