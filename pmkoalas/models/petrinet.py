@@ -230,9 +230,6 @@ class LabelledPetriNet:
                    self._arcs   == self._arcs
         return False
 
-    def reprcontents(self) -> str:
-        return f"places: {self._places} transitions: {self._transitions} arcs: {self._arcs}"
-
     def __repr__(self) -> str:
         repr = "LabelledPetriNet(\n"
         # add places
