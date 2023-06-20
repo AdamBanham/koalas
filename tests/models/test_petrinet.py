@@ -51,6 +51,23 @@ class PetriNetTest(unittest.TestCase):
         p2 = eval(p.__repr__())
         self.assertEqual(p, p2, "reproduced places does not match given place.")
 
+    def test_hash_place(self):
+        # test hashing works
+        p = Place("p1")
+        p2 = Place("z1")
+        try:
+            p.__hash__()
+            p2.__hash__()
+        except Exception as e:
+            self.fail("Failed to compute hashes for places")
+        vp = 1 
+        vp2 = 2
+        mapping = dict()
+        mapping[p] = vp 
+        mapping[p2] = vp2 
+        self.assertEqual(mapping[p], vp, "hashed reference in mapping is incorrect.")
+        self.assertEqual(mapping[p2], vp2, "hashed reference in mapping is incorrect.")       
+
     def test_repr_transition(self):
         # test that transitions can be reproduced
         t = Transition("t1")
