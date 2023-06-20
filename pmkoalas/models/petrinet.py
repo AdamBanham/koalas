@@ -196,14 +196,13 @@ Petri net with a label. Create the components first and call the constructor.
 '''
 class LabelledPetriNet:
     def __init__(self,places:Iterable[Place],transitions:Iterable[Transition],
-                 arcs:Iterable[Arc],label:str=None):
+                 arcs:Iterable[Arc],name:str=None):
         self._places = set(places)
         self._transitions = set(transitions)
         self._arcs = set(arcs)
-        if label is None:
-            self._label = 'Petri net'
+        if name is None:
+            self._name = 'Petri net'
         else:
-            self._label = label
 
     @property 
     def places(self) -> Iterable[Place]:
@@ -219,11 +218,11 @@ class LabelledPetriNet:
 
     @property
     def label(self) -> str:
-        return self._label
+        return self._name
 
     def __eq__(self,other) -> bool:
         if isinstance(other,self.__class__):
-            return self._label  == other._label and \
+            return self._name  == other._name and \
                    self._places == other._places and \
                    self._transitions == other._transitions and \
                    self._arcs   == self._arcs
@@ -233,10 +232,10 @@ class LabelledPetriNet:
         return f"places: {self._places} transitions: {self._transitions} arcs: {self._arcs}"
 
     def __repr__(self) -> str:
-        return f"LabelledPetriNet:{self._label} " + self.reprcontents()
+        return f"LabelledPetriNet:{self._name} " + self.reprcontents()
 
     def __str__(self) -> str:
-        return "LabelledPetriNet(" + self._label + ")\n" \
+        return "LabelledPetriNet(" + self._name + ")\n" \
             +  " Places: " + str(self.places) + "\n" \
             +  " Trans: " + str(self.transitions) + "\n" \
             +  " Arcs: " + str(self.arcs)
@@ -264,11 +263,11 @@ class MutableLabelledPetriNet(LabelledPetriNet):
         self.addArc(Arc(fromNode,toNode))
 
     def __repr__(self):
-        return f"MutableLabelledPetriNet:{self._label} " + self.reprcontents()
+        return f"MutableLabelledPetriNet:{self._name} " + self.reprcontents()
 
     def __eq__(self,other):
         if isinstance(other,LabelledPetriNet):
-            return self._label  == other._label and \
+            return self._name  == other._name and \
                    self._places == other._places and \
                    self._transitions == other._transitions and \
                    self._arcs   == self._arcs
