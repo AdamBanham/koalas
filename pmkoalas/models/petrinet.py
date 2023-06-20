@@ -162,28 +162,32 @@ def silentTransition(name=None,tid=None,weight=None):
 
 
 class Arc:
-    def __init__(self,fromNode,toNode):
+    """
+    This is directed arc, which has no name or idenfitier, for Petri net.
+    """
+
+    def __init__(self,fromNode:Union[Place,Transition],toNode:Union[Place,Transition]):
         self._fromNode = fromNode
         self._toNode = toNode
 
     @property
-    def fromNode(self):
+    def fromNode(self) -> Union[Place,Transition]:
         return self._fromNode
 
     @property
-    def toNode(self):
+    def toNode(self) -> Union[Place,Transition]:
         return self._toNode
 
-    def __eq__(self,other):
+    def __eq__(self,other) -> bool:
         if type(other) is type(self):
             return self.fromNode == other.fromNode and \
                     self.toNode  == other.toNode
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self._fromNode,self._toNode))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.fromNode} -> {self.toNode}' 
 
     def __repr__(self):
