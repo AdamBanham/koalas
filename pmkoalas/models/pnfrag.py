@@ -104,7 +104,7 @@ class PetriNetFragmentParser:
         self.idLookup = {}
 
     def createNet(self,label:str, netText:str) -> LabelledPetriNet:
-        net = MutableLabelledPetriNet(label=label)
+        net = BuildablePetriNet(label=label)
         self.init()
         self.addToNet(net,netText)
         return net
@@ -173,8 +173,8 @@ class PetriNetFragmentParser:
         transition = self.transition()
         self.edge()
         p2 = self.placeLedSubnet()
-        self.readdArc(p1, transition)
-        self.readdArc(transition, p2)
+        self.readd_arc(p1, transition)
+        self.readd_arc(transition, p2)
 
     def place(self):
         label = self.lookahead.tokenStr
@@ -193,7 +193,7 @@ class PetriNetFragmentParser:
             if not pid:
                 pid = self.nextId()
             place = Place(label,pid=pid)
-            self.net.addPlace(place)
+            self.net.add_place(place)
             self.labelLookup[label] = place
         return place;
 
@@ -252,7 +252,7 @@ class PetriNetFragmentParser:
                 transition = Transition(label,tid=self.nextId(),
                                         silent=silentTran)
                 self.labelLookup[label] = transition
-            self.net.addTransition(transition)
+            self.net.add_transition(transition)
         return transition
 
     def weightedValueTransition(self):
@@ -296,7 +296,7 @@ class PetriNetFragmentParser:
                 transition = Transition(label,tid=self.nextId(),
                                          silent=silentTran, weight=weight)
                 self.labelLookup[label] = transition
-            self.net.addTransition(transition)
+            self.net.add_transition(transition)
         return transition
 
 
@@ -310,8 +310,8 @@ class PetriNetFragmentParser:
             tran = self.transition()
             self.edge()
             tail = self.placeLedSubnet()
-            self.readdArc(head,tran)
-            self.readdArc(tran,tail)
+            self.readd_arc(head,tran)
+            self.readd_arc(tran,tail)
         return head
 
     def id(self):
@@ -333,8 +333,8 @@ class PetriNetFragmentParser:
         else:
             self.lookahead = self.tokens[0]
 
-    def readdArc(self,fromNode,toNode):
-        self.net.addArcForNodes(fromNode,toNode)
+    def readd_arc(self,fromNode,toNode):
+        self.net.add_arc_between(fromNode,toNode)
 
     def nextId(self,newfloor=None):
         if newfloor:

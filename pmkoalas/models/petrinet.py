@@ -259,30 +259,67 @@ class LabelledPetriNet:
             +  " Trans: " + str(self.transitions) + "\n" \
             +  " Arcs: " + str(self.arcs)
     
+class BuildablePetriNet(LabelledPetriNet):
+    """
+    This class allows for the builder design pattern to be used
+    for constructing a petri net. It allows for users to quickly
+    add places, transitions and arcs through a single chain of
+    method calls. See usage below.
 
-'''
-Petri net intended to be modified after creation. Eg, create the net then call 
-addPlace(), addTransition, and so on.
-'''
-class MutableLabelledPetriNet(LabelledPetriNet):
+    Usage
+    -----
+    ```
+    # setup elements
+    buildable = BuildablePetriNet("dupe_tran_with_id")
+    initialPlace = Place("I",1)
+    ta1 = Transition("a",1)
+    ta2 = Transition("a",2)
+    tb = Transition("b",3)
+    finalPlace = Place("F",2)
+    # build net
+    buildable.add_place(initialPlace) \\
+        .add_transition(ta1) \\
+        .add_transition(ta2) \\
+        .add_transition(tb) \\
+        .add_place(finalPlace) \\
+        .add_arc_between(initialPlace, ta1) \\
+        .add_arc_between(ta1,finalPlace) \\
+        .add_arc_between(initialPlace, ta2) \\
+        .add_arc_between(ta2,finalPlace) \\
+        .add_arc_between(initialPlace, tb) \\
+        .add_arc_between(tb,finalPlace) 
+    # get a state of build
+    net = buildable.create_net()
+    ```
+    """
     def __init__(self,label:str=None):
-        super(MutableLabelledPetriNet,self).__init__(set(),set(),set(),label)
+        super(BuildablePetriNet,self).__init__(set(),set(),set(),label)
 
-    def addPlace(self,place:Place):
+    def add_place(self,place:Place) -> 'BuildablePetriNet':
+        "Adds a place to the net."
         self._places.add(place)
+        return self
 
-    def addTransition(self,tran:Transition):
+    def add_transition(self,tran:Transition) -> 'BuildablePetriNet':
+        "Adds a tranistion to the net."
         self._transitions.add(tran)
+        return self
 
-    def addArc(self,arc:Arc):
+    def add_arc(self,arc:Arc)-> 'BuildablePetriNet':
+        "Adds an arc to the net."
         self._arcs.add(arc)
+        return self
 
-    def addArcForNodes(self,fromNode:Union[Place,Transition],
-                             toNode:Union[Place,Transition]):
-        self.addArc(Arc(fromNode,toNode))
+    def add_arc_between(self,fromNode:Union[Place,Transition],
+                             toNode:Union[Place,Transition]
+                        ) -> 'BuildablePetriNet' :
+        "Constructs an arc between the given nodes and adds it to the net."
+        self.add_arc(Arc(fromNode,toNode))
+        return self
 
-    def __repr__(self):
-        return f"MutableLabelledPetriNet:{self._name} " + self.reprcontents()
+    def create_net(self) -> LabelledPetriNet:
+        "Returns a Petri net of the current built state"
+        return eval(self.__repr__())
 
     def __eq__(self,other):
         if isinstance(other,LabelledPetriNet):
