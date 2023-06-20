@@ -23,7 +23,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                      transitions = set([tranA]),
                                      arcs = set([Arc(initialI,tranA),
                                                  Arc(tranA,final)]),
-                                     label = 'test' )
+                                     name = 'test' )
         result = self.parser.createNet("test","I -> [a] -> F")
         self.assertEqual( expected, result )
 
@@ -106,7 +106,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                      transitions = set([tranA]),
                                      arcs = set([Arc(initialI,tranA),
                                                  Arc(tranA,final)]),
-                                     label = "weighted_transition" )
+                                     name = "weighted_transition" )
         net = self.parser.createNet("weighted_transition","I -> {a 0.4} -> F")
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
@@ -117,7 +117,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                      transitions = set([tranA]),
                                      arcs = set([Arc(initialI,tranA),
                                                  Arc(tranA,final)]),
-                                     label = "weighted_transition_with_id" )
+                                     name = "weighted_transition_with_id" )
         net = self.parser.createNet("weighted_transition_with_id",
                                     "I -> {a__1 0.4} -> F")
         self.assertEqual( expected, net, verbosecmp(expected,net))
@@ -133,7 +133,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                                  Arc(tranA1,final),
                                                  Arc(initialI,tranA2),
                                                  Arc(tranA2,final)]),
-                                     label = "weighted_transition_with_dupes" )
+                                     name = "weighted_transition_with_dupes" )
         net = self.parser.createNet("weighted_transition_with_dupes",
                                     "I -> {a__1 0.4} -> F")
         self.parser.addToNet(net,   "I -> {a__2 0.5} -> F")
@@ -154,7 +154,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                                  Arc(tranA2,p1),
                                                  Arc(p1,tranB),
                                                  Arc(tranB,final)]),
-                                     label = "id_backrefs" )
+                                     name = "id_backrefs" )
         net = self.parser.createNet("id_backrefs",
                                     "I -> {a__1} -> F")
         self.parser.addToNet(net,   "I -> {a__2} -> F")
@@ -176,7 +176,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                                  Arc(tranA2,p1),
                                                  Arc(p1,tranB),
                                                  Arc(tranB,final)]),
-                                     label = "id_backrefs_weighted" )
+                                     name = "id_backrefs_weighted" )
         net = self.parser.createNet("id_backrefs_weighted",
                                     "I -> {a__1 0.4} -> F")
         self.parser.addToNet(net,   "I -> {a__2 0.5} -> F")
@@ -190,7 +190,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                      transitions = set([tranA]),
                                      arcs = set([Arc(initialI,tranA),
                                                  Arc(tranA,final)]),
-                                     label = "weighted_transition_above_ten" )
+                                     name = "weighted_transition_above_ten" )
         net = self.parser.createNet("weighted_transition_above_ten",
                                     "I -> {a 10.4} -> F")
         self.assertEqual( expected, net, verbosecmp(expected,net))
@@ -203,7 +203,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                     transitions = set([tranA]),
                     arcs = set([Arc(initialI,tranA),
                                 Arc(tranA,final)]),
-                    label = "weighted_transition_default_weight" )
+                    name = "weighted_transition_default_weight" )
         net = self.parser.createNet("weighted_transition_default_weight",
                                     "I -> {a} -> F")
         self.assertEqual( expected, net, verbosecmp(expected,net))
