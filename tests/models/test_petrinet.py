@@ -86,6 +86,31 @@ class PetriNetTest(unittest.TestCase):
         arc2 = eval(arc.__repr__())
         self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
 
+    def test_repr_net(self):
+        # test that nets can be reproduced
+        net = LabelledPetriNet(
+          places=[
+            Place("p1",pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8"),
+            Place("p2",pid="1da99779-a974-40b3-9573-bf34ab4c43cc"),
+          ],
+          transitions=[
+            Transition("t1",tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
+                       weight=1.0,silent=False),
+          ],
+          arcs=[
+            Arc(fromNode=Place("p1",pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8"),
+                toNode=Transition("t1",tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
+                                  weight=1.0,silent=False)
+            ),
+            Arc(fromNode=Transition("t1",tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
+                                    weight=1.0,silent=False),
+                toNode=Place("p1",pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8")),
+          ],
+          name='Petri net'
+        )
+        net2 = eval(net.__repr__())
+        self.assertEqual(net, net2, "reproduced net does not match given net")
+
     def test_exportToDOT(self):
         parser = PetriNetFragmentParser()
         net1 = parser.createNet("dotTest","I -> {tau 2.0} -> Sweep")

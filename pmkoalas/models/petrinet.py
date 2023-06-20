@@ -11,7 +11,7 @@ For an depth understanding or introduction to Petri Nets, see:
 '''
 
 from collections.abc import Iterable
-from typing import Union
+from typing import Union,FrozenSet
 import xml.etree.ElementTree as ET
 from uuid import uuid4
 
@@ -195,6 +195,7 @@ class LabelledPetriNet:
     This class consists of places, transitions and direct arcs between them.
     The class contract implies that places and transitions have labels/names and
     identifiers.
+    Each instance of this class, has a name or title for the net.
     """
 
     def __init__(self,places:Iterable[Place],transitions:Iterable[Transition],
@@ -205,19 +206,19 @@ class LabelledPetriNet:
         self._name = name
 
     @property 
-    def places(self) -> Iterable[Place]:
+    def places(self) -> FrozenSet[Place]:
         return frozenset(self._places)
 
     @property
-    def transitions(self) -> Iterable[Transition]:
+    def transitions(self) -> FrozenSet[Transition]:
         return frozenset(self._transitions)
 
     @property
-    def arcs(self) -> Iterable[Arc]:
+    def arcs(self) -> FrozenSet[Arc]:
         return frozenset(self._arcs)
 
     @property
-    def label(self) -> str:
+    def name(self) -> str:
         return self._name
 
     def __eq__(self,other) -> bool:
@@ -232,7 +233,27 @@ class LabelledPetriNet:
         return f"places: {self._places} transitions: {self._transitions} arcs: {self._arcs}"
 
     def __repr__(self) -> str:
-        return f"LabelledPetriNet:{self._name} " + self.reprcontents()
+        repr = "LabelledPetriNet(\n"
+        # add places
+        repr += "\tplaces=[\n"
+        for p in self.places:
+            repr += f"\t\t{p.__repr__()},\n"
+        repr += "\t],\n"
+        # add transitions
+        repr += "\ttransitions=[\n"
+        for t in self.transitions:
+            repr += f"\t\t{t.__repr__()},\n"
+        repr += "\t],\n"
+        # add arcs
+        repr += "\tarcs=[\n"
+        for a in self.arcs:
+            repr += f"\t\t{a.__repr__()},\n"
+        repr += "\t],\n"
+        # add name
+        repr += f"\tname='{self.name}'\n"
+        #close param
+        repr += ")"
+        return repr
 
     def __str__(self) -> str:
         return "LabelledPetriNet(" + self._name + ")\n" \
