@@ -413,5 +413,27 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.parser.addToNet(net, "I -> [b] -> F__5")
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
+    def test_parse_net_fragments_function(self):
+        tranA = Transition("a",2)
+        final = Place("F",3)
+        expected = LabelledPetriNet( places = set([initialI,final]),
+                                     transitions = set([tranA]),
+                                     arcs = set([Arc(initialI,tranA),
+                                                 Arc(tranA,final)]),
+                                     name = 'test' )
+        result = parseNetFragments("test","I -> [a] -> F")
+        self.assertEqual( expected, result )
+
+    def test_create_net_function(self):
+        tranA = Transition("a",2)
+        final = Place("F",3)
+        expected = LabelledPetriNet( places = set([initialI,final]),
+                                     transitions = set([tranA]),
+                                     arcs = set([Arc(initialI,tranA),
+                                                 Arc(tranA,final)]),
+                                     name = 'test' )
+        result = createNet("test","I -> [a] -> F")
+        self.assertEqual( expected, result )
+
 
 
