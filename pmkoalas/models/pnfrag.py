@@ -91,8 +91,8 @@ class Token:
 class ParseException(Exception):
     pass
 
-def createNet(label, netText) -> LabelledPetriNet:
-    PetriNetFragmentParser().createNet(label,netText)
+def createNet(net_title, netText) -> LabelledPetriNet:
+    PetriNetFragmentParser().createNet(net_title,netText)
 
 
 class PetriNetFragmentParser:
@@ -105,8 +105,8 @@ class PetriNetFragmentParser:
         self.labelLookup = {}
         self.idLookup = {}
 
-    def createNet(self,label:str, netText:str) -> LabelledPetriNet:
-        net = BuildablePetriNet(label=label)
+    def createNet(self,net_title:str, netText:str) -> LabelledPetriNet:
+        net = BuildablePetriNet(label=net_title)
         self.init()
         self.addToNet(net,netText)
         return net
