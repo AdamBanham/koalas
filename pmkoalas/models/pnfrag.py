@@ -10,8 +10,21 @@ Weighted transitions without weights, as in {b}, are defaulted to weight 1.0.
 
 Nodes with duplicate labels can be specified using a [tranLabel__id] syntax. 
 
-Current limitations: SPN support is only weighted transitions. No time 
-distributions or weighted arcs.
+Example uses::
+    net1 = pnfrag.createNet()
+    net2 = pnfrag.parseNetFragments("tester_net",
+                "I -> [A] -> p1 -> [tau] -> F",
+                "I -> [A] -> p1 -> [B] -> p2 -> [E] -> p3 -> [G] -> F",
+                "I -> [A] -> p1 -> [C] -> p2 -> [E] -> p3 -> [H] -> F",
+                "I -> [A] -> p1 -> [D] -> p2 -> [E] -> p3 -> [K] -> F")
+    parser = pnfrag.PetriNetFragmentParser()
+    net3 = parser.createNet()
+    parser.addToNet(net3, "I -> {a__1 3} -> F")
+ 
+
+Weighted transitions, allowing support of Stochastic Labelled Petri Nets. 
+
+Current limitations: No time distributions or weighted arcs.
 
  
 Grammar
@@ -43,7 +56,7 @@ LABEL             	:: alphanumeric string
 
 This is adapted from PetriNetFragmentParser.java in the prom-helpers library.
 
-See: 
+See also: 
     - https://github.com/adamburkegh/prom-helpers
     - https://adamburkeware.net/2021/05/20/petri-net-fragments.html
 
