@@ -329,16 +329,18 @@ class BuildablePetriNet(LabelledPetriNet):
                    self._arcs   == self._arcs
         return False
 
-
-
 class PetriNetDOTFormatter:
-    def __init__(self,pn,font='SimSun'):
+    """
+    This class creates a dot (graphviz) structure for displaying. Used as internal
+    machinery for exporting to a dot file.
+    """
+    def __init__(self,pn:LabelledPetriNet,font:str='SimSun'):
         self._pn = pn
         self._font = font
         self._nodemap = {}
         self._defaultHeight = 0.2
 
-    def tranDOT(self,tran,ti):
+    def transform_transition(self,tran,ti) -> str:
         fstr = 'n{} [shape="box",margin="0, 0.1",label="{} {}",style="filled"];\n'
         tl = tran.name if tran.name and tran.name != 'tau' else '&tau;'
         fstr = f'n{str(ti)} [shape="box",margin="0, 0.1",'
@@ -348,16 +350,16 @@ class PetriNetDOTFormatter:
         fstr += '];\n'
         return fstr
 
-    def placeDOT(self,place,pi):
+    def transform_place(self,place,pi) -> str:
         fstr = '{} [shape="circle",label="{}"];\n'
         return fstr.format('n' + str(pi),place.name)
 
-    def arcDOT(self,arc):
+    def transform_arc(self,arc) -> str:
         fromNode = self._nodemap[arc.fromNode]
         toNode = self._nodemap[arc.toNode]
         return f'n{fromNode}->n{toNode}\n'
 
-    def netToDOT(self):
+    def transform_net(self) -> str:
         dotstr = ""
         dotstr += 'digraph G{\n'
         dotstr += f'ranksep=".3"; fontsize="14"; remincross=true; margin="0.0,0.0"; fontname="{self._font}";rankdir="LR";charset=utf8;\n'
@@ -369,13 +371,13 @@ class PetriNetDOTFormatter:
         for pl in self._pn.places:
             ni += 1
             self._nodemap[pl] = ni
-            dotstr += self.placeDOT(pl,ni)
+            dotstr += self.transform_place(pl,ni)
         for tr in self._pn.transitions:
             ni += 1
             self._nodemap[tr] = ni
-            dotstr += self.tranDOT(tr,ni)
+            dotstr += self.transform_transition(tr,ni)
         for ar in self._pn.arcs:
-            dotstr += self.arcDOT(ar)
+            dotstr += self.transform_arc(ar)
         dotstr += '}\n'
         return dotstr
 
