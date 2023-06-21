@@ -378,9 +378,7 @@ class PetriNetFragmentParser:
     def readd_arc(self,fromNode,toNode):
         self.net.add_arc_between(fromNode,toNode)
 
-    def nextId(self,newfloor=None):
-        if newfloor:
-            self.ctid = max(newfloor,ctid)
+    def nextId(self):
         self.ctid += 1
         return self.ctid
 
