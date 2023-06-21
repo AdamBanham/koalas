@@ -174,7 +174,7 @@ class PetriNetTest(unittest.TestCase):
         parser = PetriNetFragmentParser()
         net1 = parser.createNet("dotTest","I -> {tau 2.0} -> Sweep")
         parser.addToNet(net1,"I -> {tau 2.0} -> Student")
-        dotStr = exportToDOT(net1)
+        dotStr = convert_net_to_dot(net1)
         # Not a rigorous check, just a way to check it doesn't throw exceptions
         # by plugging manually into DOT
         debug(dotStr)
@@ -192,12 +192,12 @@ class PetriNetTest(unittest.TestCase):
         parser = PetriNetFragmentParser()
         net1 = parser.createNet("dotTest","I -> {tau 2.0} -> Sweep")
         parser.addToNet(net1,"I -> {tau 2.0} -> Student")
-        xmlStr = exportToPNMLStr(net1)
+        xmlStr = convert_net_to_xmlstr(net1)
         debug('=================\n')
         debug(f"\n{xmlStr}\n")
         with tempfile.NamedTemporaryFile(delete=True) as outfile:
             debug(outfile.name)
-            exportToPNML( net1, outfile ) 
+            export_net_to_pnml( net1, outfile ) 
         # can't guarantee output order
         self.assertCharactersEqual(expectedXML,xmlStr)
 

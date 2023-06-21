@@ -381,15 +381,17 @@ class PetriNetDOTFormatter:
         dotstr += '}\n'
         return dotstr
 
-
-def exportToDOT(net:LabelledPetriNet) -> str:
-    return PetriNetDOTFormatter(net).netToDOT()
-
-
+def convert_net_to_dot(net:LabelledPetriNet) -> str:
+    return PetriNetDOTFormatter(net).transform_net()
 
 PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel',
+def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element: 
+    """
+    Converts a given Petri net to an XML structure that conforms with the pnml
+    schema.
 
-def exportToPNMLObj(net:LabelledPetriNet) -> ET.Element: 
+    See: http://www.pnml.org/version-2009/grammar/pnmlcoremodel.rng
+    """
     root = ET.Element('pnml')
     netNode = ET.SubElement(root,'net', 
             attrib={'type':PNML_URL,
@@ -425,13 +427,23 @@ def exportToPNMLObj(net:LabelledPetriNet) -> ET.Element:
     return root
 
 
-def exportToPNMLStr(net:LabelledPetriNet) -> ET.Element: 
-    xml = exportToPNMLObj(net)  
+def convert_net_to_xmlstr(net:LabelledPetriNet) -> str: 
+    """
+    Converts a given Petri net, to an XML structure, and then returns a string
+    representation of the indented XML tree.
+    """
+    xml = convert_net_to_xml(net)  
     ET.indent( xml ) 
     return ET.tostring(xml,encoding=ENCODING)
 
-def exportToPNML(net:LabelledPetriNet,fname:str): 
-    xml =  exportToPNMLObj(net)  
+def export_net_to_pnml(net:LabelledPetriNet,fname:str) -> None: 
+    """
+    Converts a given Petri net, to an XML structure conforming to the pnml schema 
+    , then writes out the XML to a given file location (fname).
+
+    No checking of file location is done for you.
+    """
+    xml =  convert_net_to_xml(net)  
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
 
