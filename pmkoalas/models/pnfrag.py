@@ -92,7 +92,47 @@ class ParseException(Exception):
     pass
 
 def createNet(net_title, netText) -> LabelledPetriNet:
-    PetriNetFragmentParser().createNet(net_title,netText)
+    return PetriNetFragmentParser().createNet(net_title,netText)
+
+def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
+    """
+    Given a set of fragments following the gammar mentioned below, this function
+    returns a Petri net that contains all the fragments.
+
+    Grammar
+    ------
+    PETRI_ONELINE_NET       :: PLACE EDGE TRANSITION EDGE PLACE_LED_SUBNET\n
+    PLACE_LED_SUBNET  	    :: PLACE EDGE TRANSITION EDGE PLACE_LED_SUBNET\n
+    PLACE_LED_SUBNET  	    :: PLACE \n
+    TRANSITION_SUBNET 	    :: TRANSITION EDGE PLACE EDGE TRANSITION_SUBNET\n
+    TRANSITION_SUBNET 	    :: TRANSITION \n
+    TRANSITION        	    :: SIMPLE_TRANSITION || WEIGHTED_TRANSITION\n
+    SIMPLE_TRANSITION 	    :: TRAN_START TRAN_LABEL TRAN_END\n
+    WEIGHTED_TRANSITION     :: WEIGHTED_TRAN_VALUE | WEIGHTED_TRAN_DEFAULT\n
+    WEIGHTED_TRAN_VALUE     :: '{' TRAN_LABEL WEIGHT '}'\n
+    WEIGHTED_TRAN_DEFAULT   :: '{' TRAN_LABEL '}'\n
+    TRAN_LABEL		        :: TLABEL || T_ID_LABEL\n
+    T_ID_LABEL		        :: TLABEL ID_PREFIX ID\n
+    TLABEL			        :: LABEL || SILENT_LABEL\n
+    PLACE             	    :: LABEL || P_ID_LABEL\n
+    P_ID_LABEL              :: LABEL ID_PREFIX ID\n
+    EDGE              	    :: '->'\n
+    SIMPLE_TRAN_START	    :: '['\n
+    SIMPLE_TRAN_END		    :: ']' \n
+    ID_PREFIX		        :: '__'\n
+    WEIGHT		 	        :: NUM_STR\n
+    ID             		    :: NUM_STR\n
+    NUM_STR			        :: numeric string\n
+    SILENT_LABEL            :: 'tau'\n
+    LABEL             	    :: alphanumeric string
+    """
+    
+    parser = PetriNetFragmentParser()
+    if (len(fragments) > 0):
+        net = parser.createNet(net_title, fragments[0])
+        for frag in fragments[1:]:
+            parser.addToNet(net, frag)
+    return net.create_net()
 
 
 class PetriNetFragmentParser:
