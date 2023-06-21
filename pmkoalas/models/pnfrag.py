@@ -43,7 +43,9 @@ LABEL             	:: alphanumeric string
 
 This is adapted from PetriNetFragmentParser.java in the prom-helpers library.
 
-https://github.com/adamburkegh/prom-helpers
+See: 
+    - https://github.com/adamburkegh/prom-helpers
+    - https://adamburkeware.net/2021/05/20/petri-net-fragments.html
 
 '''
 
