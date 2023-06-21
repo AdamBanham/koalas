@@ -105,7 +105,7 @@ class PetriNetFragmentParser:
         self.labelLookup = {}
         self.idLookup = {}
 
-    def createNet(self,net_title:str, netText:str) -> LabelledPetriNet:
+    def createNet(self,net_title:str, netText:str) -> BuildablePetriNet:
         net = BuildablePetriNet(label=net_title)
         self.init()
         self.addToNet(net,netText)
