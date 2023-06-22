@@ -144,7 +144,7 @@ class Transition:
                + f'silent={self.silent})'
 
 SILENT_TRANSITION_DEFAULT_NAME='tau'
-def silentTransition(name=None,tid=None,weight=None):
+def silent_transition(name=None,tid=None,weight=None):
     tn = SILENT_TRANSITION_DEFAULT_NAME
     if name:
         tn = name
@@ -161,33 +161,34 @@ class Arc:
     This is directed arc, which has no name or idenfitier, for Petri net.
     """
 
-    def __init__(self,fromNode:Union[Place,Transition],toNode:Union[Place,Transition]):
-        self._fromNode = fromNode
-        self._toNode = toNode
+    def __init__(self,from_node:Union[Place,Transition],
+                 to_node:Union[Place,Transition]):
+        self._from_node = from_node
+        self._to_node = to_node
 
     @property
-    def fromNode(self) -> Union[Place,Transition]:
-        return self._fromNode
+    def from_node(self) -> Union[Place,Transition]:
+        return self._from_node
 
     @property
-    def toNode(self) -> Union[Place,Transition]:
-        return self._toNode
+    def to_node(self) -> Union[Place,Transition]:
+        return self._to_node
 
     def __eq__(self,other) -> bool:
         if type(other) is type(self):
-            return self.fromNode == other.fromNode and \
-                    self.toNode  == other.toNode
+            return self.from_node == other.from_node and \
+                    self.to_node  == other.to_node
         return False
 
     def __hash__(self) -> int:
-        return hash((self._fromNode,self._toNode))
+        return hash((self._from_node,self._to_node))
 
     def __str__(self) -> str:
-        return f'{self.fromNode} -> {self.toNode}' 
+        return f'{self.from_node} -> {self.to_node}' 
 
     def __repr__(self) -> str:
-        return f'Arc(fromNode={self.fromNode.__repr__()},' \
-               + f'toNode={self.toNode.__repr__()})'
+        return f'Arc(from_node={self.from_node.__repr__()},' \
+               + f'to_node={self.to_node.__repr__()})'
 
 class LabelledPetriNet:
     """
@@ -199,8 +200,8 @@ class LabelledPetriNet:
     has a name or title for the net.
     """
 
-    def __init__(self,places:Iterable[Place],transitions:Iterable[Transition],
-                 arcs:Iterable[Arc],name:str='Petri net'):
+    def __init__(self, places:Iterable[Place], transitions:Iterable[Transition],
+                 arcs:Iterable[Arc], name:str='Petri net'):
         self._places = set(places)
         self._transitions = set(transitions)
         self._arcs = set(arcs)
@@ -266,6 +267,7 @@ class LabelledPetriNet:
             _str += f"\t\t- {a}\n"
         return _str
     
+
 class BuildablePetriNet(LabelledPetriNet):
     """
     This class allows for the builder design pattern to be used
@@ -278,7 +280,7 @@ class BuildablePetriNet(LabelledPetriNet):
     ```
     # setup elements
     buildable = BuildablePetriNet("dupe_tran_with_id")
-    initialPlace = Place("I",1)
+    initial_place = Place("I",1)
     ta1 = Transition("a",1)
     ta2 = Transition("a",2)
     tb = Transition("b",3)
@@ -317,11 +319,11 @@ class BuildablePetriNet(LabelledPetriNet):
         self._arcs.add(arc)
         return self
 
-    def add_arc_between(self,fromNode:Union[Place,Transition],
-                             toNode:Union[Place,Transition]
+    def add_arc_between(self,from_node:Union[Place,Transition],
+                             to_node:Union[Place,Transition]
                         ) -> 'BuildablePetriNet' :
         "Constructs an arc between the given nodes and adds it to the net."
-        self.add_arc(Arc(fromNode,toNode))
+        self.add_arc(Arc(from_node,to_node))
         return self
 
     def create_net(self) -> LabelledPetriNet:
@@ -345,14 +347,14 @@ class PetriNetDOTFormatter:
         self._pn = pn
         self._font = font
         self._nodemap = {}
-        self._defaultHeight = 0.2
+        self._default_height = 0.2
 
     def transform_transition(self,tran,ti) -> str:
         fstr = 'n{} [shape="box",margin="0, 0.1",label="{} {}",style="filled"];\n'
         tl = tran.name if tran.name and tran.name != 'tau' else '&tau;'
         fstr = f'n{str(ti)} [shape="box",margin="0, 0.1",'
         fstr += f'label="{tran.weight}", style="filled",'
-        height = self._defaultHeight
+        height = self._default_height
         fstr += f'height="{height}", width="{height}"'
         fstr += '];\n'
         return fstr
@@ -362,16 +364,16 @@ class PetriNetDOTFormatter:
         return fstr.format('n' + str(pi),place.name)
 
     def transform_arc(self,arc) -> str:
-        fromNode = self._nodemap[arc.fromNode]
-        toNode = self._nodemap[arc.toNode]
-        return f'n{fromNode}->n{toNode}\n'
+        from_node = self._nodemap[arc.from_node]
+        to_node = self._nodemap[arc.to_node]
+        return f'n{from_node}->n{to_node}\n'
 
     def transform_net(self) -> str:
         dotstr = ""
         dotstr += 'digraph G{\n'
         dotstr += f'ranksep=".3"; fontsize="14"; remincross=true; margin="0.0,0.0"; fontname="{self._font}";rankdir="LR";charset=utf8;\n'
         dotstr += 'edge [arrowsize="0.5"];\n'
-        dotstr += f'node [height="{self._defaultHeight}",width="{self._defaultHeight}",fontname="{self._font}"'
+        dotstr += f'node [height="{self._default_height}",width="{self._default_height}",fontname="{self._font}"'
         dotstr += ',fontsize="14"];\n'
         dotstr += 'ratio=0.4;\n'
         ni = 1
@@ -400,24 +402,24 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     See: http://www.pnml.org/version-2009/grammar/pnmlcoremodel.rng
     """
     root = ET.Element('pnml')
-    netNode = ET.SubElement(root,'net', 
+    net_node = ET.SubElement(root,'net', 
             attrib={'type':PNML_URL,
                     'id':net.name} )
-    page = ET.SubElement(netNode,'page', id="page1")
+    page = ET.SubElement(net_node,'page', id="page1")
     for place in net.places:
         placeNode = ET.SubElement(page,'place', attrib={'id':str(place.pid) } )
         if place.name:
-            nameNode = ET.SubElement(placeNode,'name')
-            textNode = ET.SubElement(nameNode,'text')
-            textNode.text = place.name
+            name_node = ET.SubElement(placeNode,'name')
+            text_node = ET.SubElement(name_node,'text')
+            text_node.text = place.name
     for tran in net.transitions:
         tranNode = ET.SubElement(page,'transition', 
                         attrib={'id':str(tran.tid) } )
         if tran.name:
-            nameNode = ET.SubElement(tranNode,'name')
-            textNode = ET.SubElement(nameNode,'text')
-            textNode.text = tran.name
-        tsNode = ET.SubElement(tranNode,'toolspecific',
+            name_node = ET.SubElement(tranNode,'name')
+            text_node = ET.SubElement(name_node,'text')
+            text_node.text = tran.name
+        ts_node = ET.SubElement(tranNode,'toolspecific',
                         attrib={ 'tool':'StochasticPetriNet',
                                  'version':'0.2', 
                                  'invisible': str(tran.silent),
@@ -427,8 +429,8 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     arcid = 1
     for arc in net.arcs:
         arcNode = ET.SubElement(page,'arc',
-                    attrib={'source': str(arc.fromNode.nodeId), 
-                            'target': str(arc.toNode.nodeId),
+                    attrib={'source': str(arc.from_node.nodeId), 
+                            'target': str(arc.to_node.nodeId),
                             'id': str(arcid) } )
         arcid += 1
     return root

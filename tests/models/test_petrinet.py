@@ -66,23 +66,23 @@ class PetriNetTest(unittest.TestCase):
         mapping = dict()
         mapping[p] = vp 
         mapping[p2] = vp2 
-        self.assertEqual(mapping[p], vp, "hashed reference in mapping is incorrect.")
-        self.assertEqual(mapping[p2], vp2, "hashed reference in mapping is incorrect.")       
+        self.assertEqual(mapping[p], vp)
+        self.assertEqual(mapping[p2], vp2)       
 
     def test_repr_transition(self):
         # test that transitions can be reproduced
         t = Transition("t1")
         t2 = eval(t.__repr__())
-        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        self.assertEqual(t, t2)
         t = Transition("t1", silent=True)
         t2 = eval(t.__repr__())
-        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        self.assertEqual(t, t2)
         t = Transition("t1", weight=0.5)
         t2 = eval(t.__repr__())
-        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        self.assertEqual(t, t2)
         t = Transition("t1", weight=0.25,silent=True)
         t2 = eval(t.__repr__())
-        self.assertEqual(t, t2, "reproduced transition does not match given transition.")
+        self.assertEqual(t, t2)
 
     def test_hash_transition(self):
         # test hashing works
@@ -98,8 +98,8 @@ class PetriNetTest(unittest.TestCase):
         mapping = dict()
         mapping[p] = vp 
         mapping[p2] = vp2 
-        self.assertEqual(mapping[p], vp, "hashed reference in mapping is incorrect.")
-        self.assertEqual(mapping[p2], vp2, "hashed reference in mapping is incorrect.")
+        self.assertEqual(mapping[p], vp)
+        self.assertEqual(mapping[p2], vp2)
 
     def test_repr_arc(self):
         # test that arcs can be reproduced
@@ -110,16 +110,16 @@ class PetriNetTest(unittest.TestCase):
         # testing
         arc = Arc(p, t)
         arc2 = eval(arc.__repr__())
-        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        self.assertEqual(arc, arc2)
         arc = Arc(t, p2)
         arc2 = eval(arc.__repr__())
-        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        self.assertEqual(arc, arc2)
         arc = Arc(p, t2)
         arc2 = eval(arc.__repr__())
-        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        self.assertEqual(arc, arc2)
         arc = Arc(t2, p2)
         arc2 = eval(arc.__repr__())
-        self.assertEqual(arc, arc2, "reproduced arc does not match given arc")
+        self.assertEqual(arc, arc2)
 
     def test_repr_net(self):
         # test that nets can be reproduced
@@ -133,13 +133,17 @@ class PetriNetTest(unittest.TestCase):
                        weight=1.0,silent=False),
           ],
           arcs=[
-            Arc(fromNode=Place("p1",pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8"),
-                toNode=Transition("t1",tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
+            Arc(from_node=Place("p1",
+                        pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8"),
+                to_node=Transition("t1",
+                        tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
                                   weight=1.0,silent=False)
             ),
-            Arc(fromNode=Transition("t1",tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
+            Arc(from_node=Transition("t1",
+                        tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
                                     weight=1.0,silent=False),
-                toNode=Place("p1",pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8")),
+                to_node=Place("p1",
+                        pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8")),
           ],
           name='Petri net'
         )
@@ -151,29 +155,34 @@ class PetriNetTest(unittest.TestCase):
         places = set( Place(f"p{i}") for i in range(5))
         transitions = set( Transition(f"t{i}") for i in range(6))
         arcs = set()
-        net = LabelledPetriNet(places=places, transitions=transitions, arcs=arcs)
-        # check that removing or adding to original or returned does not change anything
+        net = LabelledPetriNet(places=places, transitions=transitions, 
+                arcs=arcs)
+        # check that removing or adding to original or returned 
+        # does not change anything
         ## add a place
         onet = eval(net.__repr__())
         places.add(Place("p7"))
-        self.assertNotEqual(places, net.places, "reference container is reused on structure.")
+        self.assertNotEqual(places, net.places, 
+                "reference container is reused on structure.")
         self.assertEqual(net, onet, "struture has changed.")
         ## remove transition
         transitions = [t for t in transitions if not t.name.endswith('5') ]
-        self.assertNotEqual(net.transitions, transitions, "reference container is reused on structure.")
+        self.assertNotEqual(net.transitions, transitions, 
+                "reference container is reused on structure.")
         self.assertEqual(net, onet, "structure has changed.")
         ## add a arc
         p = choice(list(places))
         t = choice(list(transitions))
         arc = Arc(p, t)
         arcs.add(arc)
-        self.assertNotEqual(net.arcs, arcs, "reference container is reused on structure.")
+        self.assertNotEqual(net.arcs, arcs, 
+                "reference container is reused on structure.")
         self.assertEqual(net, onet, "structure has changed.")
 
     def test_exportToDOT(self):
         parser = PetriNetFragmentParser()
-        net1 = parser.createNet("dotTest","I -> {tau 2.0} -> Sweep")
-        parser.addToNet(net1,"I -> {tau 2.0} -> Student")
+        net1 = parser.create_net("dotTest","I -> {tau 2.0} -> Sweep")
+        parser.add_to_net(net1,"I -> {tau 2.0} -> Student")
         dotStr = convert_net_to_dot(net1)
         # Not a rigorous check, just a way to check it doesn't throw exceptions
         # by plugging manually into DOT
@@ -190,8 +199,8 @@ class PetriNetTest(unittest.TestCase):
 
     def test_exportToXML(self):
         parser = PetriNetFragmentParser()
-        net1 = parser.createNet("dotTest","I -> {tau 2.0} -> Sweep")
-        parser.addToNet(net1,"I -> {tau 2.0} -> Student")
+        net1 = parser.create_net("dotTest","I -> {tau 2.0} -> Sweep")
+        parser.add_to_net(net1,"I -> {tau 2.0} -> Student")
         xmlStr = convert_net_to_xmlstr(net1)
         debug('=================\n')
         debug(f"\n{xmlStr}\n")

@@ -11,15 +11,15 @@ Weighted transitions without weights, as in {b}, are defaulted to weight 1.0.
 Nodes with duplicate labels can be specified using a [tranLabel__id] syntax. 
 
 Example uses::
-    net1 = pnfrag.createNet()
-    net2 = pnfrag.parseNetFragments("tester_net",
+    net1 = pnfrag.create_net()
+    net2 = pnfrag.parse_net_fragments("tester_net",
                 "I -> [A] -> p1 -> [tau] -> F",
                 "I -> [A] -> p1 -> [B] -> p2 -> [E] -> p3 -> [G] -> F",
                 "I -> [A] -> p1 -> [C] -> p2 -> [E] -> p3 -> [H] -> F",
                 "I -> [A] -> p1 -> [D] -> p2 -> [E] -> p3 -> [K] -> F")
     parser = pnfrag.PetriNetFragmentParser()
-    net3 = parser.createNet()
-    parser.addToNet(net3, "I -> {a__1 3} -> F")
+    net3 = parser.create_net()
+    parser.add_to_net(net3, "I -> {a__1 3} -> F")
  
 
 Weighted transitions, allowing support of Stochastic Labelled Petri Nets. 
@@ -97,17 +97,17 @@ TOKEN_LEX_VALUES.remove(TokenInfo.TERMINAL)
 
 
 class Token:
-    def __init__(self,tokenInfo,tokenStr):
-        self.tokenInfo = tokenInfo
-        self.tokenStr = tokenStr
+    def __init__(self,token_info,token_str):
+        self.token_info = token_info
+        self.token_str = token_str
 
 class ParseException(Exception):
     pass
 
-def createNet(netTitle, netText) -> LabelledPetriNet:
-    return PetriNetFragmentParser().createNet(netTitle,netText)
+def create_net(net_title, net_text) -> LabelledPetriNet:
+    return PetriNetFragmentParser().create_net(net_title,net_text)
 
-def parseNetFragments(netTitle:str, *fragments:str) -> LabelledPetriNet:
+def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
     """
     Given a set of fragments following the gammar mentioned below, this function
     returns a Petri net that contains all the fragments.
@@ -116,9 +116,9 @@ def parseNetFragments(netTitle:str, *fragments:str) -> LabelledPetriNet:
     """
     parser = PetriNetFragmentParser()
     if (len(fragments) > 0):
-        net = parser.createNet(netTitle, fragments[0])
+        net = parser.create_net(net_title, fragments[0])
         for frag in fragments[1:]:
-            parser.addToNet(net, frag)
+            parser.add_to_net(net, frag)
     return net
 
 
@@ -129,17 +129,17 @@ class PetriNetFragmentParser:
     def init(self):
         self.tokens = []
         self.ctid = 0
-        self.labelLookup = {}
+        self.label_lookup = {}
         self.idLookup = {}
 
-    def createNet(self,net_title:str, netText:str) -> BuildablePetriNet:
+    def create_net(self,net_title:str, net_text:str) -> BuildablePetriNet:
         net = BuildablePetriNet(label=net_title)
         self.init()
-        self.addToNet(net,netText)
+        self.add_to_net(net,net_text)
         return net
 
-    def addToNet(self, net:LabelledPetriNet, netText: str):
-        self.tokenize(netText)
+    def add_to_net(self, net:LabelledPetriNet, net_text: str):
+        self.tokenize(net_text)
         self.net = net
         self.parse()
 
@@ -164,23 +164,23 @@ class PetriNetFragmentParser:
 
     def parse(self):
         self.lookahead = self.tokens[0]
-        self.petriOneLineNet()
-        if(self.lookahead.tokenInfo != TokenInfo.TERMINAL):
+        self.petri_one_line_net()
+        if(self.lookahead.token_info != TokenInfo.TERMINAL):
             raise ParseException(f"Unexpected symbol {self.lookahead} found")
 
-    def checkExistingNode(self,label: str, nodeType):
-        if not label in self.labelLookup:
+    def checkExistingNode(self,label: str, node_type):
+        if not label in self.label_lookup:
             return None
-        n = self.labelLookup[label]
-        if nodeType != type(n):
+        n = self.label_lookup[label]
+        if node_type != type(n):
             raise ParseException(f"New node {label} duplicates existing node of wrong type")
         return n
 
-    def checkExistingNodeById(self, nid, nodeType):
+    def checkExistingNodeById(self, nid, node_type):
         if not nid in self.idLookup:
             return None
         n = self.idLookup[nid]
-        if nodeType != type(n):
+        if node_type != type(n):
             raise ParseException(f"New node {nid} duplicates existing node of wrong type")
         return n
 
@@ -196,7 +196,7 @@ class PetriNetFragmentParser:
     def checkExistingTransitionById(self,tranId):
         return self.checkExistingNodeById(tranId,Transition)
 
-    def petriOneLineNet(self):
+    def petri_one_line_net(self):
         p1 = self.place()
         self.edge()
         transition = self.transition()
@@ -206,11 +206,11 @@ class PetriNetFragmentParser:
         self.readd_arc(transition, p2)
 
     def place(self):
-        label = self.lookahead.tokenStr
+        label = self.lookahead.token_str
         self.nextToken()
         pid = None
         place = None
-        if self.lookahead.tokenInfo == TokenInfo.ID_PREFIX:
+        if self.lookahead.token_info == TokenInfo.ID_PREFIX:
             self.nextToken()
             pid = self.id()
             self.nextToken()
@@ -223,19 +223,19 @@ class PetriNetFragmentParser:
                 pid = self.nextId()
             place = Place(label,pid=pid)
             self.net.add_place(place)
-            self.labelLookup[label] = place
+            self.label_lookup[label] = place
         return place;
 
     def edge(self):
-        if self.lookahead.tokenInfo != TokenInfo.EDGE:
+        if self.lookahead.token_info != TokenInfo.EDGE:
             self.tokenError(TokenInfo.EDGE)
         self.nextToken()
 
     def transition(self):
         transition = None
-        if self.lookahead.tokenInfo == TokenInfo.SIMPLE_TRAN_START: 
+        if self.lookahead.token_info == TokenInfo.SIMPLE_TRAN_START: 
             transition = self.simpleTransition()
-        if self.lookahead.tokenInfo == TokenInfo.WEIGHTED_TRAN_START: 
+        if self.lookahead.token_info == TokenInfo.WEIGHTED_TRAN_START: 
             transition = self.weightedValueTransition()
         self.nextToken()
         return transition
@@ -246,26 +246,26 @@ class PetriNetFragmentParser:
         label = ''
         tranId = None
         silentTran = False
-        if self.lookahead.tokenInfo == TokenInfo.LABEL:
+        if self.lookahead.token_info == TokenInfo.LABEL:
             label = self.tranLabel()
             self.nextToken()
         else: 
-            if self.lookahead.tokenInfo == TokenInfo.SILENT_LABEL:
+            if self.lookahead.token_info == TokenInfo.SILENT_LABEL:
                 label = self.tranLabel()
                 silentTran = True
                 self.nextToken()
             else:
                 raise ParseException(
-                        f"Expected label, but found {self.lookahead.tokenStr}")
-        if self.lookahead.tokenInfo == TokenInfo.SIMPLE_TRAN_END:
+                        f"Expected label, but found {self.lookahead.token_str}")
+        if self.lookahead.token_info == TokenInfo.SIMPLE_TRAN_END:
             transition = self.checkExistingTransition(label)
         else:
-            if self.lookahead.tokenInfo == TokenInfo.ID_PREFIX:
+            if self.lookahead.token_info == TokenInfo.ID_PREFIX:
                 transition = None
                 self.nextToken()
                 tranId = self.id()
                 self.nextToken()
-                if self.lookahead.tokenInfo != TokenInfo.SIMPLE_TRAN_END:
+                if self.lookahead.token_info != TokenInfo.SIMPLE_TRAN_END:
                     self.tokenError(TokenInfo.SIMPLE_TRAN_END,
                                     TokenInfo.ID_PREFIX)
             else:
@@ -280,7 +280,7 @@ class PetriNetFragmentParser:
             else:
                 transition = Transition(label,tid=self.nextId(),
                                         silent=silentTran)
-                self.labelLookup[label] = transition
+                self.label_lookup[label] = transition
             self.net.add_transition(transition)
         return transition
 
@@ -291,27 +291,27 @@ class PetriNetFragmentParser:
         tranId = None
         silentTran = False
         weight = 1.0
-        if self.lookahead.tokenInfo == TokenInfo.LABEL:
+        if self.lookahead.token_info == TokenInfo.LABEL:
             label = self.tranLabel()
             self.nextToken()
         else:
-            if self.lookahead.tokenInfo == TokenInfo.SILENT_LABEL:
+            if self.lookahead.token_info == TokenInfo.SILENT_LABEL:
                 label = self.tranLabel()
                 silentTran = True
                 self.nextToken()
             else:
                 raise ParseException(
-                        f"Expected label, but found {self.lookahead.tokenStr}")
+                        f"Expected label, but found {self.lookahead.token_str}")
 
-        if self.lookahead.tokenInfo == TokenInfo.ID_PREFIX:
+        if self.lookahead.token_info == TokenInfo.ID_PREFIX:
             transition = None
             self.nextToken()
             tranId = self.id()
             self.nextToken()
-        if self.lookahead.tokenInfo == TokenInfo.WEIGHT:
+        if self.lookahead.token_info == TokenInfo.WEIGHT:
             weight = self.weight()
             self.nextToken()
-        if self.lookahead.tokenInfo == TokenInfo.WEIGHTED_TRAN_END:
+        if self.lookahead.token_info == TokenInfo.WEIGHTED_TRAN_END:
             transition = self.checkExistingTransition(label)
         else:
             self.tokenError(TokenInfo.WEIGHTED_TRAN_END,
@@ -324,17 +324,17 @@ class PetriNetFragmentParser:
             else:
                 transition = Transition(label,tid=self.nextId(),
                                          silent=silentTran, weight=weight)
-                self.labelLookup[label] = transition
+                self.label_lookup[label] = transition
             self.net.add_transition(transition)
         return transition
 
 
     def tranLabel(self):
-        return self.lookahead.tokenStr
+        return self.lookahead.token_str
 
     def placeLedSubnet(self):
         head = self.place()
-        if self.lookahead.tokenInfo == TokenInfo.EDGE:
+        if self.lookahead.token_info == TokenInfo.EDGE:
             self.edge()
             tran = self.transition()
             self.edge()
@@ -344,14 +344,14 @@ class PetriNetFragmentParser:
         return head
 
     def id(self):
-        return int(self.lookahead.tokenStr)
+        return int(self.lookahead.token_str)
 
     def weight(self):
-        return float(self.lookahead.tokenStr)
+        return float(self.lookahead.token_str)
 
     def tokenError(self,*tokens):
         raise ParseException(
-                f"Expected one of {tokens} but found {self.lookahead.tokenStr}")
+                f"Expected one of {tokens} but found {self.lookahead.token_str}")
 
 
     def nextToken(self):
