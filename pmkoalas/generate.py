@@ -17,7 +17,7 @@ from abc import ABC,abstractmethod
 from copy import deepcopy
 from random import randint, choice
 
-from koalas.simple import EventLog, Trace
+from pmkoalas.simple import EventLog, Trace
 
 
 DEFAULT_DELIM=" "
