@@ -10,7 +10,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -119,6 +118,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+pipfile
 
 # Spyder project settings
 .spyderproject
@@ -157,3 +157,4 @@ cython_debug/
 
 # working dir
 working
+koalaenv

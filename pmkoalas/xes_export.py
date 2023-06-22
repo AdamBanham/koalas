@@ -3,6 +3,7 @@ This module has the arttributes and tags for xml documents for exporting.
 """
 from typing import List
 from xml.etree.ElementTree import Element 
+from datetime import datetime
 
 XES_LOG_TAG = "log"
 XES_LOG_ATTRS = {
@@ -66,9 +67,14 @@ class XesLogClassifier(Element):
 
 # XES keys
 XES_CONCEPT = "concept:name"
+XES_TIME = "time:timestamp"
 
 # XES sub elements
 XES_STRING_TAG = 'string'
+XES_INT_TAG = "int"
+XES_TIME_TAG = "date"
+XES_FLOAT_TAG = "float"
+XES_BOOLEAN_TAG = "boolean"
 class XesString(Element):
     """
     Creates an xml element, using the string representation in XES.
@@ -86,7 +92,95 @@ class XesString(Element):
             XES_STRING_TAG, 
             {
                 'key' : key,
-                'value' : value
+                'value' : str(value)
+            }, 
+            **{}
+        )
+
+class XesInt(Element):
+    """
+    Creates an xml element, using the int representation in XES.
+
+    Parameters
+    ----------
+    key: `str`
+    \t The key of the attribute to be added to parent
+    value: `str`
+    \t The value for this key.
+    """
+
+    def __init__(self, key:str, value:int) -> None:
+        super().__init__(
+            XES_INT_TAG, 
+            {
+                'key' : key,
+                'value' : str(value)
+            }, 
+            **{}
+        )
+
+class XesTime(Element):
+    """
+    Creates an xml element, using the date representation in XES.
+
+    Parameters
+    ----------
+    key: `str`
+    \t The key of the attribute to be added to parent
+    value: `str`
+    \t The value for this key.
+    """
+
+    def __init__(self, key:str, value:datetime) -> None:
+        super().__init__(
+            XES_TIME_TAG, 
+            {
+                'key' : key,
+                'value' : value.isoformat()
+            }, 
+            **{}
+        )
+
+class XesFloat(Element):
+    """
+    Creates an xml element, using the float (up to eight decimals) representation in XES.
+
+    Parameters
+    ----------
+    key: `str`
+    \t The key of the attribute to be added to parent
+    value: `str`
+    \t The value for this key.
+    """
+
+    def __init__(self, key:str, value:float) -> None:
+        super().__init__(
+            XES_FLOAT_TAG, 
+            {
+                'key' : key,
+                'value' : f"{value:.8f}"
+            }, 
+            **{}
+        )
+
+class XesBoolean(Element):
+    """
+    Creates an xml element, using the float (up to eight decimals) representation in XES.
+
+    Parameters
+    ----------
+    key: `str`
+    \t The key of the attribute to be added to parent
+    value: `str`
+    \t The value for this key.
+    """
+
+    def __init__(self, key:str, value:bool) -> None:
+        super().__init__(
+            XES_BOOLEAN_TAG, 
+            {
+                'key' : key,
+                'value' : 'true' if value else 'false'
             }, 
             **{}
         )

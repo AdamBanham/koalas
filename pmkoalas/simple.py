@@ -1,15 +1,16 @@
 """
-This module contains information about the structure of the simplified api 
-for process data, being how to represent an event, a trace and an event log.
+This module contains information about the structure of the 
+simplified api for process data, being how to represent an event, 
+a trace and an event log.
 """
 
 from typing import Iterable, List, Mapping, Set, Tuple
 from copy import deepcopy
 from time import time
 
-from koalas._logging import info,debug, enable_logging
-from koalas.directly import DirectlyFollowPair,FollowLanguage
-from koalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
+from pmkoalas._logging import info, debug, enable_logging
+from pmkoalas.directly import DirectlyFollowPair,FollowLanguage
+from pmkoalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
 
 class Trace():
     """
@@ -69,7 +70,8 @@ DEFAULT_SIMPLE_LOG_NAME="simple"
 
 class EventLog():
     """
-    A simplified representation of a language.
+    A simplified collection of traces, which can express
+    several languages.
     """
 
     @enable_logging

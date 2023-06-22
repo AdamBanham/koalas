@@ -1,7 +1,6 @@
 
 import unittest
-from koalas.simple import EventLog,Trace
-from koalas.generate import gen_log, gen_trace
+from pmkoalas.dtlog import *
 
 class DTLogTest(unittest.TestCase):
     def test_convert_empty(self):

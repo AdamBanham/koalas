@@ -1,19 +1,57 @@
-# Koalas: A Process Mining Project
+# pmkoalas: A Process Mining Project
 [![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)   [![Testing](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml)
 
 
-Koalas provides data structures for process mining research in a well-organized pythonic style.
+`pmkoalas` provides data structures for process mining research in a well-organized pythonic style.
 
-# Development
-To install the library as a local copy, such that edits to source will be automatically translated into your intercepter use the following command:
+## Current Features
+* Event log structures
+    * Importing and exporting of logs to XES formatted XML
+    * Several views/types of log
+        * Simplified logs
+            * This type only considers sequences of process 
+            activities, and nothing else.
+        * Complex logs
+            * This type considers sequences of events. Where 
+            an event is a mapping of data. This log type can 
+            always be reduced to the simplified type.
+    * Generating logs quickly delimited string
+        * currently only supports simplified logs
+* Process model structures
+    * Petri nets
+        * exporting to pnml
+        * creating dot files for a net
+        * generation of a net using fragments of desirable 
+        behaviour
+* Process discovery techniques
+    * Generating a directly follows language from a log
+    * The Alpha miner (original variant)
+
+# Development Information
+To install dependencies:
+
 `py -m pip install -e .[dev]`
 
-## Test
-To run tests use the following command
-`py -m pip install -e .[dev] && py -m unittest`
+## Testing
+To run tests:
 
-# Values of the team
+`py -m unittest`
+
+# The values of the team
 
 ## Postel's law
+
+"Be liberal in what you accept, and conservative in what you send"
+
 [https://en.wikipedia.org/wiki/Jon_Postel](cite)
-Perhaps his most famous legacy is from RFC760, which includes a robustness principle often called Postel's law: "an implementation should be conservative in its sending behavior, and liberal in its receiving behavior" (reworded in RFC 1122 as "Be liberal in what you accept, and conservative in what you send").
+
+Branches off main are meant to be either merged in a timely manner,
+or show off a potential feature, or should be removed/released back
+into the wild.
+
+Features need a use case or a user before they can be explored
+in detail.
+
+It is better to delete code that is not used, than to keep it
+around. You have written it once, you will write it better the 
+next time. Don't be afraid to let it go.
