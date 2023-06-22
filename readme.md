@@ -4,6 +4,29 @@
 
 `pmkoalas` provides data structures for process mining research in a well-organized pythonic style.
 
+## Current Features
+* Event log structures
+    * Importing and exporting of logs to XES formatted XML
+    * Several views/types of log
+        * Simplified logs
+            * This type only considers sequences of process 
+            activities, and nothing else.
+        * Complex logs
+            * This type considers sequences of events. Where 
+            an event is a mapping of data. This log type can 
+            always be reduced to the simplified type.
+    * Generating logs quickly delimited string
+        * currently only supports simplified logs
+* Process model structures
+    * Petri nets
+        * exporting to pnml
+        * creating dot files for a net
+        * generation of a net using fragments of desirable 
+        behaviour
+* Process discovery techniques
+    * Generating a directly follows language from a log
+    * The Alpha miner (original variant)
+
 # Development
 To install dependencies:
 
