@@ -17,12 +17,12 @@ class PetriNetFragmentTest(unittest.TestCase):
                "invalid", "I --> ~jerry [a] -> F")
 
     def test_ptp_fragment(self):
-        tranA = Transition("a",2)
+        tran_a = Transition("a",2)
         final = Place("F",3)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA]),
-                                     arcs = set([Arc(initialI,tranA),
-                                                 Arc(tranA,final)]),
+                                     transitions = set([tran_a]),
+                                     arcs = set([Arc(initialI,tran_a),
+                                                 Arc(tran_a,final)]),
                                      name = 'test' )
         result = self.parser.create_net("test","I -> [a] -> F")
         self.assertEqual( expected, result )
@@ -100,23 +100,23 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition(self):
-        tranA = Transition("a",weight=0.4,tid=2)
+        tran_a = Transition("a",weight=0.4,tid=2)
         final = Place("F",3)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA]),
-                                     arcs = set([Arc(initialI,tranA),
-                                                 Arc(tranA,final)]),
+                                     transitions = set([tran_a]),
+                                     arcs = set([Arc(initialI,tran_a),
+                                                 Arc(tran_a,final)]),
                                      name = "weighted_transition" )
         net = self.parser.create_net("weighted_transition","I -> {a 0.4} -> F")
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_with_id(self):
-        tranA = Transition("a",weight=0.4,tid=1)
+        tran_a = Transition("a",weight=0.4,tid=1)
         final = Place("F",2)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA]),
-                                     arcs = set([Arc(initialI,tranA),
-                                                 Arc(tranA,final)]),
+                                     transitions = set([tran_a]),
+                                     arcs = set([Arc(initialI,tran_a),
+                                                 Arc(tran_a,final)]),
                                      name = "weighted_transition_with_id" )
         net = self.parser.create_net("weighted_transition_with_id",
                                     "I -> {a__1 0.4} -> F")
@@ -124,15 +124,15 @@ class PetriNetFragmentTest(unittest.TestCase):
 
 
     def test_weighted_transition_with_dupes(self):
-        tranA1 = Transition("a",weight=0.4,tid=1)
-        tranA2 = Transition("a",weight=0.5,tid=2)
+        tran_a1 = Transition("a",weight=0.4,tid=1)
+        tran_a2 = Transition("a",weight=0.5,tid=2)
         final = Place("F",2)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA1,tranA2]),
-                                     arcs = set([Arc(initialI,tranA1),
-                                                 Arc(tranA1,final),
-                                                 Arc(initialI,tranA2),
-                                                 Arc(tranA2,final)]),
+                                     transitions = set([tran_a1,tran_a2]),
+                                     arcs = set([Arc(initialI,tran_a1),
+                                                 Arc(tran_a1,final),
+                                                 Arc(initialI,tran_a2),
+                                                 Arc(tran_a2,final)]),
                                      name = "weighted_transition_with_dupes" )
         net = self.parser.create_net("weighted_transition_with_dupes",
                                     "I -> {a__1 0.4} -> F")
@@ -140,18 +140,18 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_id_backrefs(self):
-        tranA1 = Transition("a",tid=1)
-        tranA2 = Transition("a",tid=2)
+        tran_a1 = Transition("a",tid=1)
+        tran_a2 = Transition("a",tid=2)
         tranB  = Transition("b",tid=4)
         p1    = Place("p1",3)
         final = Place("F",2)
         expected = LabelledPetriNet( places = set([initialI,p1,final]),
-                                     transitions = set([tranA1,tranA2,tranB]),
-                                     arcs = set([Arc(initialI,tranA1),
-                                                 Arc(tranA1,final),
-                                                 Arc(initialI,tranA2),
-                                                 Arc(tranA2,final),
-                                                 Arc(tranA2,p1),
+                                     transitions = set([tran_a1,tran_a2,tranB]),
+                                     arcs = set([Arc(initialI,tran_a1),
+                                                 Arc(tran_a1,final),
+                                                 Arc(initialI,tran_a2),
+                                                 Arc(tran_a2,final),
+                                                 Arc(tran_a2,p1),
                                                  Arc(p1,tranB),
                                                  Arc(tranB,final)]),
                                      name = "id_backrefs" )
@@ -162,18 +162,18 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_id_backrefs_weighted(self):
-        tranA1 = Transition("a",tid=1,weight=0.4)
-        tranA2 = Transition("a",tid=2,weight=0.5)
+        tran_a1 = Transition("a",tid=1,weight=0.4)
+        tran_a2 = Transition("a",tid=2,weight=0.5)
         tranB  = Transition("b",tid=4)
         p1    = Place("p1",3)
         final = Place("F",2)
         expected = LabelledPetriNet( places = set([initialI,p1,final]),
-                                     transitions = set([tranA1,tranA2,tranB]),
-                                     arcs = set([Arc(initialI,tranA1),
-                                                 Arc(tranA1,final),
-                                                 Arc(initialI,tranA2),
-                                                 Arc(tranA2,final),
-                                                 Arc(tranA2,p1),
+                                     transitions = set([tran_a1,tran_a2,tranB]),
+                                     arcs = set([Arc(initialI,tran_a1),
+                                                 Arc(tran_a1,final),
+                                                 Arc(initialI,tran_a2),
+                                                 Arc(tran_a2,final),
+                                                 Arc(tran_a2,p1),
                                                  Arc(p1,tranB),
                                                  Arc(tranB,final)]),
                                      name = "id_backrefs_weighted" )
@@ -184,25 +184,25 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_above_ten(self):
-        tranA = Transition("a",weight=10.4,tid=2)
+        tran_a = Transition("a",weight=10.4,tid=2)
         final = Place("F",3)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA]),
-                                     arcs = set([Arc(initialI,tranA),
-                                                 Arc(tranA,final)]),
+                                     transitions = set([tran_a]),
+                                     arcs = set([Arc(initialI,tran_a),
+                                                 Arc(tran_a,final)]),
                                      name = "weighted_transition_above_ten" )
         net = self.parser.create_net("weighted_transition_above_ten",
                                     "I -> {a 10.4} -> F")
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_default_weight(self):
-        tranA = Transition("a",tid=2)
+        tran_a = Transition("a",tid=2)
         final = Place("F",3)
         expected = LabelledPetriNet( 
                     places = set([initialI,final]),
-                    transitions = set([tranA]),
-                    arcs = set([Arc(initialI,tranA),
-                                Arc(tranA,final)]),
+                    transitions = set([tran_a]),
+                    arcs = set([Arc(initialI,tran_a),
+                                Arc(tran_a,final)]),
                     name = "weighted_transition_default_weight" )
         net = self.parser.create_net("weighted_transition_default_weight",
                                     "I -> {a} -> F")
@@ -414,23 +414,23 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_parse_net_fragments_function(self):
-        tranA = Transition("a",2)
+        tran_a = Transition("a",2)
         final = Place("F",3)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA]),
-                                     arcs = set([Arc(initialI,tranA),
-                                                 Arc(tranA,final)]),
+                                     transitions = set([tran_a]),
+                                     arcs = set([Arc(initialI,tran_a),
+                                                 Arc(tran_a,final)]),
                                      name = 'test' )
         result = parse_net_fragments("test","I -> [a] -> F")
         self.assertEqual( expected, result )
 
     def test_create_net_function(self):
-        tranA = Transition("a",2)
+        tran_a = Transition("a",2)
         final = Place("F",3)
         expected = LabelledPetriNet( places = set([initialI,final]),
-                                     transitions = set([tranA]),
-                                     arcs = set([Arc(initialI,tranA),
-                                                 Arc(tranA,final)]),
+                                     transitions = set([tran_a]),
+                                     arcs = set([Arc(initialI,tran_a),
+                                                 Arc(tran_a,final)]),
                                      name = 'test' )
         result = create_net("test","I -> [a] -> F")
         self.assertEqual( expected, result )
