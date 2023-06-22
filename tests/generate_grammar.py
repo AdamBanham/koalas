@@ -7,33 +7,39 @@ COMPLEX_LOG_GRAMMAR: Grammar = {
     "<log>" : 
         ["[Patterns]{<number>} <trace>"],
     "<trace>" : 
-        ["[ <event> ]", "[<event>] <trace>" ],
+        ["[ <event> ]{<nonzero>}", "[<event>]{<nonzero>} <trace>" ],
     "<event>" :
         ["<event> <event>", "<word>" , "<word>{<data>}"],
     "<word>" :
         ["<ascii>"],
-    "<ascii>" : 
-        ascii_lowercase,
     "<data>" : 
-        ["<attr>", "<attr>|<shift>", "<data> <data>"],
+        ["<attr>", "<attr>|<shift>", "<data>,<data>"],
     "<attr>" : 
         ["d_<alldigits>"],
     "<shift>" : 
         ["<limit>" , "<lshift>", "<rshift>", "<mshift>"],
     "<lshift>" : 
-        ["<number>%-left"],
+        ["<halfnumber>%-left"],
     "<rshift>" : 
-        ["<number>%-right"],
+        ["<halfnumber>%-right"],
     "<mshift>" : 
-        ["<number>%-m-<number>%"],
+        ["<halfnumber>%-m-<halfnumber>%"],
     "<limit>" :
-        ["<< <number>", ">> <number>"],
+        ["<<<number>", ">><number>"],
+    "<halfnumber>" :
+        ["<halfdigits>" , "<halfdigits><halfdigits>"],
     "<number>" :
-        ["<digit>", "<digit><digit>"],
-    "<digit>" : 
-        ["5", "4", "3", "2", "1", "0"],
+        ["<alldigits>", "<number><number>"],
+    "<nonzero>" :
+        ["<nonzerodigits>", "<nonzero><nonzero>"],
     "<alldigits>" : 
+        ["0","1", "2", "3", "4", "5", "6", "7", "8","9"],
+    "<nonzerodigits>" : 
         ["1", "2", "3", "4", "5", "6", "7", "8","9"],
+    "<halfdigits>" : 
+        ["5", "4", "3", "2", "1", "0"],
+    "<ascii>" : 
+        ascii_lowercase,
     "<domain>" : 
         ["[Domains] "]
 }
@@ -41,7 +47,8 @@ COMPLEX_LOG_GRAMMAR: Grammar = {
 if __name__ == "__main__":
     simple_grammar_fuzzer(
         COMPLEX_LOG_GRAMMAR,
-        "[Patterns] <trace> <trace> <trace>",
+        "[Patterns]{200} [ <event> ]{<nonzero>} [ <event> ]{<nonzero>}" \
+        +" [ <event> ]{<nonzero>}",
         50,
         100,
         True
