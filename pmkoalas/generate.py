@@ -36,7 +36,10 @@ Grammar
 <ascii> :: a | b | c | ... | x | y | z ** any ascii symbol
 
 <domain> :: [Domains] <atttribute>
-<attribute> :: <attribute> <attribute> | <word>-<type>-<dist> | <word>-<type>
+<attribute> :: <attribute> <attribute> | <attr>-<type> | <attr>-<type>-<dist>
+<type> :: int | float | string | bool
+<dist> :: <disttype> | <disttype>-<number>
+<disttype> :: normal | uniform
 
 
 """
