@@ -44,3 +44,14 @@ To run tests:
 "Be liberal in what you accept, and conservative in what you send"
 
 [https://en.wikipedia.org/wiki/Jon_Postel](cite)
+
+Branches off main are meant to be either merged in a timely manner,
+or show off a potential feature, or should be removed/released back
+into the wild.
+
+Features need a use case or a user before they can be explored
+in detail.
+
+It is better to delete code that is not used, than to keep it
+around. You have written it once, you will write it better the 
+next time. Don't be afraid to let it go.
