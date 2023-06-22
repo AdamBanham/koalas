@@ -81,13 +81,14 @@ par_grammar_complex_log = Grammar(
     """
 )
 
-test_trace_01 = "[ u ]{8}"
-test_trace_02 = "[ a b c ]{16}"
-test_trace_03 = "[ a{d_1,} ]{224}"
-test_trace_04 = "[ a{d_1,d_2,} b c ]{224}"
+test_trace_01 = " [ u ]{8}"
+test_trace_02 = " [ a b c ]{16}"
+test_trace_03 = " [ a{d_1,} ]{224}"
+test_trace_04 = " [ a{d_1,d_2,} b c ]{224}"
+test_trace_05 = " [ dog{d_1,d_2,} cat dog ]{224}"
 test_trace_grammar = Grammar(
     """
-    trace = ("[" event* " ]{" nonzero "}") 
+    trace = " " "[" event* " ]{" freq "}"
     event = (" " word "{" data* "}" ) / (" " word)
     word = ~"[a-z]{1,}" 
     data = (attr ",") / (attr "|" shift ",") 
@@ -97,10 +98,14 @@ test_trace_grammar = Grammar(
     rshift = ~"[0-5]{,2}""-right" 
     mshift = ~"[0-5]{,2}" "-m-" ~"[0-5]{,2}" 
     limit = ("<<" ~"[0-9]*") / (">>" ~"[0-9]*") 
+    freq = ~"[1-9]*" 
+    samplesize = ~"[1-9]*" 
     nonzero = ~"[1-9]*" 
     """
 )
-trace_tests = [ test_trace_01, test_trace_02, test_trace_03, test_trace_04]
+trace_tests = [ test_trace_01, test_trace_02, test_trace_03, test_trace_04,
+                test_trace_05
+]
 
 if __name__ == "__main__":
     print("testing finding a trace")
