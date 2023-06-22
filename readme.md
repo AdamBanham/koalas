@@ -27,17 +27,17 @@
     * Generating a directly follows language from a log
     * The Alpha miner (original variant)
 
-# Development
+# Development Information
 To install dependencies:
 
 `py -m pip install -e .[dev]`
 
-## Test
+## Testing
 To run tests:
 
 `py -m unittest`
 
-# Values of the team
+# The values of the team
 
 ## Postel's law
 
