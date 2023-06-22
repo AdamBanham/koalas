@@ -11,15 +11,15 @@ Weighted transitions without weights, as in {b}, are defaulted to weight 1.0.
 Nodes with duplicate labels can be specified using a [tranLabel__id] syntax. 
 
 Example uses::
-    net1 = pnfrag.createNet()
-    net2 = pnfrag.parseNetFragments("tester_net",
+    net1 = pnfrag.create_net()
+    net2 = pnfrag.parse_net_fragments("tester_net",
                 "I -> [A] -> p1 -> [tau] -> F",
                 "I -> [A] -> p1 -> [B] -> p2 -> [E] -> p3 -> [G] -> F",
                 "I -> [A] -> p1 -> [C] -> p2 -> [E] -> p3 -> [H] -> F",
                 "I -> [A] -> p1 -> [D] -> p2 -> [E] -> p3 -> [K] -> F")
     parser = pnfrag.PetriNetFragmentParser()
-    net3 = parser.createNet()
-    parser.addToNet(net3, "I -> {a__1 3} -> F")
+    net3 = parser.create_net()
+    parser.add_to_net(net3, "I -> {a__1 3} -> F")
  
 
 Weighted transitions, allowing support of Stochastic Labelled Petri Nets. 
@@ -97,17 +97,17 @@ TOKEN_LEX_VALUES.remove(TokenInfo.TERMINAL)
 
 
 class Token:
-    def __init__(self,tokenInfo,tokenStr):
-        self.tokenInfo = tokenInfo
-        self.tokenStr = tokenStr
+    def __init__(self,token_info,token_str):
+        self.token_info = token_info
+        self.token_str = token_str
 
 class ParseException(Exception):
     pass
 
-def createNet(netTitle, netText) -> LabelledPetriNet:
-    return PetriNetFragmentParser().createNet(netTitle,netText)
+def create_net(net_title, net_text) -> LabelledPetriNet:
+    return PetriNetFragmentParser().create_net(net_title,net_text)
 
-def parseNetFragments(netTitle:str, *fragments:str) -> LabelledPetriNet:
+def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
     """
     Given a set of fragments following the gammar mentioned below, this function
     returns a Petri net that contains all the fragments.
@@ -116,9 +116,9 @@ def parseNetFragments(netTitle:str, *fragments:str) -> LabelledPetriNet:
     """
     parser = PetriNetFragmentParser()
     if (len(fragments) > 0):
-        net = parser.createNet(netTitle, fragments[0])
+        net = parser.create_net(net_title, fragments[0])
         for frag in fragments[1:]:
-            parser.addToNet(net, frag)
+            parser.add_to_net(net, frag)
     return net
 
 
@@ -129,17 +129,17 @@ class PetriNetFragmentParser:
     def init(self):
         self.tokens = []
         self.ctid = 0
-        self.labelLookup = {}
-        self.idLookup = {}
+        self.label_lookup = {}
+        self.id_lookup = {}
 
-    def createNet(self,net_title:str, netText:str) -> BuildablePetriNet:
+    def create_net(self,net_title:str, net_text:str) -> BuildablePetriNet:
         net = BuildablePetriNet(label=net_title)
         self.init()
-        self.addToNet(net,netText)
+        self.add_to_net(net,net_text)
         return net
 
-    def addToNet(self, net:LabelledPetriNet, netText: str):
-        self.tokenize(netText)
+    def add_to_net(self, net:LabelledPetriNet, net_text: str):
+        self.tokenize(net_text)
         self.net = net
         self.parse()
 
@@ -164,197 +164,197 @@ class PetriNetFragmentParser:
 
     def parse(self):
         self.lookahead = self.tokens[0]
-        self.petriOneLineNet()
-        if(self.lookahead.tokenInfo != TokenInfo.TERMINAL):
+        self.petri_one_line_net()
+        if(self.lookahead.token_info != TokenInfo.TERMINAL):
             raise ParseException(f"Unexpected symbol {self.lookahead} found")
 
-    def checkExistingNode(self,label: str, nodeType):
-        if not label in self.labelLookup:
+    def check_existing_node(self,label: str, node_type):
+        if not label in self.label_lookup:
             return None
-        n = self.labelLookup[label]
-        if nodeType != type(n):
+        n = self.label_lookup[label]
+        if node_type != type(n):
             raise ParseException(f"New node {label} duplicates existing node of wrong type")
         return n
 
-    def checkExistingNodeById(self, nid, nodeType):
-        if not nid in self.idLookup:
+    def check_existing_node_by_id(self, nid, node_type):
+        if not nid in self.id_lookup:
             return None
-        n = self.idLookup[nid]
-        if nodeType != type(n):
+        n = self.id_lookup[nid]
+        if node_type != type(n):
             raise ParseException(f"New node {nid} duplicates existing node of wrong type")
         return n
 
-    def checkExistingPlace(self, label: str):
-        return self.checkExistingNode(label,Place)
+    def check_existing_place(self, label: str):
+        return self.check_existing_node(label,Place)
 
-    def checkExistingPlaceById(self,pid):
-        return self.checkExistingNodeById(pid,Place)
+    def check_existing_place_by_id(self,pid):
+        return self.check_existing_node_by_id(pid,Place)
 
-    def checkExistingTransition(self,label: str):
-        return self.checkExistingNode(label,Transition)
+    def check_existing_transition(self,label: str):
+        return self.check_existing_node(label,Transition)
 
-    def checkExistingTransitionById(self,tranId):
-        return self.checkExistingNodeById(tranId,Transition)
+    def check_existing_transition_by_id(self,tran_id):
+        return self.check_existing_node_by_id(tran_id,Transition)
 
-    def petriOneLineNet(self):
+    def petri_one_line_net(self):
         p1 = self.place()
         self.edge()
         transition = self.transition()
         self.edge()
-        p2 = self.placeLedSubnet()
+        p2 = self.place_led_subnet()
         self.readd_arc(p1, transition)
         self.readd_arc(transition, p2)
 
     def place(self):
-        label = self.lookahead.tokenStr
-        self.nextToken()
+        label = self.lookahead.token_str
+        self.next_token()
         pid = None
         place = None
-        if self.lookahead.tokenInfo == TokenInfo.ID_PREFIX:
-            self.nextToken()
+        if self.lookahead.token_info == TokenInfo.ID_PREFIX:
+            self.next_token()
             pid = self.id()
-            self.nextToken()
+            self.next_token()
         if pid:
-            place = self.checkExistingPlaceById(pid)
+            place = self.check_existing_place_by_id(pid)
         else:
-            place = self.checkExistingPlace(label)
+            place = self.check_existing_place(label)
         if (place is None):
             if not pid:
-                pid = self.nextId()
+                pid = self.next_id()
             place = Place(label,pid=pid)
             self.net.add_place(place)
-            self.labelLookup[label] = place
+            self.label_lookup[label] = place
         return place;
 
     def edge(self):
-        if self.lookahead.tokenInfo != TokenInfo.EDGE:
-            self.tokenError(TokenInfo.EDGE)
-        self.nextToken()
+        if self.lookahead.token_info != TokenInfo.EDGE:
+            self.token_error(TokenInfo.EDGE)
+        self.next_token()
 
     def transition(self):
         transition = None
-        if self.lookahead.tokenInfo == TokenInfo.SIMPLE_TRAN_START: 
-            transition = self.simpleTransition()
-        if self.lookahead.tokenInfo == TokenInfo.WEIGHTED_TRAN_START: 
-            transition = self.weightedValueTransition()
-        self.nextToken()
+        if self.lookahead.token_info == TokenInfo.SIMPLE_TRAN_START: 
+            transition = self.simple_transition()
+        if self.lookahead.token_info == TokenInfo.WEIGHTED_TRAN_START: 
+            transition = self.weighted_value_transition()
+        self.next_token()
         return transition
 
-    def simpleTransition(self):
+    def simple_transition(self):
         transition = None
-        self.nextToken()
+        self.next_token()
         label = ''
-        tranId = None
-        silentTran = False
-        if self.lookahead.tokenInfo == TokenInfo.LABEL:
-            label = self.tranLabel()
-            self.nextToken()
+        tran_id = None
+        silent_tran = False
+        if self.lookahead.token_info == TokenInfo.LABEL:
+            label = self.tran_label()
+            self.next_token()
         else: 
-            if self.lookahead.tokenInfo == TokenInfo.SILENT_LABEL:
-                label = self.tranLabel()
-                silentTran = True
-                self.nextToken()
+            if self.lookahead.token_info == TokenInfo.SILENT_LABEL:
+                label = self.tran_label()
+                silent_tran = True
+                self.next_token()
             else:
                 raise ParseException(
-                        f"Expected label, but found {self.lookahead.tokenStr}")
-        if self.lookahead.tokenInfo == TokenInfo.SIMPLE_TRAN_END:
-            transition = self.checkExistingTransition(label)
+                        f"Expected label, but found {self.lookahead.token_str}")
+        if self.lookahead.token_info == TokenInfo.SIMPLE_TRAN_END:
+            transition = self.check_existing_transition(label)
         else:
-            if self.lookahead.tokenInfo == TokenInfo.ID_PREFIX:
+            if self.lookahead.token_info == TokenInfo.ID_PREFIX:
                 transition = None
-                self.nextToken()
-                tranId = self.id()
-                self.nextToken()
-                if self.lookahead.tokenInfo != TokenInfo.SIMPLE_TRAN_END:
-                    self.tokenError(TokenInfo.SIMPLE_TRAN_END,
+                self.next_token()
+                tran_id = self.id()
+                self.next_token()
+                if self.lookahead.token_info != TokenInfo.SIMPLE_TRAN_END:
+                    self.token_error(TokenInfo.SIMPLE_TRAN_END,
                                     TokenInfo.ID_PREFIX)
             else:
-                self.tokenError(TokenInfo.SIMPLE_TRAN_END,
+                self.token_error(TokenInfo.SIMPLE_TRAN_END,
                                 TokenInfo.ID_PREFIX)
-        if not tranId is None:
-            transition = self.checkExistingTransitionById(tranId)
+        if not tran_id is None:
+            transition = self.check_existing_transition_by_id(tran_id)
         if not transition:
-            if tranId:
-                transition = Transition(label,tid=tranId,silent=silentTran)
-                self.idLookup[tranId] = transition
+            if tran_id:
+                transition = Transition(label,tid=tran_id,silent=silent_tran)
+                self.id_lookup[tran_id] = transition
             else:
-                transition = Transition(label,tid=self.nextId(),
-                                        silent=silentTran)
-                self.labelLookup[label] = transition
+                transition = Transition(label,tid=self.next_id(),
+                                        silent=silent_tran)
+                self.label_lookup[label] = transition
             self.net.add_transition(transition)
         return transition
 
-    def weightedValueTransition(self):
+    def weighted_value_transition(self):
         transition = None
-        self.nextToken()
+        self.next_token()
         label = ''
-        tranId = None
-        silentTran = False
+        tran_id = None
+        silent_tran = False
         weight = 1.0
-        if self.lookahead.tokenInfo == TokenInfo.LABEL:
-            label = self.tranLabel()
-            self.nextToken()
+        if self.lookahead.token_info == TokenInfo.LABEL:
+            label = self.tran_label()
+            self.next_token()
         else:
-            if self.lookahead.tokenInfo == TokenInfo.SILENT_LABEL:
-                label = self.tranLabel()
-                silentTran = True
-                self.nextToken()
+            if self.lookahead.token_info == TokenInfo.SILENT_LABEL:
+                label = self.tran_label()
+                silent_tran = True
+                self.next_token()
             else:
                 raise ParseException(
-                        f"Expected label, but found {self.lookahead.tokenStr}")
+                        f"Expected label, but found {self.lookahead.token_str}")
 
-        if self.lookahead.tokenInfo == TokenInfo.ID_PREFIX:
+        if self.lookahead.token_info == TokenInfo.ID_PREFIX:
             transition = None
-            self.nextToken()
-            tranId = self.id()
-            self.nextToken()
-        if self.lookahead.tokenInfo == TokenInfo.WEIGHT:
+            self.next_token()
+            tran_id = self.id()
+            self.next_token()
+        if self.lookahead.token_info == TokenInfo.WEIGHT:
             weight = self.weight()
-            self.nextToken()
-        if self.lookahead.tokenInfo == TokenInfo.WEIGHTED_TRAN_END:
-            transition = self.checkExistingTransition(label)
+            self.next_token()
+        if self.lookahead.token_info == TokenInfo.WEIGHTED_TRAN_END:
+            transition = self.check_existing_transition(label)
         else:
-            self.tokenError(TokenInfo.WEIGHTED_TRAN_END,
+            self.token_error(TokenInfo.WEIGHTED_TRAN_END,
                             TokenInfo.ID_PREFIX)
         if not transition:
-            if tranId:
-                transition = Transition(label,tid=tranId,silent=silentTran,
+            if tran_id:
+                transition = Transition(label,tid=tran_id,silent=silent_tran,
                                     weight=weight)
-                self.idLookup[tranId] = transition
+                self.id_lookup[tran_id] = transition
             else:
-                transition = Transition(label,tid=self.nextId(),
-                                         silent=silentTran, weight=weight)
-                self.labelLookup[label] = transition
+                transition = Transition(label,tid=self.next_id(),
+                                         silent=silent_tran, weight=weight)
+                self.label_lookup[label] = transition
             self.net.add_transition(transition)
         return transition
 
 
-    def tranLabel(self):
-        return self.lookahead.tokenStr
+    def tran_label(self):
+        return self.lookahead.token_str
 
-    def placeLedSubnet(self):
+    def place_led_subnet(self):
         head = self.place()
-        if self.lookahead.tokenInfo == TokenInfo.EDGE:
+        if self.lookahead.token_info == TokenInfo.EDGE:
             self.edge()
             tran = self.transition()
             self.edge()
-            tail = self.placeLedSubnet()
+            tail = self.place_led_subnet()
             self.readd_arc(head,tran)
             self.readd_arc(tran,tail)
         return head
 
     def id(self):
-        return int(self.lookahead.tokenStr)
+        return int(self.lookahead.token_str)
 
     def weight(self):
-        return float(self.lookahead.tokenStr)
+        return float(self.lookahead.token_str)
 
-    def tokenError(self,*tokens):
+    def token_error(self,*tokens):
         raise ParseException(
-                f"Expected one of {tokens} but found {self.lookahead.tokenStr}")
+                f"Expected one of {tokens} but found {self.lookahead.token_str}")
 
 
-    def nextToken(self):
+    def next_token(self):
         self.tokens.pop(0)
         # at the end of input we return an epsilon token
         if not self.tokens:
@@ -362,10 +362,10 @@ class PetriNetFragmentParser:
         else:
             self.lookahead = self.tokens[0]
 
-    def readd_arc(self,fromNode,toNode):
-        self.net.add_arc_between(fromNode,toNode)
+    def readd_arc(self,from_node,to_node):
+        self.net.add_arc_between(from_node,to_node)
 
-    def nextId(self):
+    def next_id(self):
         self.ctid += 1
         return self.ctid
 

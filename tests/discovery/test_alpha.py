@@ -212,7 +212,7 @@ class DTLogTest(unittest.TestCase):
     def test_mine(self):
         miner = AlphaMinerInstance()
         # following p173 and L5 in Process Mining (2016;2ND ED) 
-        PL, TL, FL = miner.mine_model(BOOK_LOG)
-        self.assertEqual(PL, BOOK_PL)
-        self.assertEqual(TL, BOOK_TL_OUT)
-        self.assertEqual(FL, BOOK_FL)
+        net = miner.mine_model(BOOK_LOG)
+        self.assertEqual(net.places, BOOK_PL)
+        self.assertEqual(net.transitions, BOOK_TL_OUT)
+        self.assertEqual(net.arcs, BOOK_FL)
