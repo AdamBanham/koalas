@@ -10,6 +10,35 @@ gen_trace\n
 Complex Form Objects
 --------------------
 Coming soon...
+
+
+Grammar
+-------
+<system> :: <log> | <domain> <log> | <log> <issue> | <domain> <log> <issue>
+
+<log> :: [Patterns]{<nonzero>} <trace>
+<trace> :: [ <event> ]{<nonzero>} | [<event>]{<nonzero>} <trace>
+<event> :: <event> <event>| <word> | <word>{<data>}
+<word> :: <ascii> | <ascii><word>
+<data> :: <attr> | <attr>|<shift> | <data>,<data>
+<attr> :: d_<alldigits>
+<shift> :: <limit> | <lshift> | <rshift> | <mshift>
+<lshift> :: <halfnumber>%-left
+<rshift> :: <halfnumber>%-right 
+<mshift> :: <halfnumber>%-m-<halfnumber>%
+<limit> :: <<<number> | >><number>
+<halfnumber> :: <halfdigits> | <halfdigits><halfdigits>
+<number> :: <alldigits> | <number><number>
+<nonzero> :: <nonzerodigits> | <nonzero><nonzero>
+<alldigits> :: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 
+<nonzerodigits> :: 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 
+<halfdigits> :: 0 | 1 | 2 | 3 | 4 | 5
+<ascii> :: a | b | c | ... | x | y | z ** any ascii symbol
+
+<domain> :: [Domains] <atttribute>
+<attribute> :: <attribute> <attribute> | <word>-<type>-<dist> | <word>-<type>
+
+
 """
 from typing import Iterable,List
 from enum import Enum
