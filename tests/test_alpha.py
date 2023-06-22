@@ -9,7 +9,7 @@ from pmkoalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
 from pmkoalas.dtlog import convert
 
 # simple log tests
-LOG = gen_log( 
+LOG = convert( 
             "a b d",
             "a c d",
             "a b",
@@ -59,7 +59,7 @@ MATRIX = {
 }
 
 # following p173 and L5 in Process Mining (2016;2ND ED)
-BOOK_LOG = gen_log( 
+BOOK_LOG = convert( 
     "a b e f",
     "a b e f",
     "a b e c d b f",

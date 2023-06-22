@@ -6,9 +6,9 @@ from pmkoalas.directly import DirectlyFollowPair as DFPair, FollowLanguage
 from pmkoalas.directly import DIRECTLY_END,DIRECTLY_SOURCE
 from pmkoalas.simple import EventLog
 
-empty_lang = gen_log()
+empty_lang = convert()
 
-simple_lang = gen_log(
+simple_lang = convert(
     "a b c",
     "a b c",
     "a d c"
@@ -22,7 +22,7 @@ simple_pairs = [
     DFPair("c", DIRECTLY_END, 3),
 ]
 
-many_starts = gen_log(
+many_starts = convert(
     "a e",
     "b e",
     "c e",
@@ -40,7 +40,7 @@ many_starts_pairs = [
     DFPair("e", DIRECTLY_END, 4),
 ]
 
-many_ends = gen_log(
+many_ends = convert(
     "a b",
     "a c",
     "a d",
@@ -58,7 +58,7 @@ many_ends_pairs = [
     DFPair("e", DIRECTLY_END, 1),
 ]
 
-empty_traces_lang = gen_log(
+empty_traces_lang = convert(
     "a b c",
     "a b c",
     "a d c",
