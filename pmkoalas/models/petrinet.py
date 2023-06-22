@@ -254,10 +254,17 @@ class LabelledPetriNet:
         return repr
 
     def __str__(self) -> str:
-        return "LabelledPetriNet(" + self._name + ")\n" \
-            +  " Places: " + str(self.places) + "\n" \
-            +  " Trans: " + str(self.transitions) + "\n" \
-            +  " Arcs: " + str(self.arcs)
+        _str = "LabelledPetriNet with name of '" + self._name + "'\n"
+        _str += "\tPlaces: \n"
+        for p in self.places:
+            _str += f"\t\t- {p}\n"
+        _str += "\tTransitions: \n"
+        for t in self.transitions:
+            _str += f"\t\t- {t}\n"
+        _str += "\tArcs: \n"
+        for a in self.arcs:
+            _str += f"\t\t- {a}\n"
+        return _str
     
 class BuildablePetriNet(LabelledPetriNet):
     """
