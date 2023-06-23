@@ -125,7 +125,7 @@ class ComplexLogVisitor(NodeVisitor):
         log = "Patterns:{" samplesize "}" trace*
         trace = " " "[" event* " ]{" freq "}"
         event = (" " word "{" data* "}" ) / (" " word)
-        word = ~"[a-z]{1,}" 
+        word = ~"[a-zA-Z]{1,}" 
         data =  (attr "|" shift ", ") / (attr ", ")
         attr = "d_" ~"[0-9]{1}" 
         shift = mshift / limit / lshift / rshift 
@@ -146,8 +146,9 @@ class ComplexLogVisitor(NodeVisitor):
     )
 
     def prepare_parse(self, text):
-        text = " ".join(text.splitlines())
+        text = " ".join(text.strip().splitlines())
         text = re.sub("\s\s+", " ", text.strip())
+        print(f"'{text}'")
         tree = par_grammar_complex_log.parse(text)
         return self.visit(tree)
 
@@ -305,7 +306,7 @@ par_grammar_complex_log = Grammar(
     log = "Patterns:{" samplesize "}" trace*
     trace = " " "[" event* " ]{" freq "}"
     event = (" " word "{" data* "}" ) / (" " word)
-    word = ~"[a-z]{1,}" 
+    word = ~"[a-zA-Z]{1,}" 
     data =  (attr "|" shift ", ") / (attr ", ")
     attr = "d_" ~"[0-9]{1}" 
     shift = mshift / limit / lshift / rshift 
@@ -453,6 +454,20 @@ test_system_07 = """
 system_tests = [test_system_01, test_system_02, test_system_03, test_system_04,
                 test_system_05, test_system_06]
 
+
+def pretty_out(out:str):
+    print(f"parsed output:")
+    if "domain" in out:
+        print("Domain:")
+        for key, val in out['domain'].items():
+            print(f"\t{key} -- {val}")
+    print(f"Log ({out['log']['samplesize']})")
+    for i,pattern in enumerate(out["log"]["patterns"]):
+        print(f"\tPattern {i+1} : (weight={pattern['weight']})")
+        for e in pattern["events"]:
+            print(f"\t\t {e['act']}")
+            print(f"\t\t\t vars : {e['vars']}")
+
 if __name__ == "__main__":
     print("testing finding a trace")
     for test in trace_tests:
@@ -507,18 +522,15 @@ if __name__ == "__main__":
     print(f"Fuzzed output :: '{fuzzed_out}'")
     iv = ComplexLogVisitor()
     out = iv.prepare_parse(fuzzed_out)
-    print(out)
-    print(f"parsed output:")
-    if "domain" in out:
-        print("Domain:")
-        for key, val in out['domain'].items():
-            print(f"\t{key} -- {val}")
-    print(f"Log ({out['log']['samplesize']})")
-    for i,pattern in enumerate(out["log"]["patterns"]):
-        print(f"\tPattern {i+1} : (weight={pattern['weight']})")
-        for e in pattern["events"]:
-            print(f"\t\t {e['act']}")
-            print(f"\t\t\t vars : {e['vars']}")
+    pretty_out(out)
+    # test loading in case_system
+    csystem = ""
+    with open("./tests/case_system.gen", "r") as f:
+        csystem = f.read()
+    print()
+    iv = ComplexLogVisitor()
+    out = iv.prepare_parse(csystem)
+    pretty_out(out)
 
 
     
