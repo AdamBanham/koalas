@@ -1,0 +1,18 @@
+Domains: 
+    d_1-int
+    d_2-string
+    d_3-float
+    d_4-int
+    d_5-float
+    d_6-bool
+    
+Patterns:{9} 
+    [ A B E F ]{3} 
+    [ A B E G ]{2} 
+    [ A B E H ]{1} 
+    [ A C E F ]{3} 
+    [ A C E G ]{2} 
+    [ A C E H ]{1} 
+    [ A D E F ]{3} 
+    [ A D E G ]{2} 
+    [ A D E H ]{1}
