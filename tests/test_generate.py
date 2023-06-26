@@ -1,7 +1,13 @@
 import unittest
+from random import randint
+from os.path import join
+from logging import DEBUG
+
 from pmkoalas.generate import *
 from pmkoalas.simple import Trace
-from random import randint
+from pmkoalas._logging import debug
+
+case_system_file = join(".", "tests", "case_system.gen") 
 
 class DTLogTest(unittest.TestCase):
 
@@ -74,4 +80,6 @@ class DTLogTest(unittest.TestCase):
             self.fail(f"unable to generate log as :: {e}") 
 
     def test_generate_from_grammar(self):
-        pass
+        with open(case_system_file, "r") as f:
+            log = generate_from_grammar(f.read(), debug=True, debug_level=DEBUG)
+            debug(log)
