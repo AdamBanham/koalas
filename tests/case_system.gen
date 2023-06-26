@@ -6,7 +6,7 @@ Domains:
     d_5-float
     d_6-bool
     
-Patterns:{9} 
+Patterns:{100} 
     [ A B E F ]{3} 
     [ A B E G ]{2} 
     [ A B E H ]{1} 
