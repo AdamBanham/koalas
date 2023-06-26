@@ -25,7 +25,10 @@ from copy import deepcopy
 from random import randint, choice
 
 from pmkoalas.simple import EventLog, Trace
-from pmkoalas.complex import ComplexEventLog
+from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
+from pmkoalas.grammars.complex_logs import ComplexLogParser, ComplexLogParse
+from pmkoalas import __version__
+from pmkoalas._logging import enable_logging, debug
 
 ### Simple form functions
 DEFAULT_DELIM=" "
@@ -244,27 +247,66 @@ class PesudoGenerator(ABC):
 
 class PesudoEvent(PesudoGenerator):
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, domain:'PesudoDomain', template) -> None:
+        self._domain = domain 
+        self._template = template 
 
-    def generate(self) -> object:
-        return []
+    def generate(self) -> ComplexEvent:
+        return ComplexEvent(self._template['act'], {})
     
 class PesudoTrace(PesudoGenerator):
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, domain:'PesudoDomain', pattern) -> None:
+        self._weight = pattern['weight']
+        self._events = [ 
+            PesudoEvent(domain, ev)
+            for ev
+            in pattern['events']
+        ]
 
-    def generate(self) -> object:
-        return []
+    def generate(self) -> Iterable[ComplexEvent]:
+        for pe in self._events:
+            yield pe.generate()
+    
+    @property
+    def weight(self) -> int: 
+        return self._weight
     
 class PesudoLog(PesudoGenerator):
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, domain:'PesudoDomain', patterns , samplesize:int) -> None:
+        self._patterns = [ 
+            PesudoTrace(domain, pattern)
+            for pattern 
+            in patterns
+        ]
+        self._weights = [ 
+            pt.weight
+            for pt 
+            in self._patterns
+        ]
+        self._weights = [ 
+            sum(self._weights[:i])
+            for i 
+            in range(1,len(self._weights)+1)
+        ]
+        self._samplesize = samplesize
 
-    def generate(self) -> object:
-        return []
+    def generate(self) -> Iterable[ComplexTrace]:
+        traces = []
+        debug(f"making a log of size {self._samplesize}")
+        for sample in range(self._samplesize):
+            coin = randint(0, max(self._weights))
+            for w,p in zip(self._weights, self._patterns):
+                if coin < w:
+                    debug(f"coin :: {coin}, pattern :: {w}-{p}")
+                    traces.append(ComplexTrace(p.generate(), 
+                    { "concept:name" : f"Generated Trace {sample+1}",
+                     "created:from" : f"pmkoalas_{__version__}"
+                    })
+                    )
+                    break
+        return traces
     
 class PesudoAttribute(PesudoGenerator):
 
@@ -276,7 +318,7 @@ class PesudoAttribute(PesudoGenerator):
     
 class PesudoDomain(PesudoGenerator):
 
-    def __init__(self) -> None:
+    def __init__(self, domain) -> None:
         super().__init__()
 
     def generate(self) -> object:
@@ -284,11 +326,22 @@ class PesudoDomain(PesudoGenerator):
     
 class PesudoSystem(PesudoGenerator):
 
-    def __init__(self) -> None:
+    def __init__(self, parsed_state:ComplexLogParse) -> None:
+        self._domain = PesudoDomain(parsed_state.domain)
+        self._log = PesudoLog(self._domain, parsed_state.patterns(), 
+                              parsed_state.samplesize())   
         super().__init__()
 
-    def generate(self) -> object:
-        return []
+    def generate(self) -> ComplexEventLog:
+        traces = [ t for t in self._log.generate() ]
+        return ComplexEventLog(traces, {}, "Dummy log generated from grammar")
 
+def create_generator_from_grammar(grammar:str) -> PesudoSystem:
+    parsed = ComplexLogParser().prepare_parse(grammar)
+    return PesudoSystem(parsed)
+
+@enable_logging
 def generate_from_grammar(grammar:str) -> ComplexEventLog:
-    return ComplexEventLog([], {}, "Dummy log generated from grammar")
+    system = create_generator_from_grammar(grammar)
+    log = system.generate()
+    return log
