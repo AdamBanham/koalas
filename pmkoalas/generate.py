@@ -204,14 +204,14 @@ def generate_trace(trace: str, delimiter=DEFAULT_DELIM) -> List[Iterable[str]]:
 def generate_log(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
     """
     This function generates an (simple) event log from a collection
-    of delimited traces, e.g. ["a b", "a c", "a b d"].\n
-    Exemplar uses consist of:\n
-    `convert("a b c", "a b", "a")`\n
-    `convert(*[ t for t in traces])`\n
-
-    More advanced usages:\n
-    multiply a sequence, five times: `"a b c || ^5"`\n
-    having 50% chance to cause a data issue: `"a b c d e || %d50"`\n
+    of delimited traces, e.g. ["a b", "a c", "a b d"]. However, in contrast to, 
+    `pmkoalas.dtlog.convert`, this function allows for some simple augments to 
+    variants.\n
+    Exemplar use cases:\n
+    - multiplying a sequence by a factor, e.g. five times: `"a b c || ^5"`\n
+    - having 50% chance to cause a data issue: `"a b c d e || %d50"`\n
+    - generating five traces, each with 25% chance of an issue: 
+    `"a b c d e ||^5 %d25"`
     """
     return EventLog( [ 
         t 
