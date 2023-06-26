@@ -1,57 +1,33 @@
 """
-This module includes functions to quickly generate koalas 
-event logs, traces, and events in both simple and complex forms.
+This module includes functions to quickly generate event logs, traces, and 
+events in both simple and complex forms. The simple form functions allow for 
+mutation of strings based on some simple augmentations, and are very similar
+to the dtlog options.
+
+The complex form functions are design tools for generating an event log from a 
+grammar and allow for many more augmentations. These are mainly aimed at users 
+that wish to include some decision making based on data within the log, but 
+do not wish to explicitly code this relationship. 
 
 Simple Form Objects
 -------------------
-gen_log\n
-gen_trace\n
+generate_log\n
+generate_trace\n
 
 Complex Form Objects
 --------------------
-Coming soon...
-
-
-Grammar
--------
-<system> :: <log> | <domain> <log> | <log> <issue> | <domain> <log> <issue>
-
-<log> :: [Patterns]{<nonzero>} <trace>
-<trace> :: [ <event> ]{<nonzero>} | [<event>]{<nonzero>} <trace>
-<event> :: <event> <event>| <word> | <word>{<data>}
-<word> :: <ascii> | <ascii><word>
-<data> :: <attr> | <attr>|<shift> | <data>,<data>
-<attr> :: d_<alldigits>
-<shift> :: <limit> | <lshift> | <rshift> | <mshift>
-<lshift> :: <halfnumber>%-left
-<rshift> :: <halfnumber>%-right 
-<mshift> :: <halfnumber>%-m-<halfnumber>%
-<limit> :: <<<number> | >><number>
-<halfnumber> :: <halfdigits> | <halfdigits><halfdigits>
-<number> :: <alldigits> | <number><number>
-<nonzero> :: <nonzerodigits> | <nonzero><nonzero>
-<alldigits> :: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 
-<nonzerodigits> :: 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 
-<halfdigits> :: 0 | 1 | 2 | 3 | 4 | 5
-<ascii> :: a | b | c | ... | x | y | z ** any ascii symbol
-
-<domain> :: [Domains] <atttribute>
-<attribute> :: <attribute> <attribute> | <attr>-<type> | <attr>-<type>-<dist>
-<type> :: int | float | string | bool
-<dist> :: <disttype> | <disttype>-<number>
-<disttype> :: normal | uniform
-
-
+generate_from_grammar\n
 """
-from typing import Iterable,List
+from typing import Iterable,List, Union
 from enum import Enum
 from abc import ABC,abstractmethod
 from copy import deepcopy
 from random import randint, choice
 
 from pmkoalas.simple import EventLog, Trace
+from pmkoalas.complex import ComplexEventLog
 
-
+### Simple form functions
 DEFAULT_DELIM=" "
 DEFAULT_AUG_SPLIT = "||"
 DEFAULT_MUT_AUG = "^"
@@ -104,11 +80,10 @@ class TraceAugment(ABC):
 
 class TraceMutAugment(TraceAugment):
     """
-    This trace augment, mutiplies the number of traces produced
-    by the given multiplier.
+    This trace augment, mutiplies the number of traces produced by the given 
+    multiplier.
     ### FORM
-    "a b c d e || ^5" where "^5" is translated produce 5 of 
-    this trace.
+    "a b c d e || ^5" where "^5" is translated to produce 5 of this trace.
     """
 
     def __init__(self, mut:int) -> None:
@@ -186,7 +161,7 @@ class TraceDataIssue(TraceAugment):
         return seq 
 ### Top level API calls
 
-def gen_trace(trace: str, delimiter=DEFAULT_DELIM) -> List[Iterable[str]]:
+def generate_trace(trace: str, delimiter=DEFAULT_DELIM) -> List[Iterable[str]]:
     """
     This function generates a (simple) Trace from a delimited trace,
     e.g. "a b c" or "a b c || ^100".
@@ -226,7 +201,7 @@ def gen_trace(trace: str, delimiter=DEFAULT_DELIM) -> List[Iterable[str]]:
     else:
         return [Trace(seq)]
 
-def gen_log(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
+def generate_log(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
     """
     This function generates an (simple) event log from a collection
     of delimited traces, e.g. ["a b", "a c", "a b d"].\n
@@ -240,8 +215,66 @@ def gen_log(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
     """
     return EventLog( [ 
         t 
-        for gens in map( gen_trace, traces )
+        for gens in map( generate_trace, traces )
         for t in gens
     ] )
 
+### Complex form functions
+class PesudoGenerator(ABC):
 
+    @abstractmethod
+    def generate(self) -> object:
+        """
+        Generates the object from the grammar parsing.
+        """
+
+class PesudoEvent(PesudoGenerator):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self) -> object:
+        return []
+    
+class PesudoTrace(PesudoGenerator):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self) -> object:
+        return []
+    
+class PesudoLog(PesudoGenerator):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self) -> object:
+        return []
+    
+class PesudoAttribute(PesudoGenerator):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self) -> object:
+        return [] 
+    
+class PesudoDomain(PesudoGenerator):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self) -> object:
+        return []
+    
+class PesudoSystem(PesudoGenerator):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self) -> object:
+        return []
+
+def generate_from_grammar(grammar:str) -> ComplexEventLog:
+    return ComplexEventLog([], {}, "Dummy log generated from grammar")
