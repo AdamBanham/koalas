@@ -270,10 +270,12 @@ class ComplexLogParser(NodeVisitor):
         for c in visited_children[3]:
             patterns.append(c)
         # collect sample size
-        samplesize = visited_children[1][0].text
+        samplesize = ""
+        for c in visited_children[1]:
+            samplesize += c.text
         return {
             "patterns" : patterns,
-            "samplesize" : samplesize
+            "samplesize" : int(samplesize)
         } 
     
     def visit_attribute(self, node, visited_children):
@@ -305,7 +307,7 @@ class ComplexLogParser(NodeVisitor):
         _, _, events, _, freq, _ = vc 
         for e in events:
             trace["events"].append(e)
-        trace["weight"] = freq.text
+        trace["weight"] = int(freq.text)
         return trace
     
     def visit_event(self, node, visited_children):
