@@ -96,6 +96,14 @@ class TraceMutAugment(TraceAugment):
             out += [ deepcopy(seq) for _ in range(self._mut)]
         return out
 
+class DataIssueImpossible(Exception):
+    """
+    An exception that is raised when we are unable to generate a data issue,
+    using the given pattern. Usually occurs when the trace length is one, or that
+    the number of unique process attributes is one.
+    """
+    pass
+
 class TraceDataIssue(TraceAugment):
     """
     This trace augment will simulate a data issue occuring on
@@ -124,6 +132,8 @@ class TraceDataIssue(TraceAugment):
             nseq = deepcopy(seq)
             # roll for issue
             chance = randint(0, 100)
+            if (len(nseq) < 2 or len(set(nseq)) < 2):
+                    raise DataIssueImpossible()
             if (chance <= self._chance):
                 # work out the type of issue
                 issue = randint(1,3)
@@ -141,6 +151,8 @@ class TraceDataIssue(TraceAugment):
         choices = list(range(len(seq)))
         c1 = choice(choices)
         c2 = choice(choices)
+        while c2 == c1:
+            c2 = choice(choices)
         temp = seq[c2]
         seq[c2] = seq[c1]
         seq[c1] = temp
@@ -157,6 +169,8 @@ class TraceDataIssue(TraceAugment):
         index_choices = list(range(len(seq)))
         index = choice(index_choices)
         label = choice(label_choices)
+        while seq[index] == label:
+            label = choice(label_choices)
         seq[index] = label
         return seq 
 ### Top level API calls
