@@ -218,8 +218,9 @@ class DTLogTest(unittest.TestCase):
         with open(case_system_file, "r") as f:
             csystem = f.read()
             out = self.complex_parser.prepare_parse(csystem)
-            print(out)
-            print(pretty_out(out))
+            if self.show_logging:
+                debug(out)
+                debug(pretty_out(out))
 
 # if __name__ == "__main__":
     
