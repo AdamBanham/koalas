@@ -221,29 +221,4 @@ class DTLogTest(unittest.TestCase):
             if self.show_logging:
                 debug(out)
                 debug(pretty_out(out))
-
-# if __name__ == "__main__":
-    
-#     fuzzed_out = simple_grammar_fuzzer(
-#         COMPLEX_LOG_GRAMMAR,
-#         "<system>",
-#         50,
-#         100,
-#         False
-#     )
-#     # fuzzed_out = test_system_07
-#     print(f"Fuzzed output :: '{fuzzed_out}'")
-#     iv = ComplexLogVisitor()
-#     out = iv.prepare_parse(fuzzed_out)
-#     pretty_out(out)
-#     # test loading in case_system
-#     csystem = ""
-#     with open("./tests/case_system.gen", "r") as f:
-#         csystem = f.read()
-#     print()
-#     iv = ComplexLogVisitor()
-#     out = iv.prepare_parse(csystem)
-#     pretty_out(out)
-
-
     
