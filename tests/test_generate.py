@@ -81,5 +81,5 @@ class DTLogTest(unittest.TestCase):
 
     def test_generate_from_grammar(self):
         with open(case_system_file, "r") as f:
-            log = generate_from_grammar(f.read(), debug=True, debug_level=DEBUG)
+            log = generate_from_grammar(f.read())
             debug(log)

@@ -413,7 +413,6 @@ class PesudoAttribute(PesudoGenerator):
         else: 
             self._dist_mean = None
         self._type = self.SupportedTypes.find_type(parsed['atype'])
-        print(self._type)
         self._setup()
 
     def _setup(self) -> None:
