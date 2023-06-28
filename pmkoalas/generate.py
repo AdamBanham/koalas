@@ -22,7 +22,9 @@ from typing import Iterable,List, Union
 from enum import Enum
 from abc import ABC,abstractmethod
 from copy import deepcopy
-from random import randint, choice
+from random import randint, choice, random, normalvariate, uniform
+from statistics import NormalDist
+from string import ascii_lowercase
 
 from pmkoalas.simple import EventLog, Trace
 from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
@@ -236,6 +238,9 @@ def generate_log(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
         for t in gens
     ] )
 
+class GenerationIssue(Exception):
+    pass
+
 ### Complex form functions
 class PesudoGenerator(ABC):
 
@@ -247,12 +252,59 @@ class PesudoGenerator(ABC):
 
 class PesudoEvent(PesudoGenerator):
 
+    
+    class SupportedShifters(Enum):
+        left = 1
+        right = 2
+        mid = 3
+
+        @classmethod
+        def find_type(self, parsed) -> 'SupportedShifters':
+            for shifter in self:
+                if shifter.name == parsed:
+                    return shifter 
+            raise GenerationIssue(f"Unknown shifter presented :: '{parsed}'")
+        
+    class Shifter():
+
+        def __init__(self, shift, amount) -> None:
+            self._shift = shift 
+            if (self.is_mid()):
+                self.left = amount[0]
+                self.right = amount[1]
+            else:
+                self.amount = amount
+
+        def is_left(self):
+            return self._shift == PesudoEvent.SupportedShifters.left
+        
+        def is_right(self):
+            return self._shift == PesudoEvent.SupportedShifters.right
+        
+        def is_mid(self):
+            return self._shift == PesudoEvent.SupportedShifters.mid
+
     def __init__(self, domain:'PesudoDomain', template) -> None:
         self._domain = domain 
         self._template = template 
 
     def generate(self) -> ComplexEvent:
-        return ComplexEvent(self._template['act'], {})
+        mapping = {}
+        for var in self._template['vars']:
+            vname = var['name']
+            if (var['shift'] != None):
+                shift = self.SupportedShifters.find_type(var['shift']['typer'])
+                if "amount" in var['shift']:
+                    shift = self.Shifter(shift, var['shift']['amount'])
+                else:
+                    shift = self.Shifter(shift, 
+                            [var['shift']['lshift'], var['shift']['rshift']]
+                    )
+            else:
+                shift = None
+            mapping[vname] = self._domain.generate_attribute(vname, shift)
+        ev = ComplexEvent(self._template['act'], mapping)
+        return ev
     
 class PesudoTrace(PesudoGenerator):
 
@@ -263,6 +315,7 @@ class PesudoTrace(PesudoGenerator):
             for ev
             in pattern['events']
         ]
+        self._match = pattern['match']
 
     def generate(self) -> Iterable[ComplexEvent]:
         for pe in self._events:
@@ -271,6 +324,9 @@ class PesudoTrace(PesudoGenerator):
     @property
     def weight(self) -> int: 
         return self._weight
+    
+    def __str__(self) -> str:
+        return self._match
     
 class PesudoLog(PesudoGenerator):
 
@@ -296,9 +352,9 @@ class PesudoLog(PesudoGenerator):
         traces = []
         debug(f"making a log of size {self._samplesize}")
         for sample in range(self._samplesize):
-            coin = randint(0, max(self._weights))
+            coin = randint(0, self._weights[-1])
             for w,p in zip(self._weights, self._patterns):
-                if coin < w:
+                if coin <= w:
                     debug(f"coin :: {coin}, pattern :: {w}-{p}")
                     traces.append(ComplexTrace(p.generate(), 
                     { "concept:name" : f"Generated Trace {sample+1}",
@@ -306,23 +362,188 @@ class PesudoLog(PesudoGenerator):
                     })
                     )
                     break
+        debug(len(traces))
         return traces
     
 class PesudoAttribute(PesudoGenerator):
 
-    def __init__(self) -> None:
-        super().__init__()
+    # default parameters
+    DEFAULT_RANGE_FOR_UNIFORM = 10
+    DEFAULT_MEAN_FOR_NORMAL = 5.0
+    DEFAULT_SIGMA_FOR_NORMAL = 1.0
+    # support type classes
+    class SupportedDistrubutions(Enum):
+        uniform = "uniform"
+        normal  = "normal"
 
-    def generate(self) -> object:
-        return [] 
+        def __init__(self, parse) -> None:
+            self.parse = parse
+
+        @classmethod
+        def find_type(self, parsed:str) -> 'SupportedDistrubutions':
+            for dist in self:
+                if dist.parse == parsed:
+                    return dist
+            raise GenerationIssue(f"Unsupported Distribution found :: '{parsed}'")
+
+    class SupportedTypes(Enum):
+        float = float
+        int = int 
+        string = str
+        bool = bool
+
+        def __init__(self, clazz) -> None:
+            self.clazz = clazz
+
+        @classmethod
+        def find_type(self, parsed:str) -> 'SupportedTypes':
+            for typer in self:
+                if str(typer.name) == parsed:
+                    return typer 
+            raise GenerationIssue("Unsupported process attribute type found" /
+                                  +f" :: '{parsed}") 
+
+    def __init__(self, parsed) -> None:
+        self._name = parsed['name']
+        self._dist = self.SupportedDistrubutions.find_type(
+            parsed['dist']['typer']
+        )
+        if ("mean" in parsed['dist']):
+            self._dist_mean = float(parsed['dist']['mean'])
+        else: 
+            self._dist_mean = None
+        self._type = self.SupportedTypes.find_type(parsed['atype'])
+        print(self._type)
+        self._setup()
+
+    def _setup(self) -> None:
+        if self._type == self.SupportedTypes.int:
+            self._setup_int()
+            return
+        elif self._type == self.SupportedTypes.float:
+            self._setup_float()
+            return
+        elif self._type == self.SupportedTypes.string:
+            self._setup_string()
+            return
+        elif self._type == self.SupportedTypes.bool:
+            return
+        raise GenerationIssue(f"Setup not completed for attribute type" /
+                              +f" '{self._type}'")
+    
+    def _setup_int(self):
+        if (self._dist_mean == None):
+            self._dist_mean = 25
+        if self._dist == self.SupportedDistrubutions.normal: 
+            mean = self._dist_mean
+            std = self._dist_mean/8.0
+            self._normal = NormalDist(mean, std)
+            self._selector = \
+                lambda : int(self._normal.samples(1)[0])
+        else:
+            max = self._dist_mean
+            self._selector = \
+                lambda : int(uniform(1, max+1))
+
+    def _setup_float(self):
+        pass 
+
+    def _setup_string(self):
+        pass 
+
+    def generate(self, shift) -> object:
+        debug(f"generating {self._name} ({self._type},{self._dist})")
+        if self._type == self.SupportedTypes.int:
+            return self._generate_int(shift)
+        elif self._type == self.SupportedTypes.float:
+            return self._generate_float(shift)
+        elif self._type == self.SupportedTypes.string:
+            return self._generate_string(shift)
+        elif self._type == self.SupportedTypes.bool:
+            return choice([True,False])
+        return 1 
+    
+    def _generate_int(self, shift:PesudoEvent.Shifter) -> int:
+        if shift == None:
+            return self._selector() 
+        elif shift.is_left():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = [i for i in range(1, int(self._dist_mean+1))]
+                mid = int((len(ranger) / 2.0)+1)
+                mid = max(int(mid - (mid * ((shift.amount*2)/100.0))), 1)
+                ranger = ranger[:mid]
+                accept = lambda x: x in ranger
+            else:
+                p = (50.0 - shift.amount)/100.0
+                cutoff = self._normal.inv_cdf(p)
+                accept = lambda x: x <= cutoff
+            while not accept(sel):
+                sel = self._selector()
+            return sel 
+        elif shift.is_right():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = [i for i in range(1, int(self._dist_mean+1))]
+                mid = int((len(ranger) / 2.0)-1)
+                mid = min(int(mid + (mid * ((shift.amount*2)/100.0))),
+                           len(ranger)-1)
+                ranger = ranger[mid:]
+                accept = lambda x: x in ranger
+            else:
+                p = (50.0 + shift.amount)/100.0
+                cutoff = self._normal.inv_cdf(p)
+                accept = lambda x: x >= cutoff
+            while not accept(sel):
+                sel = self._selector()
+            return sel  
+        elif shift.is_mid():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = [i for i in range(1, int(self._dist_mean+1))]
+                left = int((len(ranger) / 2.0)+1)
+                left = max(int(left - (left * ((shift.left*2)/100.0))), 1)
+                right = int((len(ranger) / 2.0)-1)
+                right = min(int(right + (right * ((shift.right*2)/100.0))),
+                             len(ranger)-1)
+                ranger = ranger[left:right]
+                accept = lambda x: x in ranger
+            else:
+                lp = (50.0 - shift.left)/100.0
+                lcutoff = self._normal.inv_cdf(lp)
+                rp = (50.0 + shift.right)/100.0
+                rcutoff = self._normal.inv_cdf(rp)
+                accept = lambda x: lcutoff <= x <= rcutoff
+            while not accept(sel):
+                sel = self._selector()
+            return sel  
+        raise GenerationIssue(f"Approciate shifter not used for int :: {shift}")
+
+    def _generate_float(self, shift) -> float: 
+        return random() 
+    
+    def _generate_string(self, shift) -> str:
+        return choice(ascii_lowercase)
     
 class PesudoDomain(PesudoGenerator):
 
     def __init__(self, domain) -> None:
-        super().__init__()
+        self._attrs =  dict(
+            (key, PesudoAttribute(val))
+            for key,val 
+            in domain.items()
+        )
+        debug(self._attrs)
 
-    def generate(self) -> object:
-        return []
+    def generate(self,) -> None:
+        return None
+    
+    def generate_attribute(self, name, shift=None) -> object:
+        if (name in self._attrs):
+            return self._attrs[name].generate(shift) 
+        else: 
+            raise GenerationIssue("unable to find process attribute named " \
+                                  +f"'{name}' in grammar.")
     
 class PesudoSystem(PesudoGenerator):
 
