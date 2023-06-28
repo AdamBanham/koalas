@@ -446,7 +446,18 @@ class PesudoAttribute(PesudoGenerator):
                 lambda : int(uniform(1, max+1))
 
     def _setup_float(self):
-        pass 
+        if (self._dist_mean == None):
+            self._dist_mean = 25
+        if self._dist == self.SupportedDistrubutions.normal: 
+            mean = self._dist_mean
+            std = self._dist_mean/8.0
+            self._normal = NormalDist(mean, std)
+            self._selector = \
+                lambda : self._normal.samples(1)[0]
+        else:
+            max = self._dist_mean
+            self._selector = \
+                lambda : uniform(1, max+1)
 
     def _setup_string(self):
         pass 
@@ -520,7 +531,54 @@ class PesudoAttribute(PesudoGenerator):
         raise GenerationIssue(f"Approciate shifter not used for int :: {shift}")
 
     def _generate_float(self, shift) -> float: 
-        return random() 
+        if shift == None:
+            return self._selector() 
+        elif shift.is_left():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = self._dist_mean - 1
+                mid = ranger - (ranger / 2.0)
+                cutoff = mid - (ranger * (0.5 - (shift.amount/100))) 
+                accept = lambda x: x <= cutoff
+            else:
+                p = (50.0 - shift.amount)/100.0
+                cutoff = self._normal.inv_cdf(p)
+                accept = lambda x: x <= cutoff
+            while not accept(sel):
+                sel = self._selector()
+            return sel 
+        elif shift.is_right():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = self._dist_mean - 1
+                mid = ranger - (ranger / 2.0)
+                cutoff = mid + (ranger * (shift.amount/100)) 
+                accept = lambda x: x >= cutoff
+            else:
+                p = (50.0 + shift.amount)/100.0
+                cutoff = self._normal.inv_cdf(p)
+                accept = lambda x: x >= cutoff
+            while not accept(sel):
+                sel = self._selector()
+            return sel  
+        elif shift.is_mid():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = self._dist_mean - 1
+                mid = ranger - (ranger / 2.0)
+                lcutoff = mid - (ranger * (0.5 - (shift.amount/100)))
+                rcutoff = mid + (ranger * (shift.amount/100)) 
+                accept = lambda x: lcutoff <= x <= rcutoff
+            else:
+                lp = (50.0 - shift.left)/100.0
+                lcutoff = self._normal.inv_cdf(lp)
+                rp = (50.0 + shift.right)/100.0
+                rcutoff = self._normal.inv_cdf(rp)
+                accept = lambda x: lcutoff <= x <= rcutoff
+            while not accept(sel):
+                sel = self._selector()
+            return sel  
+        raise GenerationIssue(f"Approciate shifter not used for int :: {shift}") 
     
     def _generate_string(self, shift) -> str:
         return choice(ascii_lowercase)
