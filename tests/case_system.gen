@@ -7,12 +7,12 @@ Domains:
     d_6-bool-uniform
     
 Patterns:{100} 
-    [ A{d_1|25%-left, d_2,  } B E{d_4|10%-left, d_5, } F ]{3} 
+    [ A{d_1|25%-left, d_2,  } B E{d_4|10%-left, d_5, } F ]{4} 
     [ A{d_1|25%-left, d_2,  } B E{d_4|10%-left, d_6, } G ]{2} 
     [ A{d_1|25%-left, d_2,  } B E{d_4|10%-left,      } H ]{1} 
-    [ A{d_1|30%-m-30%, d_3, } C E{d_4|25%-m-25%, d_5, } F ]{3} 
+    [ A{d_1|30%-m-30%, d_3, } C E{d_4|25%-m-25%, d_5, } F ]{4} 
     [ A{d_1|30%-m-30%, d_3, } C E{d_4|25%-m-25%, d_6, } G ]{2} 
     [ A{d_1|30%-m-30%, d_3, } C E{d_4|25%-m-25%,      } H ]{1} 
-    [ A{d_1|25%-right, d_3, } D E{d_4|10%-right, d_5, } F ]{3} 
+    [ A{d_1|25%-right, d_3, } D E{d_4|10%-right, d_5, } F ]{4} 
     [ A{d_1|25%-right, d_3, } D E{d_4|10%-right, d_6, } G ]{2} 
     [ A{d_1|25%-right, d_3, } D E{d_4|10%-right,      } H ]{1}
