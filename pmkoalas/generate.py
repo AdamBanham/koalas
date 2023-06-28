@@ -352,7 +352,7 @@ class PesudoLog(PesudoGenerator):
         traces = []
         debug(f"making a log of size {self._samplesize}")
         for sample in range(self._samplesize):
-            coin = randint(0, self._weights[-1])
+            coin = uniform(0, self._weights[-1])
             for w,p in zip(self._weights, self._patterns):
                 if coin <= w:
                     debug(f"coin :: {coin}, pattern :: {w}-{p}")
