@@ -284,7 +284,10 @@ class ComplexLogParser(NodeVisitor):
         vc = visited_children[0]
         if (len(vc) == 4):
             _, attr, _, atype = vc
-            dist = {}
+            dist = {
+                "typer"  : "uniform",
+                "amount" : 10
+            }
         else:
             _, attr, _, atype, _, dist = vc
         atype = atype[0].text
@@ -350,15 +353,15 @@ class ComplexLogParser(NodeVisitor):
         if  len(vc) == 2:
             shift, stype = vc
             return {
-                "typer": stype.text,
-                "amount": shift.text
+                "typer": stype.text[2:],
+                "amount": int(shift.text)
             }
         else: 
             lshift, _, stype, rshift, _ = vc 
             return {
-                "typer" : stype.text,
-                "lshift" : lshift.text,
-                "rshift" : rshift.text
+                "typer" : "mid",
+                "lshift" : int(lshift.text),
+                "rshift" : int(rshift.text)
             }
     
     def visit_lshift(self, node, visited_children):
