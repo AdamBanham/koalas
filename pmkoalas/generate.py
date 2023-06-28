@@ -259,7 +259,7 @@ class PesudoEvent(PesudoGenerator):
         mid = 3
 
         @classmethod
-        def find_type(self, parsed) -> 'SupportedShifters':
+        def find_type(self, parsed) -> 'PesudoEvent.SupportedShifters':
             for shifter in self:
                 if shifter.name == parsed:
                     return shifter 
@@ -380,7 +380,8 @@ class PesudoAttribute(PesudoGenerator):
             self.parse = parse
 
         @classmethod
-        def find_type(self, parsed:str) -> 'SupportedDistrubutions':
+        def find_type(self, parsed:str) \
+            -> 'PesudoAttribute.SupportedDistrubutions':
             for dist in self:
                 if dist.parse == parsed:
                     return dist
@@ -396,7 +397,8 @@ class PesudoAttribute(PesudoGenerator):
             self.clazz = clazz
 
         @classmethod
-        def find_type(self, parsed:str) -> 'SupportedTypes':
+        def find_type(self, parsed:str) \
+            -> 'PesudoAttribute.SupportedTypes':
             for typer in self:
                 if str(typer.name) == parsed:
                     return typer 
