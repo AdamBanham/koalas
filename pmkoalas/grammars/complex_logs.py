@@ -19,12 +19,12 @@ GRAMMAR
 <rshift> :: <halfnumber>%-right 
 <mshift> :: <halfnumber>%-m-<halfnumber>%
 <limit> :: <<<number> | >><number>
-<halfnumber> :: <halfdigits> | <halfdigits><halfdigits>
+<halfnumber> :: <nonzerodigits> | <halfdigits><halfdigits>
 <number> :: <alldigits> | <number><number>
-<nonzero> :: <nonzerodigits> | <nonzero><nonzero>
+<nonzero> :: <nonzerodigits> | <halfdigits><alldigits>
 <alldigits> :: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 
 <nonzerodigits> :: 1 | 2 | 3 | 4 | 5 | 6 | 8 | 9 
-<halfdigits> :: 0 | 1 | 2 | 3 | 4 | 5
+<halfdigits> :: 1 | 2 | 3 | 4 | 5
 <ascii> :: a | b | c | ... | x | y | z ** anything that matches [a-zA-Z0-9_]*
 
 <domain> :: [Domains] <atttribute>
