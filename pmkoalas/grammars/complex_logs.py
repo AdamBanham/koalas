@@ -71,7 +71,7 @@ COMPLEX_LOG_FUZZING_GRAMMAR: FuzzGrammar = {
     "<limit>" :
         ["<<<number>", ">><number>"],
     "<halfnumber>" :
-        ["<halfdigits>" , "<halfdigits><halfdigits>"],
+        ["<nonzerodigits>" , "<halfdigits-lead><alldigits>"],
     "<number>" :
         ["<alldigits>", "<number><number>"],
     "<nonzero>" :
@@ -82,6 +82,8 @@ COMPLEX_LOG_FUZZING_GRAMMAR: FuzzGrammar = {
         ["1", "2", "3", "4", "5", "6", "7", "8","9"],
     "<halfdigits>" : 
         ["5", "4", "3", "2", "1", "0"],
+    "<halfdigits-lead>":
+        ["4", "3", "2", "1"],
     "<ascii>" : 
         [ s for s in ascii_lowercase+ascii_uppercase+digits+"_" ],
     "<domain>" : 
@@ -118,7 +120,7 @@ COMPLEX_TRACE_FUZZING_GRAMMAR:FuzzGrammar = {
     "<limit>" :
         ["<<<number>", ">><number>"],
     "<halfnumber>" :
-        ["<halfdigits>" , "<halfdigits><halfdigits>"],
+        ["<nonzerodigits>" , "<halfdigits-lead><alldigits>"],
     "<number>" :
         ["<alldigits>", "<number><number>"],
     "<nonzero>" :
@@ -129,6 +131,8 @@ COMPLEX_TRACE_FUZZING_GRAMMAR:FuzzGrammar = {
         ["1", "2", "3", "4", "5", "6", "7", "8","9"],
     "<halfdigits>" : 
         ["5", "4", "3", "2", "1", "0"],
+    "<halfdigits-lead>":
+        ["4", "3", "2", "1"],
     "<ascii>" : 
         [ s for s in ascii_lowercase+ascii_uppercase+digits+"_"],
 }
@@ -163,9 +167,12 @@ COMPLEX_LOG_PARSING_GRAMMAR: Grammar = Grammar(
         data =  (attr "|" shift ", ") / (attr ", ")
         attr = "d_" ~"[0-9]{1}" 
         shift = mshift / limit / lshift / rshift 
-        lshift = ~"[1-5][0-9]{,1}" "%-left" 
-        rshift = ~"[1-5][0-9]{,1}" "%-right" 
-        mshift = ~"[1-5][0-9]{,1}" "%" "-m-" ~"[1-5][0-9]{,1}" "%" 
+        lshift = (~"[1-5]{1}[0-9]{1}" "%-left") / (~"[1-9]{1}" "%-left") 
+        rshift = (~"[1-5]{1}[0-9]{1}" "%-right") / (~"[1-9]{1}" "%-right") 
+        mshift = (~"[1-5]{1}[0-9]{1}" "%" "-m-" ~"[1-5]{1}[0-9]{1}" "%") /
+            (~"[1-9]{1}" "%" "-m-" ~"[1-5]{1}[0-9]{1}" "%") / 
+            (~"[1-5]{1}[0-9]{1}" "%" "-m-" ~"[1-9]{1}" "%") /
+            (~"[1-9]{1}" "%" "-m-" ~"[1-9]{1}" "%")
         limit = ("<<" ~"[0-9]*") / (">>" ~"[0-9]*") 
         freq = ~"[1-9]*" 
         samplesize = ~"[1-9]" ~"[0-9]*"
@@ -189,9 +196,12 @@ COMPLEX_TRACE_PARSING_GRAMMAR: Grammar = Grammar(
         data =  (attr "|" shift ", ") / (attr ", ")
         attr = "d_" ~"[0-9]{1}" 
         shift = mshift / limit / lshift / rshift 
-        lshift = ~"[0-5]{1,2}" "%-left" 
-        rshift = ~"[0-5]{1,2}" "%-right" 
-        mshift = ~"[0-5]{1,2}" "%" "-m-" ~"[0-5]{1,2}" "%" 
+        lshift = (~"[1-5]{1}[0-9]{1}" "%-left") / (~"[1-9]{1}" "%-left") 
+        rshift = (~"[1-5]{1}[0-9]{1}" "%-right") / (~"[1-9]{1}" "%-right") 
+        mshift = (~"[1-5]{1}[0-9]{1}" "%" "-m-" ~"[1-5]{1}[0-9]{1}" "%") /
+            (~"[1-9]{1}" "%" "-m-" ~"[1-5]{1}[0-9]{1}" "%") / 
+            (~"[1-5]{1}[0-9]{1}" "%" "-m-" ~"[1-9]{1}" "%") /
+            (~"[1-9]{1}" "%" "-m-" ~"[1-9]{1}" "%")
         limit = ("<<" ~"[0-9]*") / (">>" ~"[0-9]*") 
         freq = ~"[1-9]*" 
         samplesize = ~"[1-9]" ~"[0-9]*"
@@ -349,7 +359,7 @@ class ComplexLogParser(NodeVisitor):
         return visited_children[0]
     
     def visit_shift(self, node, visited_children):
-        vc = visited_children[0]
+        vc = visited_children[0][0]
         if  len(vc) == 2:
             shift, stype = vc
             return {
