@@ -10,9 +10,9 @@ GRAMMAR
 
 <log> :: [Patterns]{<nonzero>} <trace>
 <trace> :: [ <event> ]{<nonzero>} | [<event>]{<nonzero>} <trace>
-<event> :: <event> <event>| <word> | <word>{<data>}
+<event> :: <event> <event>| <word> | <word>{<data> }
 <word> :: <ascii> | <ascii><word>
-<data> :: <attr> | <attr>|<shift> | <data>,<data>
+<data> :: <attr> | <attr>|<shift> | <data>, <data>
 <attr> :: d_<alldigits>
 <shift> :: <limit> | <lshift> | <rshift> | <mshift>
 <lshift> :: <halfnumber>%-left
