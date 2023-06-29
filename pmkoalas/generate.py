@@ -461,6 +461,21 @@ class PesudoAttribute(PesudoGenerator):
                 lambda : uniform(1, max+1)
 
     def _setup_string(self):
+        if self._dist == self.SupportedDistrubutions.normal:
+            self._normal = NormalDist(13,13/2.0)
+            def select():
+                sel = self._normal.samples(1)[0]
+                if sel < 0:
+                    return ascii_lowercase[0]
+                elif sel > 25:
+                    return ascii_lowercase[25]
+                else:
+                    return ascii_lowercase[int(sel)]
+            self._selector = \
+                lambda : select()
+        else:
+            self._selector = \
+                lambda : choice(ascii_lowercase)
         pass 
 
     def generate(self, shift) -> object:
@@ -582,7 +597,59 @@ class PesudoAttribute(PesudoGenerator):
         raise GenerationIssue(f"Approciate shifter not used for int :: {shift}") 
     
     def _generate_string(self, shift) -> str:
-        return choice(ascii_lowercase)
+        if shift == None:
+            return self._selector() 
+        elif shift.is_left():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = len(ascii_lowercase)
+                mid = ranger - (ranger / 2.0)
+                cutoff = mid - (ranger * (0.5 - (shift.amount/100)))
+                accepts = ascii_lowercase[:int(cutoff)] 
+                accept = lambda x: x in accepts
+            else:
+                p = (50.0 - shift.amount)/100.0
+                cutoff = self._normal.inv_cdf(p)
+                accepts = ascii_lowercase[:int(cutoff)] 
+                accept = lambda x: x in accepts
+            while not accept(sel):
+                sel = self._selector()
+            return sel 
+        elif shift.is_right():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = len(ascii_lowercase)
+                mid = ranger - (ranger / 2.0)
+                cutoff = mid + (ranger * (shift.amount/100)) 
+                accepts = ascii_lowercase[int(cutoff):] 
+                accept = lambda x: x in accepts
+            else:
+                p = (50.0 + shift.amount)/100.0
+                cutoff = self._normal.inv_cdf(p)
+                accepts = ascii_lowercase[int(cutoff):] 
+                accept = lambda x: x in accepts
+            while not accept(sel):
+                sel = self._selector()
+            return sel  
+        elif shift.is_mid():
+            sel = self._selector()
+            if self._dist == self.SupportedDistrubutions.uniform:
+                ranger = len(ascii_lowercase)
+                mid = ranger - (ranger / 2.0)
+                lcutoff = mid - (ranger * (0.5 - (shift.amount/100)))
+                rcutoff = mid + (ranger * (shift.amount/100)) 
+                accepts = ascii_lowercase[int(lcutoff):int(rcutoff)]
+                accept = lambda x: x in accepts
+            else:
+                lp = (50.0 - shift.left)/100.0
+                lcutoff = self._normal.inv_cdf(lp)
+                rp = (50.0 + shift.right)/100.0
+                rcutoff = self._normal.inv_cdf(rp)
+                accepts = ascii_lowercase[int(lcutoff):int(rcutoff)]
+                accept = lambda x: x in accepts
+            while not accept(sel):
+                sel = self._selector()
+            return sel
     
 class PesudoDomain(PesudoGenerator):
 
