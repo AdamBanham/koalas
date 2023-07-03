@@ -10,5 +10,7 @@ If all goes well, then prepate a release for the offical index, using `py -m twi
 ## Checklist
  - move version number in pyproject.toml
  - update version in __init__.py of pmkoalas
+ - ensure the module `build` is up to date on local python
+ - check that all submodules are mentioned in the pyproject toml.
  - clear dist
  - build project
