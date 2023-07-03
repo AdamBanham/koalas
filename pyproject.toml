@@ -29,7 +29,9 @@ dev = [
 
 [tool.setuptools]
 packages = [
-"pmkoalas"
+"pmkoalas",
+"pmkoalas.discovery",
+"pmkoalas.models"
 ]
 
 [project.urls]
