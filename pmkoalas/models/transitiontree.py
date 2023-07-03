@@ -216,6 +216,9 @@ class TransitionTreeGuard():
     def enabling(self, population:Set[ComplexEvent]) -> Set[ComplexEvent]:
         " returns the subset of the population that this guard supports."
         return set([ p for p in population if self.check(p)])
+    
+    def html_label(self) -> str:
+        return f"g<sub>1</sub>"
 
 class TransitionTreeGuardFlow(TransitionTreeFlow):
     """
@@ -380,7 +383,7 @@ class TransitionTree():
         TERM_VERT = """\t\t{id} [label={html}, shape="tripleoctagon", fillcolor="olivedrab4"];\n"""
         VERT = """\t\t{id} [label={html}];\n"""
         FLOW = """\t\t{offer} -> {next} [taillabel=<[{label},]>, headlabel=<<font color="darkgrey">f<sub>{id}</sub></font>>];\n"""
-        HALT_FLOW = """\t\t{offer} -> {next} [taillabel="&#8855;", color="red"];\n"""
+        GFLOW = """\t\t{offer} -> {next} [taillabel=<[{label},{guard}]>, headlabel=<<font color="darkgrey">f<sub>{id}</sub></font>>];\n"""
         FILE_FOOTER = """\n}"""
         # check if file exists
         dirname = path.dirname(filepath)
@@ -414,20 +417,23 @@ class TransitionTree():
                             VERT.format(id=v.id(), html=v.html_label())
                         )
                 for flow in flows:
-                    if flow.activity() != TranstionTreeEarlyComplete().activity():
+                    if isinstance(flow, TransitionTreeGuardFlow):
+                        f.write( 
+                            GFLOW.format(
+                                offer=flow.offering().id(),
+                                next=flow.next().id(),
+                                label=flow.activity(),
+                                id=seen_flows[flow],
+                                guard=flow.guard().html_label()
+                            )
+                        )
+                    else:
                         f.write( 
                             FLOW.format(
                                 offer=flow.offering().id(),
                                 next=flow.next().id(),
                                 label=flow.activity(),
                                 id=seen_flows[flow]
-                            )
-                        )
-                    else:
-                        f.write( 
-                            HALT_FLOW.format(
-                                offer=flow.offering().id(),
-                                next=flow.next().id(),
                             )
                         )
                 flows = []
