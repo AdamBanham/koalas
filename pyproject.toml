@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pmkoalas"
-version = "0.2"
+version = "0.2.1"
 authors = [
   { name="Adam Banham", email="adam_banham@hotmail.com" },
   { name="Adam Burke" },
@@ -29,7 +29,9 @@ dev = [
 
 [tool.setuptools]
 packages = [
-"pmkoalas"
+"pmkoalas",
+"pmkoalas.discovery",
+"pmkoalas.models"
 ]
 
 [project.urls]
