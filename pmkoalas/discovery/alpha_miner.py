@@ -14,6 +14,7 @@ from copy import deepcopy,copy
 
 from pmkoalas.simple import EventLog
 from pmkoalas.directly import DirectlyFollowPair
+from pmkoalas.models.petrinet import LabelledPetriNet
 
 class AlphaRelationType(Enum):
     DF = ">"
@@ -346,7 +347,7 @@ class AlphaMinerInstance():
             out[src] = deepcopy(self._matrix[src])
         return deepcopy(self._matrix)
 
-    def mine_model(self, log:EventLog) -> Tuple[Set,Set,Set]:
+    def mine_model(self, log:EventLog) -> LabelledPetriNet:
         """
         Mines a petri net based on the given event log, using
         the alpha miner discovery technique.
@@ -371,7 +372,7 @@ class AlphaMinerInstance():
         FL = self._step_seven(log, PL, TI, TO) 
         TL = set([ AlphaTransition(t) for t in TL])
         self._matrix = None
-        return (PL, TL, FL)
+        return LabelledPetriNet(PL, TL, FL)
 
     def _step_one(self, log:EventLog) -> Set[str]:
         """

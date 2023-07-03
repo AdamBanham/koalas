@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pmkoalas"
-version = "0.0.1-alpha.2"
+version = "0.2"
 authors = [
   { name="Adam Banham", email="adam_banham@hotmail.com" },
-  { name="Adam Burke", email="adam_burke_mail@yahoo.com" },
+  { name="Adam Burke" },
 ]
 description = "A process mining library that focuses on providing pythonic interactions with event logs and languages."
 readme = "README.md"
