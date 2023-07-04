@@ -79,7 +79,7 @@ class TransitionTreeVertex():
         return self.id()
 
     def __eq__(self, __o: object) -> bool:
-        if (isinstance(__o, TransitionTreeVertex)):
+        if (issubclass(type(__o), TransitionTreeVertex)):
             return self.sigma_sequence() == __o.sigma_sequence()
         return False
     
@@ -241,6 +241,20 @@ class TransitionTreeGuardFlow(TransitionTreeFlow):
     def guard(self) -> TransitionTreeGuard:
         return self._guard
     
+    def __hash__(self) -> int:
+        return hash(
+            tuple(
+            [ self.offering().sigma_sequence().__hash__(), 
+              hash(self.activity()+self.guard().html_label()), 
+              self.next().sigma_sequence().__hash__()
+            ])
+        )
+    
+    def __str__(self):
+        return f"{self.offering().html_label()} -[" + \
+            f"{self.activity(),self.guard().html_label()}]->" + \
+            f" {self.next().html_label()}"
+    
 @dataclass
 class Offer():
     """ A data container for an offer from a transition tree. """
@@ -400,6 +414,7 @@ class TransitionTree():
             # walk from root, adding vertices and flows
             flows = root.outgoing(self.flows())
             seen_flows = dict()
+            seen_verts = set()
             currnt_flow = 1
             while len(flows) > 0:
                 verts = [ flow.next() for flow in flows]
@@ -438,7 +453,9 @@ class TransitionTree():
                         )
                 flows = []
                 for v in verts:
-                    flows += v.outgoing(self.flows())
+                    if (v not in seen_verts):
+                        flows += v.outgoing(self.flows())
+                        seen_verts.add(v)
             # close and write footer
             f.write(FILE_FOOTER)
             
