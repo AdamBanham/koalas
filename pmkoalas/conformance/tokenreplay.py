@@ -5,6 +5,7 @@ of Petri nets.
 from copy import deepcopy
 from typing import Dict,Set,List
 
+from pmkoalas import __version__
 from pmkoalas.models.petrinet import LabelledPetriNet, Place, Transition
 from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
 
@@ -64,14 +65,17 @@ class PetriNetFiringSequence():
         self._seq = deepcopy(fired)
 
     def next(self) -> Set[Transition]:
+        # return nothing if we are at final
         if (self.reached_final()):
             return set()
+        # remove previous linked silence from choices
         previous_silence = set()
         for last in self._seq[-1::-1]:
             if last.silent:
                 previous_silence.add(last)
             else:
                 break
+        # present choices
         choices = self._mark.can_fire().difference(previous_silence)
         return choices
     
@@ -139,6 +143,8 @@ def construct_playout_log(model:LabelledPetriNet, max_length:int,
         }
         trace_seq = list()
         leftover_guard = None 
+        # build sequence of fired transitions
+        ## but profilerate guards on silence, without recording them
         for fired in comp.fired():
             if fired.silent:
                 if leftover_guard == None:
@@ -166,4 +172,9 @@ def construct_playout_log(model:LabelledPetriNet, max_length:int,
             )
         )
         trace_id += 1
-    return ComplexEventLog(playout_traces, dict(), f"playout log for {model._name}")
+    return ComplexEventLog(playout_traces, dict({
+        "meta:generated:by" : "pmkoalas",
+        "meta:generator:version" : __version__
+        }), 
+        f"playout log for {model._name}"
+    )
