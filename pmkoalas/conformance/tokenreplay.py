@@ -73,8 +73,7 @@ class PetriNetFiringSequence():
             else:
                 break
         choices = self._mark.can_fire().difference(previous_silence)
-        print(f"given {[ s.name for s in self._seq]}, next fires are :: {[ c.name for c in choices]}")
-        return self._mark.can_fire().difference(previous_silence)
+        return choices
     
     def fire(self, firing:Transition) -> 'PetriNetFiringSequence':
         new_mark = self._mark.remark(firing)
@@ -131,7 +130,6 @@ def construct_playout_log(model:LabelledPetriNet, max_length:int,
             else:
                 if pot not in seen and len(pot) < max_length + 1:
                     incomplete.append(pot)
-        print(f"size of queue :: {len(incomplete)}")
             
     # now for each completed trace, we need to produce a complex trace
     trace_id = 1
