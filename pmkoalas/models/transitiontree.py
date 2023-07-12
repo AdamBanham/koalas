@@ -13,17 +13,6 @@ from os import path,mkdir
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.complex import ComplexEvent, ComplexEventLog
 
-class TranstionTreeEarlyComplete():
-    """
-    Place holder for a option to early complete
-    """
-
-    def __init__(self) -> None:
-        pass
-
-    def activity(self) -> str:
-        return "\u2297"
-
 class TransitionTreeVertex():
     """
     Data class for a vertex in a transition tree.
@@ -86,7 +75,6 @@ class TransitionTreeVertex():
     def __hash__(self) -> int:
         return hash((self.sigma_sequence().__hash__()))
     
-
 class TransitionTreeRoot(TransitionTreeVertex):
     """
     Data class for the root of a transition tree.
@@ -108,7 +96,7 @@ class TransitionTreeFlow():
     """
 
     def __init__(self, source:TransitionTreeVertex, 
-                 act:Union[str,TranstionTreeEarlyComplete], 
+                 act:str, 
                  target:TransitionTreeVertex) -> None:
         self._source = source
         self._act = act 
@@ -122,7 +110,7 @@ class TransitionTreeFlow():
         " returns the vertex that this flow is directed towards."
         return self._target
     
-    def activity(self) -> Union[str,TranstionTreeEarlyComplete]:
+    def activity(self) -> str:
         " returns the process activity related to this flow."
         return self._act
     
@@ -151,15 +139,13 @@ class TransitionTreeFlow():
     def __hash__(self) -> int:
         return hash(tuple([ self.offering(), self.activity(), self.next()]))
     
-
-
 class TransitionTreeInformationFlow(TransitionTreeFlow):
     """
     A implementation for a flow with abstracted information.
     """
 
     def __init__(self, source:TransitionTreeVertex, 
-                 act:Union[str,TranstionTreeEarlyComplete], 
+                 act:str, 
                  target:TransitionTreeVertex,
                  information:object) -> None:
         super().__init__(source, act, target)
@@ -174,7 +160,7 @@ class TransitionTreePopulationFlow(TransitionTreeFlow):
     """
 
     def __init__(self, source:TransitionTreeVertex, 
-                 act:Union[str,TranstionTreeEarlyComplete], 
+                 act:str, 
                  target:TransitionTreeVertex, 
                  population:List[ComplexEvent]) -> None:
         super().__init__(source, act, target)
@@ -226,7 +212,7 @@ class TransitionTreeGuardFlow(TransitionTreeFlow):
     """
 
     def __init__(self, source:TransitionTreeVertex, 
-                 act:Union[str,TranstionTreeEarlyComplete], 
+                 act:str, 
                  target:TransitionTreeVertex, 
                  guard:TransitionTreeGuard) -> None:
         super().__init__(source, act, target)
@@ -260,7 +246,7 @@ class Offer():
     """ A data container for an offer from a transition tree. """
 
     sigma:Trace
-    activity:Set[Union[str,TranstionTreeEarlyComplete]]
+    activity:Set[str]
 
     def __hash__(self):
         return hash((self.sigma.__hash__(), tuple(self.activity)))
@@ -460,6 +446,15 @@ class TransitionTree():
             f.write(FILE_FOOTER)
             
     # comparision functions
+
+def construct_from_model(model:object, longest_playout:int) -> TransitionTree:
+    """ Constructs a transition tree from an executable model """
+    if (issubclass(type(model), )):
+        pass 
+    else:
+        raise ValueError("No known execution playout technique for model of" +\
+                         f" type :: {type(model)}")
+
 
 def construct_from_log(log:Union['EventLog','ComplexEventLog']) -> TransitionTree:
     """ Constructs a transition tree from an event log. """

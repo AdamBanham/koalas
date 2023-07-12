@@ -8,11 +8,9 @@ from pmkoalas.read import read_xes_simple,read_xes_complex
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex,TransitionTreeRoot
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow,TransitionTreePopulationFlow
-from pmkoalas.models.transitiontree import TransitionTreeGuard, TranstionTreeEarlyComplete
+from pmkoalas.models.transitiontree import TransitionTreeGuard
 from pmkoalas.models.transitiontree import Offer
 from pmkoalas.models.transitiontree import construct_from_log
-
-HALT_ACT = TranstionTreeEarlyComplete().activity()
 
 # dummy transition tree
 D1_ROOT = TransitionTreeRoot()
