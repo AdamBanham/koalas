@@ -123,7 +123,7 @@ def construct_playout_log(model:LabelledPetriNet, max_length:int,
         for firing in select.next():
             potentials.append(select.fire(firing))
         for pot in potentials:
-            if (pot.reached_final()):
+            if (pot.reached_final() and len(pot) <= max_length + 1):
                 completed.add(pot)
             elif (len(pot) == max_length + 1):
                 completed.add(pot)
