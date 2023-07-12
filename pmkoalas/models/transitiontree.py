@@ -12,7 +12,6 @@ from os import path,mkdir
 
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.complex import ComplexEvent, ComplexEventLog
-
 class TransitionTreeVertex():
     """
     Data class for a vertex in a transition tree.
@@ -205,6 +204,31 @@ class TransitionTreeGuard():
     
     def html_label(self) -> str:
         return f"g<sub>1</sub>"
+    
+class TransitionTreeMerge(TransitionTreeGuard):
+    """
+    A template for the semantics of merging two guards.
+    """
+
+    MERGER = """<sub><font point-size="16">&#8855;</font></sub>"""
+
+    def __init__(self, left:TransitionTreeGuard, right:TransitionTreeGuard) -> None:
+        super().__init__()
+        self._left = deepcopy(left)
+        self._right = deepcopy(right)
+
+    def check(self, data: ComplexEvent) -> bool:
+        return self._left.check(data) and self._right.check(data)
+    
+    def required(self) -> Set[str]:
+        return self._left.required().union(self._right.required())
+    
+    def html_label(self) -> str:
+        return f"({self._left.html_label()}) {self.MERGER} " +\
+               f"({self._right.html_label()})"
+
+    def __str__(self) -> str:
+        return self.html_label()
 
 class TransitionTreeGuardFlow(TransitionTreeFlow):
     """
