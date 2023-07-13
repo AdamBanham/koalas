@@ -205,6 +205,14 @@ class TransitionTreeGuard():
     def html_label(self) -> str:
         return f"g<sub>1</sub>"
     
+    def __hash__(self) -> int:
+        return hash(self.html_label())
+    
+    def __eq__(self, other: object) -> bool:
+        if (type(self) == type(other)):
+            return self.__hash__() == other.__hash__()
+        return False
+    
 class TransitionTreeMerge(TransitionTreeGuard):
     """
     A template for the semantics of merging two guards.
