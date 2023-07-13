@@ -430,8 +430,8 @@ class TransitionTree():
     pack="true";
     pad="1.0";
     compound="true";
-    node[fixedsize="true", width="0.75", height="0.75", fontname="serif", fontsize="24", fontcolor="white", fillcolor="cadetblue",style="filled",shape="circle", label=""];
-    edge[fontname="serif", fontcolor="black", labelfloat="true", minlen="3", fontsize="24", labeldistance="4"];\n\n"""
+    node[fixedsize="true", width="0.75", height="0.75", fontname="serif", fontsize="12", fontcolor="white", fillcolor="cadetblue",style="filled",shape="circle", label=""];
+    edge[fontname="serif", fontcolor="black", labelfloat="true", minlen="3", fontsize="10", labeldistance="4"];\n\n"""
         ROOT_VERT = """\t\t{id} [label={html}, shape="doublecircle", fillcolor="aquamarine4"];\n"""
         TERM_VERT = """\t\t{id} [label={html}, shape="tripleoctagon", fillcolor="olivedrab4"];\n"""
         VERT = """\t\t{id} [label={html}];\n"""
