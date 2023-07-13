@@ -11,9 +11,15 @@ For an depth understanding or introduction to Petri Nets, see:
 '''
 
 from collections.abc import Iterable
+from copy import deepcopy
 from typing import Union,FrozenSet
 import xml.etree.ElementTree as ET
 from uuid import uuid4
+
+#typing imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pmkoalas.conformance.tokenreplay import PetriNetMarking
 
 ENCODING='unicode'
 
@@ -199,13 +205,19 @@ class LabelledPetriNet:
     labels/names and identifiers.Each instance of this class, 
     has a name or title for the net.
     """
+    
 
     def __init__(self, places:Iterable[Place], transitions:Iterable[Transition],
-                 arcs:Iterable[Arc], name:str='Petri net'):
+                 arcs:Iterable[Arc], 
+                 name:str='Petri net',
+                 imarking:'PetriNetMarking'=None,
+                 fmarking:'PetriNetMarking'=None):
         self._places = set(places)
         self._transitions = set(transitions)
         self._arcs = set(arcs)
         self._name = name
+        self._imarking = imarking 
+        self._fmarking = fmarking
 
     @property 
     def places(self) -> FrozenSet[Place]:
@@ -222,6 +234,14 @@ class LabelledPetriNet:
     @property
     def name(self) -> str:
         return self._name
+    
+    @property
+    def initial_marking(self) -> 'PetriNetMarking':
+        return deepcopy(self._imarking)
+    
+    @property
+    def final_marking(self) -> 'PetriNetMarking':
+        return deepcopy(self._fmarking)
 
     def __eq__(self,other) -> bool:
         if isinstance(other,self.__class__):
