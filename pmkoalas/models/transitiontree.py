@@ -88,6 +88,23 @@ class TransitionTreeRoot(TransitionTreeVertex):
     def html_label(self) -> str:
         "returns a html like label with suffix."
         return "<v<sub>r</sub>>"
+    
+class TransitionPlayoutRoot(TransitionTreeRoot):
+    """
+    Data class for the root of playout transition tree.
+    """
+
+    def html_label(self) -> str:
+        return "< &lt;&gt; >"
+    
+class TransitionPlayoutVertex(TransitionTreeVertex):
+
+    def html_label(self) -> str:
+        acts = ""
+        for act in self.sigma_sequence():
+            acts += act+","
+        acts = acts[:-1]
+        return f"< &lt;{acts}&gt; >"
 
 class TransitionTreeFlow():
     """
