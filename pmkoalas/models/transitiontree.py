@@ -210,25 +210,54 @@ class TransitionTreeMerge(TransitionTreeGuard):
     A template for the semantics of merging two guards.
     """
 
-    MERGER = """<sub><font point-size="16">&#8855;</font></sub>"""
+    MERGER = """<sub><font point-size="22">&#8855;</font></sub>"""
 
     def __init__(self, left:TransitionTreeGuard, right:TransitionTreeGuard) -> None:
         super().__init__()
-        self._left = deepcopy(left)
-        self._right = deepcopy(right)
+        self._contains = set()
+        if isinstance(left, TransitionTreeMerge):
+            self._contains = self._contains.union(left.contains())
+        else:
+            self._contains.add(left)
+        if isinstance(right, TransitionTreeMerge):
+            self._contains = self._contains.union(right.contains())
+        else:
+            self._contains.add(right)
+
+    def contains(self) -> Set[TransitionTreeGuard]:
+        return deepcopy(self._contains)
 
     def check(self, data: ComplexEvent) -> bool:
-        return self._left.check(data) and self._right.check(data)
+        check = True 
+        for exp in self._contains:
+            check = check and exp.check(data)
+        return check
     
     def required(self) -> Set[str]:
-        return self._left.required().union(self._right.required())
+        ret = set()
+        for exp in self._contains:
+            ret = ret.union(exp.required())
+        return ret
     
     def html_label(self) -> str:
-        return f"({self._left.html_label()}) {self.MERGER} " +\
-               f"({self._right.html_label()})"
+        ret = ""
+        for exp in self._contains:
+            ret += exp.html_label()
+            ret += " " + self.MERGER + " "
+        drop = -1 * (len(self.MERGER) + 1)
+        ret = ret[:drop]
+        return ret
 
     def __str__(self) -> str:
         return self.html_label()
+    
+    def __hash__(self) -> int:
+        return hash((self.MERGER, len(self._contains)))
+    
+    def __eq__(self, other: object) -> bool:
+        if (type(self) == type(other)):
+            return self.__hash__() == other.__hash__()
+        return False
 
 class TransitionTreeGuardFlow(TransitionTreeFlow):
     """
