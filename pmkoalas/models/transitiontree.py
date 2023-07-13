@@ -286,7 +286,8 @@ class TransitionTreeMerge(TransitionTreeGuard):
 
 class TransitionTreeGuardFlow(TransitionTreeFlow):
     """
-    A implemenatiton for a flow with an implicit population using a guard function.
+    A implemenatiton for a flow with an implicit population using a guard 
+    function.
     """
 
     def __init__(self, source:TransitionTreeVertex, 
