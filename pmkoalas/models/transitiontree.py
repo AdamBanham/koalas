@@ -4,7 +4,7 @@ This module outlines a data structure for transitions tree as proposed by Hidder
  workflows the same? In: CATS. ACS (2005); These trees can be modified for future work.
 """
 
-from typing import Set, List, Tuple, Union
+from typing import Any, Set, List, Tuple, Union
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import reduce
@@ -526,10 +526,93 @@ class TransitionTree():
             
     # comparision functions
 
+def convert_playout_to_tree(playout_log:ComplexEventLog, k:int) \
+    -> TransitionTree:
+    """
+    Converts a playout log to a transition tree, using a flow reduction step
+    which may combine flows using a disjunction of guards.
+    """
+    # construct root
+    root = TransitionPlayoutRoot()
+    # holder for ids
+    class Idder():
+        
+        def __init__(self) -> None:
+            self._counter = 1
+        
+        def __call__(self, *args: Any, **kwds: Any) -> Any:
+            self._counter += 1
+            return self._counter
+    idder = Idder()
+    # constuct nodes
+    nodes = set(
+        [
+            trace.acut(i)
+            for _,instances
+            in playout_log
+            for trace 
+            in instances
+            for i
+            in range(1,min([k+1, len(trace)]))
+        ]
+    )
+    map_nodes = dict(
+        (node, TransitionPlayoutVertex(idder(), node))
+        for node
+        in nodes
+    )
+    map_nodes[Trace([])] = root
+    nodes.add(root)
+    print( f"nodes :: \n {list( n for n in nodes)}")
+    # construct flows
+    flows = set(
+        [
+            TransitionTreeGuardFlow(
+                map_nodes[trace.acut(i)],
+                trace.act(i),
+                map_nodes[trace.acut(i+1)],
+                trace.guard(i)
+            )
+            for _,instances
+            in playout_log
+            for trace
+            in instances
+            for i 
+            in range(0,min([k+1, len(trace)-1]))
+        ]
+    )
+    print(f"flows :: \n {list( str(f) for f in flows )}")
+    from pmkoalas.conformance.tokenreplay import PlayoutEnd
+    # set final nodes
+    for _,instances in playout_log:
+        for trace in instances:
+            i = min([k+1, len(trace)-1])
+            if isinstance(trace[i],  PlayoutEnd):
+                map_nodes[trace.acut(i)].set_as_terminal()
+    # construct tree
+    return TransitionTree(
+        nodes,
+        root,
+        flows 
+    )
+
+
 def construct_from_model(model:object, longest_playout:int) -> TransitionTree:
-    """ Constructs a transition tree from an executable model """
-    if (issubclass(type(model), )):
-        pass 
+    """ 
+    Constructs a transition tree from an executable model.
+    Currently only supports petri nets.
+    """
+    # import here to avoid cirular dependenies
+    from pmkoalas.models.petrinet import LabelledPetriNet
+    from pmkoalas.conformance.tokenreplay import construct_playout_log
+    # the work
+    if (issubclass(type(model), LabelledPetriNet)):
+        playout_log = construct_playout_log(
+            model, longest_playout,
+            model.initial_marking,
+            model.final_marking
+        )
+        return convert_playout_to_tree(playout_log, longest_playout)
     else:
         raise ValueError("No known execution playout technique for model of" +\
                          f" type :: {type(model)}")
