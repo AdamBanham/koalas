@@ -286,6 +286,48 @@ class TransitionTreeMerge(TransitionTreeGuard):
             return self.__hash__() == other.__hash__()
         return False
     
+class TransitionTreeJoin(TransitionTreeGuard):
+    """
+    A template for the semantics of joining to two guards.
+    """
+
+    JOIN = """<sub><font point-size="22">&#8854;</font></sub>"""
+
+    def __init__(self, flows:Set['TransitionTreeGuardFlow']) -> None:
+        super().__init__()
+        self._contains = set( f.guard() for f in flows)
+
+    def consists_of(self) -> Set[TransitionTreeGuard]:
+        return deepcopy(self._contains)
+    
+    def check(self, data: ComplexEvent) -> bool:
+        check = False 
+        for exp in self._contains:
+            check = check or exp.check(data)
+        return check
+    
+    def required(self) -> Set[str]:
+        ret = set()
+        for exp in self._contains:
+            ret = ret.union(exp.required())
+        return ret
+    
+    def html_label(self) -> str:
+        ret = ""
+        for exp in self._contains:
+            ret += "(" + exp.html_label() +")"
+            ret += " " + self.JOIN + " "
+        drop = -1 * (len(self.JOIN) + 1)
+        ret = ret[:drop]
+        return ret
+
+    def __str__(self) -> str:
+        return self.html_label()
+    
+    def __hash__(self) -> int:
+        glabels = list( exp.html_label() for exp in self._contains)
+        glabels = [self.JOIN] + sorted(glabels)
+        return hash(tuple(glabels))
     
     def __eq__(self, other: object) -> bool:
         if (type(self) == type(other)):
