@@ -570,12 +570,55 @@ class TransitionTree():
             
     # comparision functions
 
-def convert_playout_to_tree(playout_log:ComplexEventLog, k:int) \
-    -> TransitionTree:
+def apply_flow_reduction(tree:TransitionTree):
+    """
+    Ensures that only one flow exists between nodes in a tree.
+    Returns a new tree with the same nodes but an alternative set of flows.
+    """
+    new_flows = set()
+    for node in tree.vertices():
+        outgoing = node.outgoing(tree.flows())
+        next_nodes = set( out.next() for out in outgoing )
+        for next in next_nodes:
+            act = next.sigma_sequence()
+            act = act[len(act)-1]
+            old_flows = set( out for out in outgoing if out.next() == next)
+            if (len(old_flows) > 1):
+                new_flows.add( 
+                    TransitionTreeGuardFlow(
+                        node,
+                        act,
+                        next,
+                        TransitionTreeJoin( 
+                            old_flows
+                        )
+                    )
+                )
+            else:
+                new_flows = new_flows.union(old_flows)
+    return TransitionTree(
+        tree.vertices(),
+        tree.root(),
+        new_flows
+    )
+
+
+def convert_playout_to_tree(playout_log:ComplexEventLog, k:int , 
+                            freduce:bool=True) -> TransitionTree:
     """
     Converts a playout log to a transition tree, using a flow reduction step
     which may combine flows using a disjunction of guards.
+
+    Parameters
+    ----------
+    `playout_log`: a log of play-out traces, see 
+    pmkoalas.conformance.tokenreplay\n
+    `k`: the length of the longest observed trace, used to limit tree depth.\n
+    `freduce`: should flow reduction step be applied to ensure that only one
+    flow exists between nodes.
     """
+    # import here to avoid cirular dependenies
+    from pmkoalas.conformance.tokenreplay import PlayoutEnd
     # construct root
     root = TransitionPlayoutRoot()
     # holder for ids
@@ -607,7 +650,6 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int) \
     )
     map_nodes[Trace([])] = root
     nodes.add(root)
-    print( f"nodes :: \n {list( n for n in nodes)}")
     # construct flows
     flows = set(
         [
@@ -625,8 +667,6 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int) \
             in range(0,min([k+1, len(trace)-1]))
         ]
     )
-    print(f"flows :: \n {list( str(f) for f in flows )}")
-    from pmkoalas.conformance.tokenreplay import PlayoutEnd
     # set final nodes
     for _,instances in playout_log:
         for trace in instances:
@@ -634,17 +674,28 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int) \
             if isinstance(trace[i],  PlayoutEnd):
                 map_nodes[trace.acut(i)].set_as_terminal()
     # construct tree
-    return TransitionTree(
-        nodes,
+    tree = TransitionTree(
+        set(list(map_nodes.values())),
         root,
         flows 
     )
+    if (freduce):
+        tree = apply_flow_reduction(tree)
+    return tree
 
 
-def construct_from_model(model:object, longest_playout:int) -> TransitionTree:
+def construct_from_model(model:object, longest_playout:int, freduce:bool=True)\
+    -> TransitionTree:
     """ 
     Constructs a transition tree from an executable model.
     Currently only supports petri nets.
+
+    Parameters
+    ----------
+    `model`: the model which will be used to generate the tree. 
+    `longest_playout`: the length of the longest observed trace, used to limit tree depth.\n
+    `freduce`: should flow reduction step be applied to ensure that only one
+    flow exists between nodes.
     """
     # import here to avoid cirular dependenies
     from pmkoalas.models.petrinet import LabelledPetriNet
@@ -656,7 +707,8 @@ def construct_from_model(model:object, longest_playout:int) -> TransitionTree:
             model.initial_marking,
             model.final_marking
         )
-        return convert_playout_to_tree(playout_log, longest_playout)
+        return convert_playout_to_tree(playout_log, longest_playout, 
+                                       freduce=freduce)
     else:
         raise ValueError("No known execution playout technique for model of" +\
                          f" type :: {type(model)}")
