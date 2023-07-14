@@ -41,7 +41,7 @@ class TransitionTreeVertex():
         " makes vertex terminal."
         self._end = True
     
-    def end(self) -> bool:
+    def terminal(self) -> bool:
         """ 
         returns a boolean to say if this vertex is signals the end of the 
         process execution.
@@ -425,6 +425,17 @@ class TransitionTree():
         returns the full set of vertices that are defined by this transition tree.
         """ 
         return deepcopy(self._vertices)
+    
+    def terminals(self) -> Set[TransitionTreeVertex]:
+        """
+        returns the set of vertices that are terminal in this tree.
+        """
+        return set(
+            deepcopy(node) 
+            for node 
+            in self._vertices
+            if node.terminal()
+        )
 
     def root(self) -> TransitionTreeRoot:
         """
@@ -489,7 +500,6 @@ class TransitionTree():
             out.add(Offer(vertex.sigma_sequence(), set(acts)))
         return out
 
-    # utility functions
     def generate_dot(self, filepath:str) -> None:
         "Generates a dot file (for graphviz) for the transition tree."
         # string formats for nodes and arcs
