@@ -468,12 +468,6 @@ class TransitionTree():
         """ 
         return deepcopy(self._attrs)
 
-    def populations(self) -> List[Set[ComplexEvent]]:
-        """
-        returns the set of explicit polutations of data attribute mappings.
-        """
-        return deepcopy(self._pops)
-
     def guards(self) -> Set:
         """
         returns the set of guards used in flows, that imply a population of data 
