@@ -227,9 +227,9 @@ def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
         if isinstance(actf, Skipper):
             act_cost += 1
         else:
-            act_cost += 1 if act != actf.activity() else 0
+            act_cost += 0 if act == actf.activity() else 1
     if (len(path.noskips) > 0 ):
-        term_cost = 1 if not path.noskips[-1].next().terminal() else 0
+        term_cost = 0 if path.noskips[-1].next().terminal() else 1
     else:
         term_cost = 1 if root_is_terminal else 0
     return len_cost + act_cost + term_cost
@@ -267,7 +267,7 @@ class EqualPathWeighter():
         if path in self._cands:
             return 1.0 / len(self._cands)
         else:
-            return 0
+            return 0.0
     
 class ExpontentialPathWeighter():
     """
