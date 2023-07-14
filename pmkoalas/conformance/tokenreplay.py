@@ -247,7 +247,6 @@ def construct_playout_log(model:'LabelledPetriNet', max_length:int,
                 guard = fired.guard 
                 if leftover_guard != None:
                     guard = TransitionTreeMerge(leftover_guard, guard)
-                    print()
                     leftover_guard = None
                 trace_seq.append(
                     PlayoutEvent(fired.name, guard)
