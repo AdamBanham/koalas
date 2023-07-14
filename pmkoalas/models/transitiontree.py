@@ -67,8 +67,8 @@ class TransitionTreeVertex():
         return self.id()
 
     def __eq__(self, __o: object) -> bool:
-        if (issubclass(type(__o), TransitionTreeVertex)):
-            return self.sigma_sequence() == __o.sigma_sequence()
+        if (isinstance(__o, TransitionTreeVertex)):
+            return self.__hash__() == __o.__hash__()
         return False
     
     def __hash__(self) -> int:
@@ -147,9 +147,7 @@ class TransitionTreeFlow():
 
     def __eq__(self, __o: object) -> bool:
         if (isinstance(__o, TransitionTreeFlow)):
-            if (self.offering() == __o.offering()):
-                if (self.next() == __o.next()):
-                    return True
+            return self.__hash__() == __o.__hash__()
         return False
     
     def __hash__(self) -> int:
@@ -357,13 +355,11 @@ class TransitionTreeGuardFlow(TransitionTreeFlow):
         return self._guard
     
     def __hash__(self) -> int:
-        return hash(
-            tuple(
-            [ self.offering().sigma_sequence().__hash__(), 
-              hash(self.activity()+self.guard().html_label()), 
-              self.next().sigma_sequence().__hash__()
-            ])
-        )
+        return hash(tuple([
+            self.offering(),
+            hash(self.activity())+self.guard().__hash__(),
+            self.next()
+        ]))
     
     def __str__(self):
         return f"{self.offering().html_label()} -[" + \
@@ -542,7 +538,7 @@ class TransitionTree():
                         seen_flows[flow] = currnt_flow
                         currnt_flow += 1
                 for v in verts:
-                    if v.end():
+                    if v.terminal():
                         f.write( 
                             TERM_VERT.format(id=v.id(), html=v.html_label())
                         )
