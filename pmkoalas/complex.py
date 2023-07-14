@@ -106,6 +106,16 @@ class ComplexTrace():
         """ returns the activities seen in this trace """
         return deepcopy(self._acts)
     
+    def get_state_as_of(self, i:int) -> Mapping[str,object]:
+        """ returns the data state of the trace before the i-th event."""
+        state = dict()
+        curr = 0
+        while i > 0:
+            if (curr < len(self)):
+                state.update(self[curr].data())
+            i -= 1
+        return state
+    
     def data(self) -> Mapping[str,object]:
         """ returns the trace attributes """
         return deepcopy(self._map)
