@@ -10,7 +10,7 @@ from pmkoalas.complex import ComplexEventLog
 from pmkoalas.models.petrinet import LabelledPetriNet
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.conformance.matching import ManyMatching,EqualPathWeighter
-from pmkoalas.conformance.matching import construct_many_matching
+from pmkoalas.conformance.matching import construct_many_matching,ExpontentialPathWeighter
 from pmkoalas.models.transitiontree import construct_from_model
 
 def compute_directed_bookkeeping(flow:TransitionTreeGuardFlow, 
@@ -22,8 +22,9 @@ def compute_directed_bookkeeping(flow:TransitionTreeGuardFlow,
     for trace, instances in log:
         weighter = EqualPathWeighter(matcher[trace])
         for instance in instances:
-            for path in matcher[trace]:
-                for i,step in enumerate(path):
+            paths = matcher[trace]
+            for path in paths:
+                for step,i in zip(path, range(1, len(path)+1)):
                     if step == flow: 
                         irveson = flow.guard().check(
                             instance.get_state_as_of(i-1)
@@ -38,10 +39,11 @@ def compute_general_bookkeeping(flow:TransitionTreeGuardFlow,
     """
     bookkeeping = 0
     for trace, instances in log:
-        weighter = EqualPathWeighter(matcher[trace])
+        weighter = ExpontentialPathWeighter(matcher[trace])
         for instance in instances:
-            for path in matcher[trace]:
-                for i,step in enumerate(path):
+            paths = matcher[trace]
+            for path in paths:
+                for step,i in zip(path, range(1, len(path)+1)):
                     if ( not isinstance(step, TransitionTreeGuardFlow)):
                         continue
                     if step.offering() == flow.offering(): 
@@ -56,10 +58,13 @@ def compute_total_weight(flow:TransitionTreeGuardFlow,
     """
     Computes the total weight on a flow, regradless of outcome.
     """
-    weight = 0
+    weight = 0.0
     for trace, instances in log:
         weighter = EqualPathWeighter(matcher[trace])
-        for path in matcher[trace]:
+        paths = matcher[trace]
+        print(f"{trace=} with {len(paths)=}")
+        for path in paths:
+            print(f"{str(path)=}")
             for step in path:
                 if step == flow: 
                     weight += weighter(path, trace) * len(instances)
@@ -83,7 +88,7 @@ def compute_guard_recall(log:ComplexEventLog, model:LabelledPetriNet) \
     tree = construct_from_model(model, longest_playout=long)
     matching = construct_many_matching(log, tree)
     flow_weight = set( 
-        (flow, compute_total_weight(flow,matching, log))
+        (flow, compute_total_weight(flow, matching, log))
         for flow
         in tree.flows()
     )
@@ -93,11 +98,15 @@ def compute_guard_recall(log:ComplexEventLog, model:LabelledPetriNet) \
         in flow_weight
         if w > 0.0
     )
-    recall = 1./ len(flow_weight)
+    print(f"{len(flow_weight)=}")
+    recall = 1.0/ len(flow_weight)
+    print(f"{recall=}")
     inner_sum = 0.0
+    print(f"{inner_sum=}")
     for flow,total_weight in flow_weight:
         inner_sum += \
             compute_directed_bookkeeping(flow, matching, log) / total_weight
+        print(f"{inner_sum=}")
     return recall * inner_sum
 
 def compute_guard_precision(log:ComplexEventLog, model:LabelledPetriNet) \
