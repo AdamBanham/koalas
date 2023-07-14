@@ -277,7 +277,15 @@ class TransitionTreeMerge(TransitionTreeGuard):
         return self.html_label()
     
     def __hash__(self) -> int:
-        return hash((self.MERGER, len(self._contains)))
+        glabels = list( exp.html_label() for exp in self._contains)
+        glabels = [self.MERGER] + sorted(glabels)
+        return hash(tuple(glabels))
+    
+    def __eq__(self, other: object) -> bool:
+        if (type(self) == type(other)):
+            return self.__hash__() == other.__hash__()
+        return False
+    
     
     def __eq__(self, other: object) -> bool:
         if (type(self) == type(other)):
