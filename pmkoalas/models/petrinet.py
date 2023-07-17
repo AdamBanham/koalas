@@ -14,6 +14,8 @@ from collections.abc import Iterable
 from copy import deepcopy
 from typing import Union,FrozenSet
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import parse
+from os import path
 from uuid import uuid4
 
 #typing imports
@@ -475,4 +477,103 @@ def export_net_to_pnml(net:LabelledPetriNet,fname:str) -> None:
     xml =  convert_net_to_xml(net)  
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
+
+def parse_pnml(filepath:str) -> LabelledPetriNet:
+    """
+    Constructs a petri net from the given filepath to a pnml file.
+    """
+    from pmkoalas.conformance.tokenreplay import PetriNetMarking
+    # setup compontents
+    initial_marking = {}
+    final_marking = {}
+    # begin parsing
+    ## check that file exists
+    if not path.exists(filepath):
+        raise FileNotFoundError("event log file not found at :: "+filepath)
+    xml_tree = parse(filepath)
+    pnml = xml_tree.getroot()
+    print(pnml)
+    net = pnml.find("net")
+    net_name = net.find("name").find("text").text
+    print(net)
+    pages = net.findall("page")
+    tgt_page = pages[0]
+    ## we only parse the first page.
+    places = {}
+    place_ids = {}
+    transitions = {}
+    transition_ids = {}
+    builder = BuildablePetriNet(net_name)
+    ### parse the places 
+    for place in tgt_page.findall("place"):
+        tools = place.find("toolspecific")
+        lid = None
+        if tools != None:
+            if "localNodeID" in tools.attrib:
+                lid = tools.attrib["localNodeID"]
+        id = place.attrib["id"]
+        # making a place
+        pid = lid if lid != None else id
+        place_ids[id] = pid
+        parsed = Place( place.find("name").find("text").text, pid)
+        places[pid] = parsed
+        builder.add_place(parsed)
+        # handle markings
+        init = place.find("initialMarking")
+        final = place.find("finalMarking")
+        if init != None:
+            initial_marking[pid] = int(init.find("text").text)
+        if final != None:
+            final_marking[pid] = int(final.find("text").text)
+    ### parse the transitions
+    for transition in tgt_page.findall("transition"):
+        tools = transition.find("toolspecific")
+        lid = None
+        if tools != None:
+            if "localNodeID" in tools.attrib:
+                lid = tools.attrib["localNodeID"]
+        id = transition.attrib["id"]
+        # making a transition
+        tid = lid if lid != None else id 
+        transition_ids[id] = tid 
+        parsed = Transition( 
+            transition.find("name").find("text").text,
+            tid
+        )
+        transitions[tid] = parsed
+        builder.add_transition(parsed)
+        # add guards if they exist
+        if "guard" in transition.attrib:
+            print("found guard representation")
+            parsed.guard = transition.attrib['guard']
+    ### parse the arcs
+    nodes = places
+    nodes.update(transitions)
+    node_ids = place_ids
+    node_ids.update(transition_ids)
+    for arc in tgt_page.findall("arc"):
+        tools = arc.find("toolspecific")
+        lid = None
+        if tools != None:
+            if "localNodeID" in tools.attrib:
+                lid = tools.attrib["localNodeID"]
+        id = arc.attrib["id"]
+        src = node_ids[arc.attrib["source"]]
+        tgt = node_ids[arc.attrib["target"]]
+        # making an arc 
+        aid = lid if lid != None else id  # we aren't storing the actual id??
+        src_node = nodes[src]
+        tgt_node = nodes[tgt]
+        builder.add_arc_between(
+            src_node,
+            tgt_node
+        )
+    # finalise compontents
+    bnet = builder.create_net()
+    net = LabelledPetriNet(bnet.places, bnet.transitions, bnet.arcs, 
+                           bnet.name, PetriNetMarking(bnet, initial_marking),
+                           PetriNetMarking(bnet, final_marking)
+    )
+    return net
+
 
