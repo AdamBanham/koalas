@@ -20,8 +20,12 @@ from uuid import uuid4
 
 #typing imports
 from typing import TYPE_CHECKING
+
+from pmkoalas.conformance.tokenreplay import PetriNetMarking
+from pmkoalas.models.petrinet import Arc, Place, Transition
 if TYPE_CHECKING:
     from pmkoalas.conformance.tokenreplay import PetriNetMarking
+    from pmkoalas.models.guards import Guard
 
 ENCODING='unicode'
 
@@ -289,7 +293,6 @@ class LabelledPetriNet:
             _str += f"\t\t- {a}\n"
         return _str
     
-
 class BuildablePetriNet(LabelledPetriNet):
     """
     This class allows for the builder design pattern to be used
@@ -359,6 +362,41 @@ class BuildablePetriNet(LabelledPetriNet):
                    self._transitions == other._transitions and \
                    self._arcs   == self._arcs
         return False
+
+class GuardedTransition(Transition):
+    """
+    An abstraction for a transition with a guard.
+    """
+
+    def __init__(self, 
+                 name: str, 
+                 guard: Guard,
+                 tid: str = None, 
+                 silent: bool = False):
+        super().__init__(name, tid, 1, silent)
+        self._guard = deepcopy(guard)
+
+    @property
+    def guard(self):
+        return self._guard
+
+class PetriNetWithData(LabelledPetriNet):
+    """
+    An abstraction for extending a Petri net to one with data. This abstraction
+    only includes guards.
+    """
+
+    def __init__(self, places: Iterable[Place], 
+                 transitions: Iterable[GuardedTransition], 
+                 arcs: Iterable[Arc], 
+                 name: str = 'Petri net', 
+                 imarking: PetriNetMarking = None, 
+                 fmarking: PetriNetMarking = None):
+        super().__init__(places, transitions, arcs, name, imarking, fmarking)
+
+    def transitions(self) -> FrozenSet[GuardedTransition]:
+        return super().transitions
+
 
 class PetriNetDOTFormatter:
     """
