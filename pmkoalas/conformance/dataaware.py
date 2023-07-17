@@ -20,7 +20,7 @@ def compute_directed_bookkeeping(flow:TransitionTreeGuardFlow,
     """
     bookkeeping = 0
     for trace, instances in log:
-        weighter = EqualPathWeighter(matcher[trace])
+        weighter = ExpontentialPathWeighter(matcher[trace])
         for instance in instances:
             paths = matcher[trace]
             for path in paths:
@@ -60,7 +60,7 @@ def compute_total_weight(flow:TransitionTreeGuardFlow,
     """
     weight = 0.0
     for trace, instances in log:
-        weighter = EqualPathWeighter(matcher[trace])
+        weighter = ExpontentialPathWeighter(matcher[trace])
         paths = matcher[trace]
         print(f"{trace=} with {len(paths)=}")
         for path in paths:
