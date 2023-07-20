@@ -314,9 +314,11 @@ def construct_many_matching(log:EventLog, tree:TransitionTree) \
     rets = Parallel(n_jobs=-2)(
         delayed(_computation_many_matching)(trace,tree)
         for trace
-        in InfoIteratorProcessor("matchings", [ trace for trace,_ in log ])
+        in InfoIteratorProcessor("matchings", [ trace for trace,_ in log ]
+                                 ,stack=8)
     )
     for trace,least_costy in rets:
+        info(f"no. of matching generated for {trace} was {len(least_costy)}")
         mapping.add_to_map(trace, least_costy)
     return mapping
 
