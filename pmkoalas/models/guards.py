@@ -229,6 +229,14 @@ class Expression():
 
     def __str__(self) -> str:
         return self._org_exp
+    
+    def __eq__(self, other: object) -> bool:
+        if (type(self) == type(other)):
+            return hash(self) == hash(str)
+        return False
+    
+    def __hash__(self) -> int:
+        return hash(str(self))
 
 class Guard():
     """
@@ -255,3 +263,11 @@ class Guard():
 
     def __str__(self) -> str:
         return str(self._exp)
+    
+    def __hash__(self) -> int:
+        return self._exp.__hash__()
+    
+    def __eq__(self, other: object) -> bool:
+        if(type(self) == type(other)):
+            return hash(self) == hash(other)
+        return False
