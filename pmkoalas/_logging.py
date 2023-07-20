@@ -8,7 +8,7 @@ from typing import Iterator
 from functools import wraps
 from sys import stdout
 
-LOG_FRMT = '%(asctime)s|%(filename)-18s|%(funcName)-25s|%(levelname)-8s|: %(message)s'
+LOG_FRMT = '%(asctime)s|%(filename)-25s|%(funcName)-40s|%(levelname)-8s|: %(message)s'
 
 fmt = LOG_FRMT
 fmt_date = '%Y-%m-%dT%T'
