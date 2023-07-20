@@ -12,7 +12,7 @@ For an depth understanding or introduction to Petri Nets, see:
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Union,FrozenSet
+from typing import Union,FrozenSet,Dict
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import parse
 from os import path
@@ -22,7 +22,6 @@ from uuid import uuid4
 from typing import TYPE_CHECKING
 
 from pmkoalas.conformance.tokenreplay import PetriNetMarking
-from pmkoalas.models.petrinet import Arc, Place, Transition
 if TYPE_CHECKING:
     from pmkoalas.conformance.tokenreplay import PetriNetMarking
     from pmkoalas.models.guards import Guard
@@ -215,15 +214,13 @@ class LabelledPetriNet:
 
     def __init__(self, places:Iterable[Place], transitions:Iterable[Transition],
                  arcs:Iterable[Arc], 
-                 name:str='Petri net',
-                 imarking:'PetriNetMarking'=None,
-                 fmarking:'PetriNetMarking'=None):
+                 name:str='Petri net'):
         self._places = set(places)
         self._transitions = set(transitions)
         self._arcs = set(arcs)
         self._name = name
-        self._imarking = imarking 
-        self._fmarking = fmarking
+        self._imarking = None 
+        self._fmarking = None
 
     @property 
     def places(self) -> FrozenSet[Place]:
@@ -248,6 +245,20 @@ class LabelledPetriNet:
     @property
     def final_marking(self) -> 'PetriNetMarking':
         return deepcopy(self._fmarking)
+    
+    def set_initial_marking(self, marked:Dict[Place, int]):
+        from pmkoalas.conformance.tokenreplay import PetriNetMarking
+        for place in self.places:
+            if place not in marked:
+                marked[place] = 0
+        self._imarking = PetriNetMarking(self, marked)
+
+    def set_final_marking(self, marked:Dict[Place, int]):
+        from pmkoalas.conformance.tokenreplay import PetriNetMarking
+        for place in self.places:
+            if place not in marked:
+                marked[place] = 0
+        self._fmarking = PetriNetMarking(self, marked)
 
     def __eq__(self,other) -> bool:
         if isinstance(other,self.__class__):
@@ -370,7 +381,7 @@ class GuardedTransition(Transition):
 
     def __init__(self, 
                  name: str, 
-                 guard: Guard,
+                 guard: 'Guard',
                  tid: str = None, 
                  silent: bool = False):
         super().__init__(name, tid, 1, silent)
@@ -379,6 +390,9 @@ class GuardedTransition(Transition):
     @property
     def guard(self):
         return self._guard
+    
+    def __str__(self) -> str:
+        return f"[{self.name} {self.guard}]"
 
 class PetriNetWithData(LabelledPetriNet):
     """
@@ -389,13 +403,13 @@ class PetriNetWithData(LabelledPetriNet):
     def __init__(self, places: Iterable[Place], 
                  transitions: Iterable[GuardedTransition], 
                  arcs: Iterable[Arc], 
-                 name: str = 'Petri net', 
-                 imarking: PetriNetMarking = None, 
-                 fmarking: PetriNetMarking = None):
-        super().__init__(places, transitions, arcs, name, imarking, fmarking)
+                 name: str = 'Petri net'):
+        super().__init__(places, transitions, arcs, name)
 
+    @property
     def transitions(self) -> FrozenSet[GuardedTransition]:
-        return super().transitions
+        return deepcopy(self._transitions)
+
 
 
 class PetriNetDOTFormatter:
