@@ -530,24 +530,22 @@ def export_net_to_pnml(net:LabelledPetriNet,fname:str) -> None:
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
 
-def parse_pnml(filepath:str) -> LabelledPetriNet:
+def parse_pnml_for_dpn(filepath:str) -> PetriNetWithData:
     """
-    Constructs a petri net from the given filepath to a pnml file.
+    Constructs a Petri net with data from the given filepath to a pnml file.
     """
-    from pmkoalas.conformance.tokenreplay import PetriNetMarking
+    from pmkoalas.models.guards import Guard,Expression
     # setup compontents
     initial_marking = {}
     final_marking = {}
     # begin parsing
     ## check that file exists
     if not path.exists(filepath):
-        raise FileNotFoundError("event log file not found at :: "+filepath)
+        raise FileNotFoundError("pnml file not found at :: "+filepath)
     xml_tree = parse(filepath)
     pnml = xml_tree.getroot()
-    print(pnml)
     net = pnml.find("net")
     net_name = net.find("name").find("text").text
-    print(net)
     pages = net.findall("page")
     tgt_page = pages[0]
     ## we only parse the first page.
@@ -555,7 +553,7 @@ def parse_pnml(filepath:str) -> LabelledPetriNet:
     place_ids = {}
     transitions = {}
     transition_ids = {}
-    builder = BuildablePetriNet(net_name)
+    arcs = set()
     ### parse the places 
     for place in tgt_page.findall("place"):
         tools = place.find("toolspecific")
@@ -569,14 +567,13 @@ def parse_pnml(filepath:str) -> LabelledPetriNet:
         place_ids[id] = pid
         parsed = Place( place.find("name").find("text").text, pid)
         places[pid] = parsed
-        builder.add_place(parsed)
         # handle markings
         init = place.find("initialMarking")
         final = place.find("finalMarking")
         if init != None:
-            initial_marking[pid] = int(init.find("text").text)
+            initial_marking[places[pid]] = int(init.find("text").text)
         if final != None:
-            final_marking[pid] = int(final.find("text").text)
+            final_marking[places[pid]] = int(final.find("text").text)
     ### parse the transitions
     for transition in tgt_page.findall("transition"):
         tools = transition.find("toolspecific")
@@ -585,21 +582,22 @@ def parse_pnml(filepath:str) -> LabelledPetriNet:
             if "localNodeID" in tools.attrib:
                 lid = tools.attrib["localNodeID"]
         id = transition.attrib["id"]
+        # add guards if they exist
+        if "guard" in transition.attrib:
+            guard = Guard(Expression(transition.attrib['guard']))
+        else: 
+            guard = Guard(Expression("true"))
         # making a transition
         tid = lid if lid != None else id 
         transition_ids[id] = tid 
-        parsed = Transition( 
+        parsed = GuardedTransition( 
             transition.find("name").find("text").text,
+            guard,
             tid
         )
         transitions[tid] = parsed
-        builder.add_transition(parsed)
-        # add guards if they exist
-        if "guard" in transition.attrib:
-            print("found guard representation")
-            parsed.guard = transition.attrib['guard']
-    ### parse the arcs
-    nodes = places
+    ### parse the arcs    
+    nodes = deepcopy(places)
     nodes.update(transitions)
     node_ids = place_ids
     node_ids.update(transition_ids)
@@ -616,16 +614,22 @@ def parse_pnml(filepath:str) -> LabelledPetriNet:
         aid = lid if lid != None else id  # we aren't storing the actual id??
         src_node = nodes[src]
         tgt_node = nodes[tgt]
-        builder.add_arc_between(
-            src_node,
-            tgt_node
-        )
+        arcs.add(Arc(
+            src_node, tgt_node
+        ))
     # finalise compontents
-    bnet = builder.create_net()
-    net = LabelledPetriNet(bnet.places, bnet.transitions, bnet.arcs, 
-                           bnet.name, PetriNetMarking(bnet, initial_marking),
-                           PetriNetMarking(bnet, final_marking)
+    dpn = PetriNetWithData(
+        places=set(list(places.values())),
+        transitions=set(list(transitions.values())),
+        arcs=arcs,
+        name=net_name
     )
-    return net
+    dpn.set_initial_marking(
+        initial_marking
+    )
+    dpn.set_final_marking(
+        final_marking
+    )
+    return dpn
 
 
