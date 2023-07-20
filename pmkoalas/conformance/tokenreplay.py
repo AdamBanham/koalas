@@ -229,7 +229,6 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
     """
     # importing here to remove circular dependencies.
     from pmkoalas.models.transitiontree import TransitionTreeMerge
-    from pmkoalas.models.transitiontree import TransitionTreeGuard
 
     playout_traces = list()
     completed:List[PetriNetFiringSequence] = set()
@@ -237,10 +236,14 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
         PetriNetFiringSequence(initial_marking, list(), final_marking)
     ]
     seen = set()
+    pbar = InfoQueueProcessor(itername="processed partials",
+                                 starting_size=len(incomplete)
+    )
     while len(incomplete) > 0:
         select = incomplete.pop(0)
         seen.add(select)
         potentials = list()
+
         for firing in select.next():
             potentials.append(select.fire(firing))
         for pot in potentials:
@@ -251,10 +254,13 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
             else:
                 if pot not in seen and len(pot) < max_length + 1:
                     incomplete.append(pot)
-            
+                    pbar.extent(1)
+        pbar.update()        
     # now for each completed trace, we need to produce a complex trace
     trace_id = 1
-    for comp in completed:
+    guard_id = 1
+    guard_ids = {}
+    for comp in InfoIteratorProcessor("play-out traces", completed):
         trace_map = {
             "concept:name" : f"play-out trace {trace_id}"
         }
@@ -263,14 +269,22 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
         # build sequence of fired transitions
         ## but profilerate guards on silence, without recording them
         for fired in comp.fired():
+            if fired.guard not in guard_ids:
+                guard_ids[fired.guard] = guard_id
+                guard_id += 1
             if fired.silent:
                 if leftover_guard == None:
-                    leftover_guard = fired.guard
+                    leftover_guard = PlayoutTransitionGuard(
+                        fired.guard,
+                        guard_ids[fired.guard]
+                    )
                 else:
-                    leftover_guard = TransitionTreeMerge(leftover_guard, 
-                                                         fired.guard)
+                    leftover_guard = TransitionTreeMerge(
+                        leftover_guard, 
+                        PlayoutTransitionGuard(fired.guard, guard_ids[fired.guard])
+                    )
             else:
-                guard = fired.guard 
+                guard = PlayoutTransitionGuard(fired.guard, guard_ids[fired.guard])
                 if leftover_guard != None:
                     guard = TransitionTreeMerge(leftover_guard, guard)
                     leftover_guard = None
@@ -288,6 +302,7 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
             )
         )
         trace_id += 1
+    info("made playout log")
     return ComplexEventLog(playout_traces, dict({
         "meta:generated:by" : "pmkoalas",
         "meta:generator:version" : __version__
