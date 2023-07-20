@@ -2,16 +2,16 @@
 This module contains an alignment like process for transition trees, called 
 matchings.
 """
-from typing import Any, Union, Dict, List, Set, Iterable
+from typing import Any, Union, Dict, List, Set, Iterable, Tuple
 from copy import deepcopy
-from pmkoalas.simple import Trace, EventLog
 
-#typing imports
-# from typing import TYPE_CHECKING
-# if TYPE_CHECKING:
+from joblib import Parallel, delayed
+
 from pmkoalas.models.transitiontree import TransitionTreeFlow
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex
+from pmkoalas.simple import Trace, EventLog
+from pmkoalas._logging import info, InfoIteratorProcessor
 
 class Skipper():
     """
@@ -282,26 +282,41 @@ class ExpontentialPathWeighter():
         if path in self._cands:
             cost = cost_of_path(path, trace)
             offset = 0.05 * cost - 1 if cost > 0 else  0
-            return (1.0 / len(self._cands)) ** ( offset )
+            return (1.0 / len(self._cands)) ** ( 1 + offset )
         else:
             return 0
+        
+def _computation_many_matching(trace, tree) -> Tuple[Trace,Set[Path]]:
+    """
+    The individual work for a given trace, to find a matching.
+    """
+    noskips = find_non_skipping_candidates(tree, trace)
+    skippings = find_skipping_candidates(tree,trace)
+    terminals = find_terminal_candidates(tree,trace)
+    allcads = noskips.union(skippings).union(terminals)
+    if len(allcads) > 0:
+        least_costy = find_least_costy_paths(
+            noskips.union(skippings).union(terminals),
+            trace,
+            root_is_terminal=tree.root() in tree.terminals()
+        )
+    else: 
+        raise Exception(f"Unable to find any candidates for :: {trace}")
+    return (trace, least_costy)
 
-def  construct_many_matching(log:EventLog, tree:TransitionTree) \
+def construct_many_matching(log:EventLog, tree:TransitionTree) \
      -> ManyMatching:
     """
     Constructs a set of likely cadidate paths for each trace in the log,
     then constructs a map from traces to these sets.
     """
     mapping = ManyMatching(dict())
-    for trace,_ in log:
-        noskips = find_non_skipping_candidates(tree, trace)
-        skippings = find_skipping_candidates(tree,trace)
-        terminals = find_terminal_candidates(tree,trace)
-        least_costy = find_least_costy_paths(
-            noskips.union(skippings).union(terminals),
-            trace,
-            root_is_terminal=tree.root() in tree.terminals()
-        )
+    rets = Parallel(n_jobs=-2)(
+        delayed(_computation_many_matching)(trace,tree)
+        for trace
+        in InfoIteratorProcessor("matchings", [ trace for trace,_ in log ])
+    )
+    for trace,least_costy in rets:
         mapping.add_to_map(trace, least_costy)
     return mapping
 
