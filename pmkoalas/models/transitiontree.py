@@ -3,7 +3,6 @@ This module outlines a data structure for transitions tree as proposed by Hidder
  Dumas, M., van der Aalst, W.M.P., ter Hofstede, A.H.M., Verelst, J.: When are two
  workflows the same? In: CATS. ACS (2005); These trees can be modified for future work.
 """
-
 from typing import Any, Set, List, Tuple, Union
 from copy import deepcopy
 from dataclasses import dataclass
@@ -12,6 +11,8 @@ from os import path,mkdir
 
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.complex import ComplexEvent, ComplexEventLog
+from pmkoalas._logging import info, InfoQueueProcessor, InfoIteratorProcessor
+
 class TransitionTreeVertex():
     """
     Data class for a vertex in a transition tree.
@@ -343,10 +344,10 @@ class TransitionTreeGuardFlow(TransitionTreeFlow):
                  target:TransitionTreeVertex, 
                  guard:TransitionTreeGuard) -> None:
         super().__init__(source, act, target)
-        self._guard = deepcopy(guard)
+        self._guard = guard
 
     def label(self) -> Tuple[str, TransitionTreeGuard]:
-        return (self.activity(), deepcopy(self._guard))
+        return (self.activity(), self._guard)
     
     def attributes(self) -> Set[str]:
         return self._guard.required()
@@ -581,8 +582,9 @@ def apply_flow_reduction(tree:TransitionTree):
     Ensures that only one flow exists between nodes in a tree.
     Returns a new tree with the same nodes but an alternative set of flows.
     """
+    info("applying flow reduction on playout tree.")
     new_flows = set()
-    for node in tree.vertices():
+    for node in InfoIteratorProcessor("checking nodes", tree.vertices()):
         outgoing = node.outgoing(tree.flows())
         next_nodes = set( out.next() for out in outgoing )
         for next in next_nodes:
@@ -602,6 +604,7 @@ def apply_flow_reduction(tree:TransitionTree):
                 )
             else:
                 new_flows = new_flows.union(old_flows)
+    info("flow reduction complete.")
     return TransitionTree(
         tree.vertices(),
         tree.root(),
@@ -638,17 +641,15 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
             return self._counter
     idder = Idder()
     # constuct nodes
-    nodes = set(
-        [
-            trace.acut(i)
-            for _,instances
-            in playout_log
-            for trace 
-            in instances
-            for i
-            in range(1,min([k+1, len(trace)]))
-        ]
+    nodes = set()
+    pbar = InfoQueueProcessor("built nodes of tree", 
+                              starting_size=len(playout_log)
     )
+    for _,instances in playout_log:
+        for trace in instances:
+            for i in range(1, min([k+1, len(trace)])):
+                nodes.add(trace.acut(i))
+            pbar.update()
     map_nodes = dict(
         (node, TransitionPlayoutVertex(idder(), node))
         for node
@@ -657,28 +658,32 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
     map_nodes[Trace([])] = root
     nodes.add(root)
     # construct flows
-    flows = set(
-        [
-            TransitionTreeGuardFlow(
-                map_nodes[trace.acut(i)],
-                trace.act(i),
-                map_nodes[trace.acut(i+1)],
-                trace.guard(i)
-            )
-            for _,instances
-            in playout_log
-            for trace
-            in instances
-            for i 
-            in range(0,min([k+1, len(trace)-1]))
-        ]
+    flows = set()
+    pbar = InfoQueueProcessor("built flows of tree",
+                              starting_size=len(playout_log)
     )
+    for _,instances in playout_log:
+        for trace in instances:
+            for i in range(0,min([k+1, len(trace)-1])):
+                flows.add(
+                    TransitionTreeGuardFlow(
+                        map_nodes[trace.acut(i)],
+                        trace.act(i),
+                        map_nodes[trace.acut(i+1)],
+                        trace.guard(i)
+                    )
+                )    
+            pbar.update()
     # set final nodes
+    pbar = InfoQueueProcessor("check for terminals",
+                              starting_size=len(playout_log)
+    )
     for _,instances in playout_log:
         for trace in instances:
             i = min([k+1, len(trace)-1])
             if isinstance(trace[i],  PlayoutEnd):
                 map_nodes[trace.acut(i)].set_as_terminal()
+            pbar.update()
     # construct tree
     tree = TransitionTree(
         set(list(map_nodes.values())),
@@ -687,6 +692,7 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
     )
     if (freduce):
         tree = apply_flow_reduction(tree)
+    info("constructed tree.")
     return tree
 
 
