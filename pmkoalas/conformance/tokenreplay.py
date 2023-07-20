@@ -8,12 +8,38 @@ from typing import Dict, Iterable, Mapping,Set,List
 from pmkoalas import __version__
 from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
 from pmkoalas.simple import Trace
+from pmkoalas.models.transitiontree import TransitionTreeGuard
+from pmkoalas._logging import info, InfoQueueProcessor, InfoIteratorProcessor
 
 #typing imports
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from pmkoalas.models.transitiontree import TransitionTreeGuard
-    from pmkoalas.models.petrinet import LabelledPetriNet, Place, Transition
+    from pmkoalas.models.guards import Guard, GuardOutcomes
+    from pmkoalas.models.petrinet import LabelledPetriNet, PetriNetWithData
+    from pmkoalas.models.petrinet import Place, Transition
+
+class PlayoutTransitionGuard(TransitionTreeGuard):
+    """
+    Template for taking a guard off a transition in a petri net and converting
+    it into the semantics for a transition tree.
+    """
+
+    def __init__(self, guard:'Guard', id:str=None) -> None:
+        super().__init__()
+        self._guard = guard
+        self._id = 1 if id == None else id
+        
+    def check(self, data: ComplexEvent) -> 'GuardOutcomes':
+        return self._guard.evaluate_data(data)
+    
+    def html_label(self) -> str:
+        return f"g<sub>{self._id}</sub>"
+    
+    def expanded_html_label(self) -> str:
+        return f"{self._guard}"
+    
+    def __hash__(self) -> int:
+        return hash(self.expanded_html_label())
 
 class PetriNetMarking():
     """
@@ -191,10 +217,10 @@ class PlayoutTrace(ComplexTrace):
         """
         return self[i].activity()
     
-    def guard(self, i:int) -> 'TransitionTreeGuard':
+    def guard(self, i:int) -> PlayoutTransitionGuard:
         return self[i].guard
 
-def construct_playout_log(model:'LabelledPetriNet', max_length:int, 
+def construct_playout_log(model:'PetriNetWithData', max_length:int, 
         initial_marking:'PetriNetMarking', final_marking:'PetriNetMarking') \
         -> ComplexEventLog:
     """ 
