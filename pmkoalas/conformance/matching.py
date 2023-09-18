@@ -274,17 +274,32 @@ class ExpontentialPathWeighter():
     A weighting function, that weights candidates with exponential offset for,
     non-optimal paths, between a path and a trace.
     """
+    # offset cost
+    kappa = 0.9
 
     def __init__(self, candidates:Set[Path]) -> None:
         self._cands = deepcopy(candidates)
+        self._size = len(self._cands)
 
     def __call__(self, path:Path, trace:Trace) -> float:
         if path in self._cands:
             cost = cost_of_path(path, trace)
-            offset = 0.05 * cost - 1 if cost > 0 else  0
-            return (1.0 / len(self._cands)) ** ( 1 + offset )
+            share = 1 / self.size
+            offset = self.kappa ** cost
+            return share * offset
         else:
             return 0
+    
+    @property
+    def size(self) -> int:
+        return self._size
+    
+    @property
+    def share(self) -> float:
+        """
+        The maximum share that a path can be given
+        """
+        return 1 / self.size
         
 def _computation_many_matching(trace, tree) -> Tuple[Trace,Set[Path]]:
     """

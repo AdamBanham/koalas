@@ -230,12 +230,12 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
                                     instance.get_state_as_of(i-1)
                                 ) == GuardOutcomes.TRUE
                             upper_sum += instance_weight * int(irveson)
-                            lower_sum += 1 * int(irveson)
+                            lower_sum += inst_w.share * int(irveson)
                             for lflow in other_flows:
                                 irveson = lflow.guard().check(
                                     instance.get_state_as_of(i-1)
                                 ) == GuardOutcomes.TRUE
-                                lower_sum += 1 * int(irveson)
+                                lower_sum += inst_w.share  * int(irveson)
         return upper_sum, lower_sum
     # worker for inputs
     info("preparing work")
