@@ -76,7 +76,7 @@ def compute_total_weight(flow:TransitionTreeGuardFlow,
         for path in paths:
             for step in path:
                 if step == flow: 
-                    weight += 1 * len(instances)
+                    weight += (1/len(paths)) * len(instances)
                     break
     return weight
 
@@ -122,7 +122,7 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree) -> float:
                                     instance.get_state_as_of(i-1)
                                 ) == GuardOutcomes.TRUE
                             flow_weight += instance_weight * int(irveson)
-                        total_weight += 1 * len(instances)
+        total_weight += inst_w.share * len(path.noskips) * len(instances)
         return flow_weight, total_weight
     # worker for inputs
     def params(trace, instances, tree):
