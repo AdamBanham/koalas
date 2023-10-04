@@ -3,6 +3,7 @@ This module handles all machinery need to parse, check, and export
 expressions on models, i.e. guards associated with transitions in a Petri net
 with data.
 """
+from pmkoalas._logging import debug
 from pmkoalas.complex import ComplexTrace
 
 
@@ -93,6 +94,7 @@ class EvalComparisonOp:
         ">" : lambda a, b: a > b,
         ">=" : lambda a,b: a >= b,
         '&&': lambda a,b: a and b,
+        '||': lambda a,b: a or b
     }
 
     def __init__(self):
@@ -100,14 +102,18 @@ class EvalComparisonOp:
 
     def eval(self):
         val1 = self.value[0].eval()
+        debug(f"starting with left of :: {val1}")
         for op, val in self.operatorOperands(self.value[1:]):
             fn = EvalComparisonOp.opMap[op]
             val2 = val.eval()
+            debug(f"operating on :: {val1} {op} {val2}")
             if not fn(val1, val2):
                 break
             val1 = val2
         else:
+            debug("resulting in true")
             return True
+        debug("resulting in false")
         return False
 
     def operatorOperands(self,tokenlist):
@@ -158,11 +164,12 @@ class ExpressionParser():
         self._operand = values | literal | variable
 
     def _expr_form(self) -> None:
-        comparisonop = oneOf("&lt;= <= &gt;= >= &lt; < &gt; > == &amp;&amp; &&")
+        comparisonop = oneOf("&lt;= <= &gt;= >= &lt; < &gt; > ==")
         self._expr = infixNotation(
             self._operand,
             [
                 (comparisonop, 2, opAssoc.LEFT, self._comparison),
+                (oneOf("&amp;&amp; && ||"), 2, opAssoc.LEFT,  self._comparison)
             ],
         )
 
@@ -224,7 +231,7 @@ class Expression():
             else:
                 return GuardOutcomes.FALSE
         except Exception as e:
-            print(f"Failed to evaluate :: {e}")
+            debug(f"Failed to evaluate :: {e}")
             return GuardOutcomes.UNDEF
 
     def __str__(self) -> str:
