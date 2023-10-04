@@ -206,17 +206,16 @@ class ComplexEventLog():
                 self._instances[strace] = list()
                 self._instances[strace].append(trace)
                 self._pop_size += 1
-            trace = strace
-            if (trace in self._freqset.keys()):
-                self._freqset[trace] += 1
+            if (strace in self._freqset.keys()):
+                self._freqset[strace] += 1
             else:
                 self._acts = self._acts.union(
-                    trace.seen_activities()
+                    strace.seen_activities()
                 )
-                if (len(trace) > 0):
-                    self._start_acts.add(trace[0])
-                    self._end_acts.add(trace[-1])
-                self._freqset[trace] = 1
+                if (len(strace) > 0):
+                    self._start_acts.add(strace[0])
+                    self._end_acts.add(strace[-1])
+                self._freqset[strace] = 1
                 self._variants += 1
             self._len += 1
         self._traces = set([ t for t in self._freqset.keys() ])
