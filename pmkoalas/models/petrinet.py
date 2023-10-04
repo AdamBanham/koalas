@@ -393,7 +393,20 @@ class GuardedTransition(Transition):
     
     def __str__(self) -> str:
         return f"[{self.name} {self.guard}]"
-
+    
+    def __hash__(self) -> int:
+        return hash((self.name, self.guard.__hash__(),self.silent, self.tid))
+    
+    def __eq__(self, other) -> bool:
+        if type(self) == type(other):
+            return self.name == other.name and self.tid == other.tid and  \
+                   self.guard == other.guard and self._silent == other._silent
+        return False
+    
+    def __repr__(self) -> str:
+        return f'GuardedTransition("{self.name}",guard={self.guard.__repr__()}'\
+               + f',tid="{self.tid}",silent={self.silent})'
+    
 class PetriNetWithData(LabelledPetriNet):
     """
     An abstraction for extending a Petri net to one with data. This abstraction
@@ -403,12 +416,35 @@ class PetriNetWithData(LabelledPetriNet):
     def __init__(self, places: Iterable[Place], 
                  transitions: Iterable[GuardedTransition], 
                  arcs: Iterable[Arc], 
-                 name: str = 'Petri net'):
+                 name: str = 'Petri net with Data'):
         super().__init__(places, transitions, arcs, name)
 
     @property
     def transitions(self) -> FrozenSet[GuardedTransition]:
         return deepcopy(self._transitions)
+    
+    def __repr__(self) -> str:
+        repr = "PetriNetWithData(\n"
+        # add places
+        repr += "\tplaces=[\n"
+        for p in self.places:
+            repr += f"\t\t{p.__repr__()},\n"
+        repr += "\t],\n"
+        # add transitions
+        repr += "\ttransitions=[\n"
+        for t in self.transitions:
+            repr += f"\t\t{t.__repr__()},\n"
+        repr += "\t],\n"
+        # add arcs
+        repr += "\tarcs=[\n"
+        for a in self.arcs:
+            repr += f"\t\t{a.__repr__()},\n"
+        repr += "\t],\n"
+        # add name
+        repr += f"\tname='{self.name}'\n"
+        #close param
+        repr += ")"
+        return repr
 
 
 
@@ -479,6 +515,9 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     net_node = ET.SubElement(root,'net', 
             attrib={'type':PNML_URL,
                     'id':net.name} )
+    net_name = ET.SubElement(net_node, "name")
+    net_text = ET.SubElement(net_name, "text")
+    net_text.text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
     for place in net.places:
         placeNode = ET.SubElement(page,'place', attrib={'id':str(place.pid) } )
@@ -487,8 +526,13 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
             text_node = ET.SubElement(name_node,'text')
             text_node.text = place.name
     for tran in net.transitions:
+        # the default attributes for transitions
+        attribs = { 'id' : str(tran.tid)}
+        # check for guards 
+        if isinstance(tran, GuardedTransition):
+            attribs['guard'] = str(tran.guard)
         tranNode = ET.SubElement(page,'transition', 
-                        attrib={'id':str(tran.tid) } )
+                        attrib=attribs )
         if tran.name:
             name_node = ET.SubElement(tranNode,'name')
             text_node = ET.SubElement(name_node,'text')

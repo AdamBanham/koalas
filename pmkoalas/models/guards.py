@@ -244,6 +244,9 @@ class Expression():
     
     def __hash__(self) -> int:
         return hash(str(self))
+    
+    def __repr__(self) -> str:
+        return f"Expression('{self._org_exp}')"
 
 class Guard():
     """
@@ -278,3 +281,6 @@ class Guard():
         if(type(self) == type(other)):
             return hash(self) == hash(other)
         return False
+    
+    def __repr__(self) -> str:
+        return f'Guard({self._exp.__repr__()})'
