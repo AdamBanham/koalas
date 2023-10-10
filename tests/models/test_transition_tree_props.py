@@ -5,6 +5,8 @@ from pmkoalas.simple import Trace
 from pmkoalas.complex import ComplexEvent
 from pmkoalas.read import read_xes_simple,read_xes_complex
 
+from pmkoalas.models.guards import Guard, GuardOutcomes, Expression
+from pmkoalas.conformance.tokenreplay import PlayoutTransitionGuard
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex,TransitionTreeRoot
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow,TransitionTreePopulationFlow
@@ -127,6 +129,60 @@ SSMALL_FLOWS = set([
 ])
 SSMALL_VERTS = set(SSMALL_VERTS)
 
+# transition tree with guards
+GSMALL_ROOT = TransitionTreeRoot()
+GSMALL_VERTS = [
+    GSMALL_ROOT,
+    TransitionTreeVertex(1,Trace(["a"])),
+    TransitionTreeVertex(2,Trace(["a","b"])),
+    TransitionTreeVertex(3,Trace(["a","c"])),
+    TransitionTreeVertex(4,Trace(["a","d"])),
+    TransitionTreeVertex(5,Trace(["a","d","e"]),end=True),
+    TransitionTreeVertex(6,Trace(["a","d","e"]),end=True),
+    TransitionTreeVertex(7,Trace(["a","d","e"]),end=True)
+]
+GSMALL_FLOWS = [
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[0], "a", GSMALL_VERTS[1],
+        PlayoutTransitionGuard(Guard("true"))
+    ),
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[1], "b", GSMALL_VERTS[2],
+        PlayoutTransitionGuard(Guard("d1 < 5"))
+    ),
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[1], "c", GSMALL_VERTS[3],
+        PlayoutTransitionGuard(Guard("d1 <= 7"))
+    ),
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[1], "d", GSMALL_VERTS[4],
+        PlayoutTransitionGuard(Guard("d3 < 10"))
+    ),
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[2], "e", GSMALL_VERTS[5],
+        PlayoutTransitionGuard(Guard("true"))
+    ),
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[3], "e", GSMALL_VERTS[6],
+        PlayoutTransitionGuard(Guard("true"))
+    ),
+    TransitionTreeGuardFlow(
+        GSMALL_VERTS[4], "e", GSMALL_VERTS[7],
+        PlayoutTransitionGuard(Guard("true"))
+    ),
+]
+GSMALL_FLOWS_EXPECT = [
+    (GSMALL_FLOWS[0], GuardOutcomes.TRUE),
+    (GSMALL_FLOWS[1], GuardOutcomes.FALSE),
+    (GSMALL_FLOWS[2], GuardOutcomes.TRUE),
+    (GSMALL_FLOWS[3], GuardOutcomes.UNDEF),
+    (GSMALL_FLOWS[4], GuardOutcomes.TRUE),
+    (GSMALL_FLOWS[5], GuardOutcomes.TRUE),
+    (GSMALL_FLOWS[6], GuardOutcomes.TRUE),
+]
+GSMALL_FLOWS = set(GSMALL_FLOWS)
+GSMALL_VERTS = set(GSMALL_VERTS)
+
 class TraceTest(unittest.TestCase):
 
     def test_init_fail(self):
@@ -203,13 +259,24 @@ class TraceTest(unittest.TestCase):
     def test_validate_attributes(self):
         self.assertEqual(D1_TREE.attributes(), D1_ATTRS) 
 
-    def test_populations(self):
-        # TODO
-        pass 
-
     def test_guards(self):
-        # TODO 
-        pass 
+        tree = None
+        # test construction
+        try:
+            tree = TransitionTree(GSMALL_VERTS, GSMALL_ROOT, GSMALL_FLOWS)
+        except Exception as e:
+            self.fail("Unable to build a transition tree with guards :: "+ str(e))
+        # test evaluation
+        data_state = { 'd1' : 7 }
+        for flow in tree.flows():
+            for tgt,out in GSMALL_FLOWS_EXPECT:
+                if flow == tgt:
+                    checker = flow.guard().check(data_state)
+                    self.assertEqual(out, checker,
+                        f"Guard Evaluation incorrect :: for {flow.guard()}"
+                        +f" we expected {out} but saw {checker}."
+                    )
+
 
     def test_simple_log_construction(self):
         try :
