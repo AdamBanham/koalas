@@ -79,7 +79,7 @@ class Path():
 
 class Matching():
     """
-    A mapping data structure, which maps traces to a path in a tree.
+    A mapping data structure, which maps variants to a path in a tree.
     """
 
     def __init__(self, mapping:Dict[Trace,Path]):
@@ -87,7 +87,7 @@ class Matching():
 
     def add_to_map(self, trace:Trace, path:Path) -> None:
         """
-        Either adds a new trace to the mapping or swaps an existing mapping
+        Either adds a new variant to the mapping or swaps an existing mapping
         with the given trace and path.
         """
         self._map[trace] = path
@@ -195,25 +195,19 @@ def find_terminal_candidates(tree:TransitionTree, trace:Trace) -> Set[Path]:
     """
     Constructs all possible paths from terminal nodes for the given trace.
     """
-    exact_terms = set(
-        find_path_in_tree(tree, node)
-        for node 
-        in tree.terminals()
-        if len(node.sigma_sequence()) == len(trace)
-    )
-    non_exact_terms = set( 
+    term_cands = set( 
         skipper 
         for node 
         in tree.terminals()
         if len(node.sigma_sequence()) < len(trace)
-        for skipper 
-        in mutate_path_with_skip(
-            Path( 
-            find_path_in_tree(tree, node).sequence + [Skipper()]
+            for skipper 
+            in mutate_path_with_skip(
+                Path( 
+                    find_path_in_tree(tree, node).sequence + [Skipper()]
+                )
             )
-        )
     )
-    return exact_terms.union(non_exact_terms)
+    return term_cands
 
 def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
     """
@@ -253,21 +247,6 @@ def find_least_costy_paths(paths:Set[Path], trace:Trace,
             if cost == ideal:
                 ret.add(path) 
     return ret 
-
-class EqualPathWeighter():
-    """
-    A weighting function, that equally weights candidates,
-    between a path and a trace.
-    """
-
-    def __init__(self, candidates:Set[Path]) -> None:
-        self._cands = deepcopy(candidates)
-
-    def __call__(self, path:Path, trace:Trace) -> float:
-        if path in self._cands:
-            return 1.0 / len(self._cands)
-        else:
-            return 0.0
     
 class ExpontentialPathWeighter():
     """
