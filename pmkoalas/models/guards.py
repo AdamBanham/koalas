@@ -18,7 +18,7 @@ from pyparsing import (
     Literal,
 )
 
-from typing import Any,Set,Dict
+from typing import Any,Set,Dict, Union
 from copy import deepcopy,copy
 from enum import Enum
 
@@ -253,7 +253,10 @@ class Guard():
     An abstraction for a guard.
     """
 
-    def __init__(self, exp:Expression) -> None:
+    def __init__(self, exp:Union[str,Expression]) -> None:
+        # convert string into expression if needed
+        if isinstance(exp, str):
+            exp = Expression(exp)
         self._exp = exp
 
     def evaluate(self, trace:ComplexTrace, i:int) -> GuardOutcomes:
