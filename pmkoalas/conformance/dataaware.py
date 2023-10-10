@@ -1,5 +1,5 @@
 """
-This modules provides ways to conformance data-aware process conformance.
+This modules provides ways to perfom data-aware conformance checking.
 
 Implemented techniques include:
     - guard-recall 
@@ -10,11 +10,11 @@ from pmkoalas.models.petrinet import PetriNetWithData
 from pmkoalas.models.guards import GuardOutcomes
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.models.transitiontree import TransitionTree
-from pmkoalas.conformance.matching import ManyMatching,EqualPathWeighter
+from pmkoalas.conformance.matching import ManyMatching
 from pmkoalas.conformance.matching import construct_many_matching, _computation_many_matching
 from pmkoalas.conformance.matching import ExpontentialPathWeighter
 from pmkoalas.models.transitiontree import construct_from_model
-from pmkoalas._logging import info, enable_logging, InfoQueueProcessor
+from pmkoalas._logging import info, enable_logging
 from pmkoalas._logging import InfoIteratorProcessor
 
 from joblib import Parallel, delayed
