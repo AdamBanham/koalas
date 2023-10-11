@@ -201,7 +201,7 @@ class PlayoutTrace(ComplexTrace):
     def acut(self, i:int) -> 'Trace':
         """
         Returns the cut of activity sequence of this playout up to the
-        i-th element (if it exists).
+        i-th step (if it exists).
         """
         seq = self.simplify().sequence
         ret = []
@@ -213,11 +213,14 @@ class PlayoutTrace(ComplexTrace):
     
     def act(self, i:int) -> str:
         """
-        Returns the activity of the i-th event.
+        Returns the activity of the i-th step.
         """
         return self[i].activity()
     
     def guard(self, i:int) -> PlayoutTransitionGuard:
+        """
+        Returns the guard of the i-th step.
+        """
         return self[i].guard
 
 def construct_playout_log(model:'PetriNetWithData', max_length:int, 

@@ -11,7 +11,9 @@ from pmkoalas.models.transitiontree import TransitionTreeFlow
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex
 from pmkoalas.simple import Trace, EventLog
-from pmkoalas._logging import info, InfoIteratorProcessor
+from pmkoalas.complex import ComplexEventLog
+from pmkoalas._logging import info, InfoIteratorProcessor,InfoQueueProcessor
+from pmkoalas._logging import debug
 
 class Skipper():
     """
@@ -150,64 +152,51 @@ def find_path_in_tree(tree:TransitionTree, tgt:TransitionTreeVertex)\
                              +"sequence of flows.")
     return Path(seq)
 
+def mutate_path_with_skips(path:Path, k:int) -> Set[Path]:
+    """
+    Constructs all mutations of the path with additional skips of at most
+    length k.
+    """
     
-def find_non_skipping_candidates(tree:TransitionTree, trace:Trace)\
-    -> Set[Path]:
-    """
-    Constructs all possible paths that are the same length of the given trace.
-    """
-    return set( 
-        find_path_in_tree(tree, node)
-        for node in tree.vertices()
-        if len(node.sigma_sequence()) == len(trace)
-    )
+    if (len(path) > k):
+        return set()
+    elif len(path) == k:
+        return set([path])
+    else:
+        ret = set()
+        adding = set([path])
+        log_que = InfoQueueProcessor("mutation size",1)
+        while len(adding) > 0:
+            mutaters = adding
+            ret = ret.union(adding)
+            adding = set()
+            for muter in mutaters:
+                info(f"mutating :: {muter}")
+                for i in range(len(muter)):
+                    spath = muter.sequence[:i] + [Skipper()] + muter.sequence[i:]
+                    spath = Path(spath)
+                    if (len(spath) <= k) and spath not in ret:
+                        adding.add(spath)
+                        info(f"adding new path to mutations :: {spath}")
+                        log_que.extent(1)
+                log_que.update(1)
+        return ret
 
-def mutate_path_with_skip(path:Path) -> Set[Path]:
+def find_all_paths(tree:TransitionTree, k:int) -> Set[Path]:
     """
-    Constructs all mutations of the given path with one skip inserted.
-    The last step in the path is not seen in mutations.
+    Finds all paths through or in the tree, for a given length.
     """
-    pseq = path.sequence
-    mutations = set()
-    for i in range(1, len(path)+1):
-        head = pseq[:i-1]
-        mid = [Skipper()]
-        tail = pseq[i-1:-1]
-        mutations.add(Path(head+mid+tail))
-    return mutations
-
-def find_skipping_candidates(tree:TransitionTree, trace:Trace) -> Set[Path]:
-    """
-    Constructs all possible paths with one skip, that are shorter than the
-    given trace.
-    """
-    return set( 
-        skipper
-        for node in tree.vertices()
-        if 1 <= len(node.sigma_sequence()) <= len(trace)
-        for skipper
-        in mutate_path_with_skip(
-            find_path_in_tree(tree, node)
-        )
-    )
-
-def find_terminal_candidates(tree:TransitionTree, trace:Trace) -> Set[Path]:
-    """
-    Constructs all possible paths from terminal nodes for the given trace.
-    """
-    term_cands = set( 
-        skipper 
-        for node 
-        in tree.terminals()
-        if len(node.sigma_sequence()) < len(trace)
-            for skipper 
-            in mutate_path_with_skip(
-                Path( 
-                    find_path_in_tree(tree, node).sequence + [Skipper()]
-                )
-            )
-    )
-    return term_cands
+    seen_paths = set()
+    # construct all paths to nodes of at most length k
+    nodes = [ v for v in tree.vertices() if len(v.sigma_sequence()) <= k]
+    complete_paths = [ find_path_in_tree(tree,n) for n in nodes]
+    seen_paths = seen_paths.union(set(complete_paths))
+    # constuct all paths with skips 
+    for path in InfoIteratorProcessor("computing all mutations", 
+                                      [ path for path in complete_paths ]):
+        mutate = mutate_path_with_skips(path, k)
+        seen_paths = seen_paths.union(mutate)
+    return seen_paths
 
 def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
     """
@@ -215,7 +204,7 @@ def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
     An optimal path for a trace has a cost of zero, while a non-optimal
     path has a cost greater than zero.
     """
-    len_cost = len(trace) - len(path.noskips)
+    len_cost = abs(len(trace) - len(path.noskips))
     act_cost = 0
     for act, actf in zip(trace, path):
         if isinstance(actf, Skipper):
@@ -225,7 +214,7 @@ def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
     if (len(path.noskips) > 0 ):
         term_cost = 0 if path.noskips[-1].next().terminal() else 1
     else:
-        term_cost = 1 if root_is_terminal else 0
+        term_cost = 0 if root_is_terminal else 1
     return len_cost + act_cost + term_cost
 
 def find_least_costy_paths(paths:Set[Path], trace:Trace, 
@@ -280,36 +269,48 @@ class ExpontentialPathWeighter():
         """
         return 1 / self.size
         
-def _computation_many_matching(trace, tree) -> Tuple[Trace,Set[Path]]:
+def _computation_many_matching(trace, tree, allcads) -> Tuple[Trace,Set[Path]]:
     """
     The individual work for a given trace, to find a matching.
     """
-    noskips = find_non_skipping_candidates(tree, trace)
-    skippings = find_skipping_candidates(tree,trace)
-    terminals = find_terminal_candidates(tree,trace)
-    allcads = noskips.union(skippings).union(terminals)
+    # noskips = find_non_skipping_candidates(tree, trace)
+    # skippings = find_skipping_candidates(tree,trace)
+    # terminals = find_terminal_candidates(tree,trace)
     if len(allcads) > 0:
         least_costy = find_least_costy_paths(
-            noskips.union(skippings).union(terminals),
+            allcads,
             trace,
             root_is_terminal=tree.root() in tree.terminals()
         )
     else: 
         raise Exception(f"Unable to find any candidates for :: {trace}")
+    cost = 0
+    for path in least_costy:
+        cost = cost_of_path(path, trace)
+        break
+    info(f"for trace {trace}, we found {len(least_costy)} paths of cost={cost}")
     return (trace, least_costy)
 
-def construct_many_matching(log:EventLog, tree:TransitionTree) \
+def construct_many_matching(log:Union[EventLog,ComplexEventLog], 
+                            tree:TransitionTree) \
      -> ManyMatching:
     """
     Constructs a set of likely cadidate paths for each trace in the log,
     then constructs a map from traces to these sets.
     """
     mapping = ManyMatching(dict())
+    max_length = max(
+        [len(trace) for trace,_ in log]
+    )
+    allcads = find_all_paths(tree, max_length)
     rets = Parallel(n_jobs=-2)(
-        delayed(_computation_many_matching)(trace,tree)
-        for trace
-        in InfoIteratorProcessor("matchings", [ trace for trace,_ in log ]
-                                 ,stack=8)
+        delayed(_computation_many_matching)(trace,tree,allcads)
+        for trace,allcads
+        in InfoIteratorProcessor(
+            "matchings", 
+            [ (trace,set([ cad for cad in allcads if len(cad) <= len(trace)]))
+             for trace,_ in log ]
+            ,stack=8)
     )
     for trace,least_costy in rets:
         info(f"no. of matching generated for {trace} was {len(least_costy)}")
