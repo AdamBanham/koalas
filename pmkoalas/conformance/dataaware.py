@@ -10,7 +10,7 @@ from pmkoalas.models.petrinet import PetriNetWithData
 from pmkoalas.models.guards import GuardOutcomes
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.models.transitiontree import TransitionTree
-from pmkoalas.conformance.matching import ManyMatching
+from pmkoalas.conformance.matching import ManyMatching, find_all_paths
 from pmkoalas.conformance.matching import construct_many_matching, _computation_many_matching
 from pmkoalas.conformance.matching import ExpontentialPathWeighter
 from pmkoalas.models.transitiontree import construct_from_model
@@ -125,13 +125,17 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree) -> float:
         total_weight += inst_w.share * len(path.noskips) * len(instances)
         return flow_weight, total_weight
     # worker for inputs
-    def params(trace, instances, tree):
-        _,candidates = _computation_many_matching(trace,tree)
+    def params(trace, instances, tree, allcads):
+        _,candidates = _computation_many_matching(trace, tree, allcads)
         return trace, instances, candidates
     # computation of work
+    max_k = max([len(trace) for trace,_ in log])
+    allcads = find_all_paths(tree, max_k)
+    info(f"size of all candidates given {max_k=} :: {len(allcads)}")
     inputs = list(pool( 
         delayed(params)
-        (trace, instances, tree)
+        (trace, instances, tree,
+         set([ cad for cad in allcads if len(cad) <= len(trace)]))
         for trace,instances 
         in log 
     ))
@@ -239,13 +243,17 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
         return upper_sum, lower_sum
     # worker for inputs
     info("preparing work")
-    def params(trace, instances, tree):
-        _,candidates = _computation_many_matching(trace,tree)
+    max_length = max([ len(trace) for trace,_ in log])
+    allcads = find_all_paths(tree, max_length)
+    def params(trace, instances, tree, allcads):
+        _,candidates = _computation_many_matching(trace, tree, allcads)
         return tree, trace, instances, candidates
     # computation of work
     inputs = list(pool( 
         delayed(params)
-        (trace, instances, tree)
+        (trace, instances, tree, 
+         set([ cad for cad in allcads if len(cad) <= len(trace)])
+        )
         for trace,instances 
         in log 
     ))
