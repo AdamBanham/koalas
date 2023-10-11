@@ -172,7 +172,7 @@ def mutate_path_with_skips(path:Path, k:int) -> Set[Path]:
             adding = set()
             for muter in mutaters:
                 info(f"mutating :: {muter}")
-                for i in range(len(muter)):
+                for i in range(len(muter)+1):
                     spath = muter.sequence[:i] + [Skipper()] + muter.sequence[i:]
                     spath = Path(spath)
                     if (len(spath) <= k) and spath not in ret:
