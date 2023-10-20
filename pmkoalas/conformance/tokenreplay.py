@@ -158,8 +158,7 @@ class PetriNetFiringSequence():
         return self._mark == self._final
     
     def __len__(self) -> int:
-        halted = 1 if self.reached_final() else 0
-        return len([ f for f in self._seq if not f.silent]) + halted
+        return len([ f for f in self._seq if not f.silent])
     
     def __hash__(self) -> int:
         return hash( tuple(self._seq + [self.reached_final()]))
@@ -234,7 +233,7 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
     from pmkoalas.models.transitiontree import TransitionTreeMerge
 
     playout_traces = list()
-    completed:List[PetriNetFiringSequence] = set()
+    completed:Set[PetriNetFiringSequence] = set()
     incomplete = [ 
         PetriNetFiringSequence(initial_marking, list(), final_marking)
     ]
@@ -244,20 +243,16 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
     )
     while len(incomplete) > 0:
         select = incomplete.pop(0)
+        if (len(select) > 0):
+            completed.add(select)
         seen.add(select)
         potentials = list()
-
         for firing in select.next():
             potentials.append(select.fire(firing))
         for pot in potentials:
-            if (pot.reached_final() and len(pot) <= max_length + 1):
-                completed.add(pot)
-            elif (len(pot) == max_length + 1):
-                completed.add(pot)
-            else:
-                if pot not in seen and len(pot) < max_length + 1:
-                    incomplete.append(pot)
-                    pbar.extent(1)
+            if pot not in seen and len(pot) <= max_length:
+                incomplete.append(pot)
+                pbar.extent(1)
         pbar.update()        
     # now for each completed trace, we need to produce a complex trace
     trace_id = 1

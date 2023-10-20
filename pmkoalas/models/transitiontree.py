@@ -647,8 +647,8 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
     )
     for _,instances in playout_log:
         for trace in instances:
-            for i in range(1, min([k+1, len(trace)])):
-                nodes.add(trace.acut(i))
+            for i in range(0, min([k+1, len(trace)])):
+                nodes.add(trace.acut(i+1))
             pbar.update()
     map_nodes = dict(
         (node, TransitionPlayoutVertex(idder(), node))
@@ -664,7 +664,7 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
     )
     for _,instances in playout_log:
         for trace in instances:
-            for i in range(0,min([k+1, len(trace)-1])):
+            for i in range(0,min([k+1, len(trace)])):
                 flows.add(
                     TransitionTreeGuardFlow(
                         map_nodes[trace.acut(i)],
