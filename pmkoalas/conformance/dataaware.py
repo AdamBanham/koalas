@@ -101,7 +101,8 @@ def _computation_guard_recall(tree:TransitionTree, matching:ManyMatching,
     info(f"computed weights :: flow - {inner_sum:.2f} total - {t_w:.2f}")
     return (inner_sum/t_w)
 
-def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree) -> float:
+def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
+        precomputed_matching:ManyMatching=None) -> float:
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
@@ -122,11 +123,14 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree) -> float:
                                     instance.get_state_as_of(i-1)
                                 ) == GuardOutcomes.TRUE
                             flow_weight += instance_weight * int(irveson)
-        total_weight += inst_w.share * len(path.noskips) * len(instances)
+        total_weight += inst_w.share * len(trace) * len(instances)
         return flow_weight, total_weight
     # worker for inputs
     def params(trace, instances, tree, allcads):
-        _,candidates = _computation_many_matching(trace, tree, allcads)
+        if precomputed_matching != None:
+            candidates = precomputed_matching[trace]
+        else:
+            _,candidates = _computation_many_matching(trace, tree, allcads)
         return trace, instances, candidates
     # computation of work
     max_k = max([len(trace) for trace,_ in log])
@@ -173,7 +177,7 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree) -> float:
 
 @enable_logging
 def compute_guard_recall(log:ComplexEventLog, model:PetriNetWithData, 
-    optimised:bool=True) -> float: 
+    optimised:bool=True, precomputed_matching:ManyMatching=None) -> float: 
     """
     Quanitfies the quality between an event log and a data-aware process model 
     using guard-recall, where a data-aware process model is a Petri net with 
@@ -190,10 +194,14 @@ def compute_guard_recall(log:ComplexEventLog, model:PetriNetWithData,
     # prepare model
     tree = construct_from_model(model, longest_playout=long)
     if (optimised):
-        return _optimised_guard_recall(log, tree)
+        return _optimised_guard_recall(log, tree, 
+                precomputed_matching=precomputed_matching)
     else:
         info("creating matchings between all traces")
-        matching = construct_many_matching(log, tree)
+        if precomputed_matching == None:
+            matching = construct_many_matching(log, tree)
+        else:
+            matching = precomputed_matching
         # compute the measure 
         return _computation_guard_recall(tree, matching, log)
 
