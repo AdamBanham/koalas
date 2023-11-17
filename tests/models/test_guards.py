@@ -37,6 +37,10 @@ LARGE_TEST_STATE = {
     'd1' : 7
 }
 
+# Difficult experession that should parse
+d_exps = [
+    "((exogenous:t1:TAS:4h:transform:slope&gt;41.44)&amp;&amp;(exogenous:t1:TAS:4h:transform:slope&lt;=105.84))",
+]
 
 class GuardTests(unittest.TestCase):
 
@@ -537,3 +541,10 @@ class GuardTests(unittest.TestCase):
             f"evaluation did not match, expected {GuardOutcomes.UNDEF},"
             +f" but returned {out}"
         ) 
+
+    def test_difficult_expressions(self):
+        try:
+            for exp in d_exps:
+                pexp = Expression(exp)
+        except Exception as e:
+            self.fail(f"failed to parse less than statement :: "+str(e))

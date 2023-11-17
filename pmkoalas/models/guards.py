@@ -158,7 +158,7 @@ class ExpressionParser():
         literal = literal | Combine('"' + Word(alphas) + '"')
         literal.setParseAction(self._literal)
 
-        variable = Combine(Word(alphas,exact=1) + Word(alphas + nums))
+        variable = Combine(Word(alphas,exact=1) + Word(alphas + nums + "_:"))
         variable.setParseAction(self._variable)
 
         self._operand = values | literal | variable
