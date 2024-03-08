@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<log xes.version="1849-2016" xes.features="nested-attributes" xmlns="http://www.xes-standard.org/">
+	<string key="concept:name" value="DAC LOG ONE" />
+	<trace>
+		<string key="concept:name" value="trace 001" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="5" />
+			<string key="d2" value="k" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="B" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="84" />
+			<int key="d5" value="12" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 002" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="6" />
+			<string key="d2" value="q" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="B" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="77" />
+			<int key="d5" value="17" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 003" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="5" />
+			<string key="d2" value="d" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="B" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="81" />
+			<int key="d5" value="19" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 004" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="5" />
+			<string key="d2" value="h" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="B" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="30" />
+			<boolean key="d6" value="false" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="G" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 005" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="5" />
+			<string key="d2" value="w" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="B" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="79" />
+			<boolean key="d6" value="false" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="G" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 006" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="5" />
+			<string key="d2" value="q" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="B" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="2" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="H" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 007" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="8" />
+			<string key="d3" value="AA" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="C" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="11" />
+			<int key="d5" value="16" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 008" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="7" />
+			<string key="d3" value="CC" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="C" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="63" />
+			<int key="d5" value="11" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 009" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="8" />
+			<string key="d3" value="CC" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="C" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="85" />
+			<int key="d5" value="10" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 010" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="7" />
+			<string key="d3" value="AA" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="C" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="84" />
+			<boolean key="d6" value="true" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="G" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 011" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="8" />
+			<string key="d3" value="BB" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="C" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="52" />
+			<boolean key="d6" value="true" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="G" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 012" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="8" />
+			<string key="d3" value="CC" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="C" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="100" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="H" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 013" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="9" />
+			<string key="d3" value="CC" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="D" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="13" />
+			<int key="d5" value="17" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 014" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="10" />
+			<string key="d3" value="BB" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="D" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="76" />
+			<int key="d5" value="11" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 015" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="10" />
+			<string key="d3" value="AA" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="D" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="100" />
+			<int key="d5" value="22" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="F" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 016" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="10" />
+			<string key="d3" value="AA" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="D" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="76" />
+			<boolean key="d6" value="true" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="G" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 017" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="10" />
+			<string key="d3" value="CC" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="D" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="51" />
+			<boolean key="d6" value="false" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="G" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="trace 018" />
+		<event>
+			<string key="concept:name" value="A" />
+			<int key="d1" value="9" />
+			<string key="d3" value="AA" />
+			<date key="time:timestamp" value="2023-10-11T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="D" />
+			<date key="time:timestamp" value="2023-10-12T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="E" />
+			<int key="d4" value="24" />
+			<date key="time:timestamp" value="2023-10-13T14:50:40.841243" />
+		</event>
+		<event>
+			<string key="concept:name" value="H" />
+			<date key="time:timestamp" value="2023-10-14T14:50:40.841243" />
+		</event>
+	</trace>
+</log>
