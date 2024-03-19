@@ -19,7 +19,7 @@ Example uses::
                 "I -> [A] -> p1 -> [D] -> p2 -> [E] -> p3 -> [K] -> F")
     parser = pnfrag.PetriNetFragmentParser()
     net3 = parser.create_net()
-    parser.add_to_net(net3, "I -> {a__1 3} -> F")
+    parser.add_to_net(net3, "I -> {a__1 3.0} -> F")
  
 
 Weighted transitions, allowing support of Stochastic Labelled Petri Nets. 
