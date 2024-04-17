@@ -134,6 +134,8 @@ class EventLog():
             start = time()
             computed_times = []
             info("Starting computation of relations")
+            starts = {}
+            ends = {}
             for tid,(trace,freq) in enumerate(self._freqset.items()):
                 if (len(trace) < 1):
                     continue
@@ -144,6 +146,10 @@ class EventLog():
                 debug(f"{DIRECTLY_SOURCE} to {trace[0]=} @ {freq}")
                 relations.append(DirectlyFollowPair(left=DIRECTLY_SOURCE, 
                  right=trace[0], freq=freq))
+                if (len(trace) > 1):
+                    relations[0].add_to_proceeding(
+                        trace[1]
+                    )
 
                 # build body flows
                 for src,trg in zip(trace[:-1],trace[1:]):
@@ -155,6 +161,10 @@ class EventLog():
                 debug(f"{trace[-1]=} to {DIRECTLY_END} @ {freq}")
                 relations.append(DirectlyFollowPair(left=trace[-1], 
                  right=DIRECTLY_END, freq=freq))
+                if (len(trace) > 1):
+                    relations[-1].add_to_preceding(
+                        trace[-2]
+                    )
 
                 # update lang
                 self._relations  = self._relations + \

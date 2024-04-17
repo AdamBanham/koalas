@@ -20,11 +20,37 @@ class DirectlyFollowPair():
     two process activities seen in a language.
     """
 
-    def __init__(self,left:str,right:str,freq:int) -> None:
+    def __init__(self,left:str,right:str,freq:int, 
+                 preceeding:Set[str]=None,
+                 proceeding:Set[str]=None) -> None:
         self._left = left.replace("\n","") 
         self._right = right.replace("\n","")
         self._hash = hash((self._left,self._right))
         self._freq = freq
+        if preceeding == None:
+            self._preced = set()
+        else:
+            self._preced = deepcopy(preceeding)
+        if proceeding == None:
+            self._proced = set()
+        else:
+            self._proced = deepcopy(proceeding)
+
+    def preceding(self) -> Set[str]:
+        "Returns the directly preceeding activities, as a set."
+        return self._preced
+    
+    def add_to_preceding(self, activity:str) -> None:
+        "Adds activity as a directly preceeding activity of this pair."
+        self._preced.add(activity)
+
+    def proceeding(self) -> Set[str]:
+        "Returns the directly proceeding activities, as a set"
+        return self._proced
+
+    def add_to_proceeding(self, activity:str) -> None:
+        "Adds an activity as a directly proceeding activity of this pair"
+        self._proced.add(activity)
 
     def left(self) -> str:
         "Source process activity"
@@ -47,7 +73,8 @@ class DirectlyFollowPair():
         self._freq -= count
     
     def copy(self) -> 'DirectlyFollowPair':
-        return DirectlyFollowPair(self._left, self._right, self._freq)
+        return DirectlyFollowPair(self._left, self._right, self._freq, 
+                                  self._preced, self._proced)
 
     # data model functions
     def __str__(self) -> str:
@@ -218,6 +245,10 @@ class FollowLanguage():
         if (val != None):
             newval = val.copy()
             newval.incre(pair.frequency())
+            for prec in pair.preceding():
+                newval.add_to_preceding(prec)
+            for proc in pair.proceeding():
+                newval.add_to_proceeding(proc)
             debug(f"{state_name} :: update : {val}")
             state[newval] = newval
         else:
