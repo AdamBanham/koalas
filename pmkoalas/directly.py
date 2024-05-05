@@ -78,13 +78,14 @@ class DirectlyFollowPair():
 
     # data model functions
     def __str__(self) -> str:
-        return f"({self._left} -> {self._right})^{self._freq}"
+        return f"B:{self.preceding()} ({self._left} -> {self._right})^{self._freq} A:{self.proceeding()}"
 
     def __repr__(self) -> str:
         left = self._left.replace("'","\\'")
         right = self._right.replace("'","\\'")
         return f"DirectlyFlowsPair(left='{left}'"+ \
-            f",right='{right}',freq={self._freq})"
+            f",right='{right}',freq={self._freq},"+ \
+            f"preceeding={self._preced},proceeding={self._proced})"
 
     def __hash__(self) -> int:
         return self._hash
@@ -93,6 +94,68 @@ class DirectlyFollowPair():
         if (isinstance(__o, DirectlyFollowPair)):
             return self.__hash__() == __o.__hash__()
         return False
+    
+def extract_df_pairs(variant:Iterable[str], prepend_start:bool=True, 
+                     append_end:bool=True, freq:int=1) -> List[DirectlyFollowPair]:
+    """
+    Extracts the directly flow pairs from a variant (sequence of activities or 
+    a simplifed trace). By default prepends a start and appends an end to the
+    variant.
+    """
+    if prepend_start:
+        variant = [DIRECTLY_SOURCE] + variant
+    if append_end:
+        variant = variant + [DIRECTLY_END]
+    curr = 1 
+    pairs = []
+    while curr < len(variant):
+        # extract a pair based on the current index
+        if variant[curr-1] == DIRECTLY_SOURCE:
+            # extraction for source
+            proceed = set()
+            if curr+1 < len(variant):
+                proceed = set([variant[curr+1]])
+            pairs.append(
+                DirectlyFollowPair(
+                    variant[curr-1],
+                    variant[curr],
+                    freq=freq,
+                    proceeding=proceed
+                )
+            )
+        elif variant[curr] == DIRECTLY_END:
+            # extraction for end
+            preced = set()
+            if curr-2 < len(variant) and curr-2 > -1:
+                preced = set([variant[curr-2]])
+            pairs.append(
+                DirectlyFollowPair(
+                    variant[curr-1],
+                    variant[curr],
+                    freq=freq,
+                    preceeding=preced
+                )
+            )
+        else:
+            # extraction for body
+            preced = set()
+            if curr-2 < len(variant) and curr-2 > -1:
+                preced = set([variant[curr-2]])
+            proceed = set()
+            if curr+1 < len(variant):
+                proceed = set([variant[curr+1]])
+            pairs.append(
+                DirectlyFollowPair(
+                    variant[curr-1],
+                    variant[curr],
+                    freq=freq,
+                    preceeding=preced,
+                    proceeding=proceed
+                )
+            )
+        curr += 1
+    return pairs
+
 
 class DirectlyFollowWalk():
     """
@@ -262,6 +325,12 @@ class FollowLanguage():
     def ends(self) -> List[DirectlyFollowPair]:
         "Returns all ending directly flow pairs."
         return list(self._ends.values())
+    
+    def pairs(self) -> List[DirectlyFollowPair]:
+        """
+        Returns all the pairs in the language.
+        """
+        return list(self._relations.values())
 
     def get(self, target:str) -> List[DirectlyFollowPair]:
         "Returns all pairs with left as target."

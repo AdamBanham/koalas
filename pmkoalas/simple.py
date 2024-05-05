@@ -11,6 +11,7 @@ from time import time
 from pmkoalas._logging import info, debug, enable_logging
 from pmkoalas.directly import DirectlyFollowPair,FollowLanguage
 from pmkoalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
+from pmkoalas.directly import extract_df_pairs
 
 class Trace():
     """
@@ -140,31 +141,13 @@ class EventLog():
                 if (len(trace) < 1):
                     continue
                 compute_time = time()
-                relations = []
                 # build initial flow
-                debug(f"{trace=} @ {freq=}")
-                debug(f"{DIRECTLY_SOURCE} to {trace[0]=} @ {freq}")
-                relations.append(DirectlyFollowPair(left=DIRECTLY_SOURCE, 
-                 right=trace[0], freq=freq))
-                if (len(trace) > 1):
-                    relations[0].add_to_proceeding(
-                        trace[1]
-                    )
-
-                # build body flows
-                for src,trg in zip(trace[:-1],trace[1:]):
-                    debug(f"{src=} to {trg=} @ {freq=}")
-                    relations.append(DirectlyFollowPair(left=src,
-                     right=trg, freq=freq))
-
-                # build exit flow 
-                debug(f"{trace[-1]=} to {DIRECTLY_END} @ {freq}")
-                relations.append(DirectlyFollowPair(left=trace[-1], 
-                 right=DIRECTLY_END, freq=freq))
-                if (len(trace) > 1):
-                    relations[-1].add_to_preceding(
-                        trace[-2]
-                    )
+                info(f"working on :: {trace=} @ {freq=}")
+                relations = extract_df_pairs(list(trace), freq=freq)
+                info(f"starting pair :: {relations[0]}")
+                for pair in relations[1:-1]:
+                    info(f"pair :: {pair}")
+                info(f"ending with :: {relations[-1]}")
 
                 # update lang
                 self._relations  = self._relations + \
