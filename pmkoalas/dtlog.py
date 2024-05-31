@@ -20,6 +20,7 @@ def convert(*traces: Iterable[str], delimiter=DEFAULT_DELIM) -> EventLog:
     `convert("a b c", "a b", "a")`\n
     `convert(*[ t for t in traces])`\n
     """
-    return EventLog( map( convertTrace, traces ) )
+    conv = lambda x: convertTrace(x, delimiter=delimiter)
+    return EventLog( map( conv, traces ) )
 
 
