@@ -4,10 +4,9 @@ Weighted Petri net with place and transition labels.
 Allows explicit place or transition ids for simpler comparison, especially
 during testing.
 
-For an indepth understanding or introduction to Petri Nets, see:
-    - [Reference A]
-    - [Reference B]
-    - [Reference C]
+For material on Petri Nets, see:
+    - Quick and dirty introduction on wikipedia https://en.wikipedia.org/wiki/Petri_net
+    - Bause and Kritzinger (2002) - Stochastic Petri Nets: An Introduction to the Theory. Freely available textbook https://www.researchgate.net/publication/258705139_Stochastic_Petri_Nets_-An_Introduction_to_the_Theory
 '''
 
 from collections.abc import Iterable
@@ -207,7 +206,7 @@ class LabelledPetriNet:
     This class consists of places, transitions and directed arcs 
     between them.
     The class contract implies that places and transitions have 
-    labels/names and identifiers.Each instance of this class, 
+    labels/names and identifiers. Each instance of this class, 
     has a name or title for the net.
     """
     
@@ -450,8 +449,8 @@ class PetriNetWithData(LabelledPetriNet):
 
 class PetriNetDOTFormatter:
     """
-    This class creates a dot (graphviz) structure for displaying. Used as internal
-    machinery for exporting to a dot file.
+    This class creates a dot (graphviz) structure for displaying Petri nets. 
+    Used as internal machinery for exporting to a dot file.
     """
     def __init__(self,pn:LabelledPetriNet,font:str='SimSun'):
         self._pn = pn
@@ -565,8 +564,8 @@ def convert_net_to_xmlstr(net:LabelledPetriNet) -> str:
 
 def export_net_to_pnml(net:LabelledPetriNet,fname:str) -> None: 
     """
-    Converts a given Petri net, to an XML structure conforming to the pnml schema 
-    , then writes out the XML to a given file location (fname).
+    Converts a given Petri net, to an XML structure conforming to the pnml 
+    schema, then writes out the XML to a given file location (fname).
 
     No checking of file location is done for you.
     """
