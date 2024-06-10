@@ -334,6 +334,7 @@ def compute_guard_precision(log:ComplexEventLog, model:PetriNetWithData,
         # compute measure
         return _computation_guard_precision(tree, matching, log)
     
+@enable_logging
 def compute_determinism(model:PetriNetWithData) -> float:
     """
     Computes the determinism of a Petri net with Data. Based on the defintion
@@ -369,11 +370,13 @@ def compute_determinism(model:PetriNetWithData) -> float:
         ])
         if (len(outgoing_nodes) >= 2):
             dtrans = dtrans.union(outgoing_nodes)
+    info(f"number of decision transitions: {len(dtrans)}")
     # find the subset of transitions with an associated 
     atrans:Set[GuardedTransition] = set()
     for trans in dtrans:
         if not trans.guard.trivial():
             atrans.add(trans)
+    info(f"number of associated transitions: {len(atrans)}")
     # return measurement
     if len(dtrans) > 0:
         return (len(atrans) * 1.0) / (len(dtrans) * 1.0)
