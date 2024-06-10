@@ -303,11 +303,6 @@ class ComplexEventLog():
         " returns a data mapping for this collection, i.e. log-level attributes."
         return self._map
     
-    def transition_tree(self) -> 'TransitionTree':
-        "Construct a transition tree for this log."
-        from pmkoalas.models.transitiontree import construct_from_log
-        return construct_from_log(self)
-    
     # data model functions
     def __len__(self) -> int:
         return self.get_population_size()
