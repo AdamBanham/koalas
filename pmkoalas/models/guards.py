@@ -16,7 +16,9 @@ from pyparsing import (
     opAssoc,
     infixNotation,
     Literal,
+    ParserElement
 )
+ParserElement.enablePackrat()
 
 from typing import Any,Set,Dict, Union
 from copy import deepcopy,copy
@@ -150,15 +152,16 @@ class ExpressionParser():
         # operand for parser
         booleans = Literal("true") | Literal('false')
         integer = Word(nums)
-        real = Combine(Word(nums) + "." + Word(nums))
-        values = booleans | real | integer 
+        pos_real = Combine(Word(nums) + "." + Word(nums))
+        neg_real = Combine("-"+Word(nums) + "." + Word(nums))
+        values = booleans | pos_real | neg_real | integer 
         values.setParseAction(self._constant)
 
-        literal = Combine('&#34;' + Word(alphas) + '&#34;')
-        literal = literal | Combine('"' + Word(alphas) + '"')
+        literal = Combine('&#34;' + Word(alphas+" ") + '&#34;')
+        literal = literal | Combine('"' + Word(alphas+" "+"/") + '"')
         literal.setParseAction(self._literal)
 
-        variable = Combine(Word(alphas,exact=1) + Word(alphas + nums + "_:"))
+        variable = Combine(Word(alphas,exact=1) + Word(alphas + nums + "_:$"))
         variable.setParseAction(self._variable)
 
         self._operand = values | literal | variable
@@ -174,7 +177,11 @@ class ExpressionParser():
         )
 
     def _parse(self):
-        self._result = self._expr.parseString(self._org_exp)[0]
+        try :
+            self._result = self._expr.parseString(self._org_exp)[0]
+        except Exception as e:
+            print(f"Failed to parse the following string :: {self._org_exp}")
+            raise e
 
     def get_observed_vars(self):
         return self._variable.seen_variables()
