@@ -1,9 +1,21 @@
 """
-This modules provides ways to perfom data-aware conformance checking.
+This modules provides ways to perfom data-aware conformance checking as
+proposed by A. Banham, A. H. M. T. Hofstede, S. J. J. Leemans, F. Mannhardt,
+R. Andrews and M. T. Wynn, "Comparing Conformance Checking for Decision 
+Mining: An Axiomatic Approach," in IEEE Access, vol. 12, pp. 60276-60298, 
+2024, doi: 10.1109/ACCESS.2024.3391234. 
+
+As well as Determinism as proposed by Banham, Adam, Leemans, Sander, Wynn, 
+Moe Thandar, & Andrews, Robert (2022) xPM: A Framework for Process Mining 
+with Exogenous Data.
+
+These conformance checking methods are related to the Petri net with data
+process modelling formalism.
 
 Implemented techniques include:
     - guard-recall 
     - guard-precision
+    - determinism
 """
 from pmkoalas.complex import ComplexEventLog
 from pmkoalas.models.petrinet import PetriNetWithData
@@ -17,6 +29,7 @@ from pmkoalas.models.transitiontree import construct_from_model
 from pmkoalas._logging import info, enable_logging
 from pmkoalas._logging import InfoIteratorProcessor
 
+from typing import Set
 from joblib import Parallel, delayed
 
 def compute_directed_bookkeeping(flow:TransitionTreeGuardFlow, 
@@ -320,3 +333,49 @@ def compute_guard_precision(log:ComplexEventLog, model:PetriNetWithData,
         matching = construct_many_matching(log, tree)
         # compute measure
         return _computation_guard_precision(tree, matching, log)
+    
+def compute_determinism(model:PetriNetWithData) -> float:
+    """
+    Computes the determinism of a Petri net with Data. Based on the defintion
+    in Banham, Adam, Leemans, Sander, Wynn, Moe Thandar, & Andrews, Robert 
+    (2022) xPM: A Framework for Process Mining with Exogenous Data. 
+    Determinism is useful for showing if how many transitions have been
+    annotated with a guard from a decision mining technique.
+
+    Determinism expresses the decision points in the model that may be 
+    deterministic. That is, the fraction of transitions in the model, that:
+        - are in the postset of a place with with two or more outgoing arcs
+          or are decision points, and
+        - that have an associated (non-trivial) precondition (defined and 
+          not equal to a literal truth).
+    
+    Returns a measure between 0 and 1.
+    A value of 1 for determinism implies that all transitions that are involved
+    in choices in the model have discovered preconditions, while a value of 0 
+    indicates that no transition that is involved in a choice has a discovered
+    precondition.
+    """
+    # typing imports
+    from pmkoalas.models.petrinet import GuardedTransition
+    # find all transitions that are in the postsets of places 
+    # with two or more transitions
+    dtrans:Set[GuardedTransition] = set()
+    for place in model.places:
+        outgoing_nodes = set([
+            arc.to_node
+            for arc
+            in model.arcs
+            if arc.from_node == place
+        ])
+        if (len(outgoing_nodes) >= 2):
+            dtrans = dtrans.union(outgoing_nodes)
+    # find the subset of transitions with an associated 
+    atrans:Set[GuardedTransition] = set()
+    for trans in dtrans:
+        if not trans.guard.trivial():
+            atrans.add(trans)
+    # return measurement
+    if len(dtrans) > 0:
+        return (len(atrans) * 1.0) / (len(dtrans) * 1.0)
+    else:
+        return 1

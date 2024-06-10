@@ -209,6 +209,16 @@ class Expression():
         parser = ExpressionParser(dict(), exp)
         return parser.get_observed_vars()
     
+    def literal_truth(self) -> bool:
+        """
+        Evaluates if this expression is a literal truth, i.e. is always
+        true and has no variables.
+        """
+        if len(self._dom) == 0:
+            return self.evaluate({})
+        else:
+            return False
+    
     def can_evaluate(self, data:Dict[str,object]) -> bool:
         """
         Checks if all variables are present for evaluation.
@@ -273,6 +283,13 @@ class Guard():
         Evaluates the guard in the context of the given data state.
         """
         return self._exp.evaluate(data)
+    
+    def trivial(self) -> bool:
+        """
+        Returns True if the guard is a literal truth, .e. is always
+        true and has no variables.
+        """
+        return self._exp.literal_truth()
 
     def __str__(self) -> str:
         return str(self._exp)
