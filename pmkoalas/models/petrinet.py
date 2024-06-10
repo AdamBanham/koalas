@@ -4,7 +4,7 @@ Weighted Petri net with place and transition labels.
 Allows explicit place or transition ids for simpler comparison, especially
 during testing.
 
-For an depth understanding or introduction to Petri Nets, see:
+For an indepth understanding or introduction to Petri Nets, see:
     - [Reference A]
     - [Reference B]
     - [Reference C]
