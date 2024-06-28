@@ -392,8 +392,8 @@ class PetriNetDOTFormatter:
 def convert_net_to_dot(net:LabelledPetriNet) -> str:
     return PetriNetDOTFormatter(net).transform_net()
 
-PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel',
-def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element: 
+PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
+
     """
     Converts a given Petri net to an XML structure that conforms with the pnml
     schema.
@@ -402,7 +402,7 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     """
     root = ET.Element('pnml')
     net_node = ET.SubElement(root,'net', 
-            attrib={'type':PNML_URL,
+            attrib={'type': PNML_URL,
                     'id':net.name} )
     page = ET.SubElement(net_node,'page', id="page1")
     for place in net.places:

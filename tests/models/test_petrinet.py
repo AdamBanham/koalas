@@ -10,7 +10,7 @@ from logging import *
 
 
 expectedXML = '''<pnml>
-  <net type="('http://www.pnml.org/version-2009/grammar/pnmlcoremodel',)" id="dotTest">
+  <net type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel" id="dotTest">
     <page id="page1">
       <place id="4">
         <name>
