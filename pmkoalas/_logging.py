@@ -74,6 +74,7 @@ def enable_logging(func):
         # a tuple of the names of the parameters that func accepts
         func_params = func.__code__.co_varnames[:func.__code__.co_argcount]
         # grab all of the kwargs that are not accepted by func
+        old_level = get_logger().level
         extra = set(kwargs.keys()) - set(func_params)
         debug = kwargs.pop("debug",False)
         level = kwargs.pop("debug_level", logging.INFO)
@@ -84,7 +85,7 @@ def enable_logging(func):
         # run function as intended
         val = func(*args, **kwargs)
         # reset logger
-        get_logger().setLevel(logging.ERROR)
+        get_logger().setLevel(old_level)
         # pass value back if needed
         return val
     
