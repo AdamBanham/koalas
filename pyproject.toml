@@ -19,7 +19,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [ 
-  "tqdm"
+  "tqdm",
+  "pyparsing",
+  "joblib"
 ]
 
 [project.optional-dependencies]
@@ -31,7 +33,8 @@ dev = [
 packages = [
 "pmkoalas",
 "pmkoalas.discovery",
-"pmkoalas.models"
+"pmkoalas.models",
+"pmkoalas.conformance"
 ]
 
 [project.urls]

@@ -8,9 +8,11 @@ Install and test package from this index.
 If all goes well, then prepate a release for the offical index, using `py -m twine upload dist/*`.
 
 ## Checklist
+ - run tests and ensure all tests pass
+    - remenber to adjust the run slow test variable in tests/__init__.py
  - move version number in pyproject.toml
  - update version in __init__.py of pmkoalas
  - ensure the module `build` is up to date on local python
- - check that all submodules are mentioned in the pyproject toml.
+ - check that all submodules are mentioned in the pyproject toml section 'tool.setuptools'.
  - clear dist
  - build project
