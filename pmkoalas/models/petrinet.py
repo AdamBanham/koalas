@@ -12,7 +12,7 @@ For material on Petri Nets, see:
 from collections.abc import Iterable
 from typing import Union,FrozenSet
 import xml.etree.ElementTree as ET
-from uuid import uuid4
+from uuid import uuid4,UUID
 
 ENCODING='unicode'
 
@@ -394,6 +394,9 @@ def convert_net_to_dot(net:LabelledPetriNet) -> str:
 
 PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
 
+def convert_net_to_xml(net:LabelledPetriNet,
+        include_prom_bits:bool=False       
+    ) -> ET.Element: 
     """
     Converts a given Petri net to an XML structure that conforms with the pnml
     schema.
@@ -418,6 +421,34 @@ PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
             name_node = ET.SubElement(tranNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = tran.name
+        # include additional info for prom
+        if (include_prom_bits):
+            if isinstance(tran.tid, int):
+                from random import Random
+                rd = Random(tran.tid)
+                localNode = str(UUID(int=rd.getrandbits(128), version=4))
+            else:
+                localNode = tran.tid
+            if  tran.silent:
+                prom_node = ET.SubElement(
+                    tranNode, 'toolspecific',
+                    attrib={
+                        'tool' : "ProM",
+                        'version' : "6.4",
+                        'activity' : "$invisible$",
+                        'localNodeID' : localNode
+                    }
+                )
+            else:
+                prom_node = ET.SubElement(
+                    tranNode, 'toolspecific',
+                    attrib={
+                        'tool' : "ProM",
+                        'version' : "6.4",
+                        'localNodeID' : localNode
+                    }
+                )
+        # include stochastic info
         ts_node = ET.SubElement(tranNode,'toolspecific',
                         attrib={ 'tool':'StochasticPetriNet',
                                  'version':'0.2', 
