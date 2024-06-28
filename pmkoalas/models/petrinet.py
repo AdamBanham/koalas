@@ -407,6 +407,8 @@ def convert_net_to_xml(net:LabelledPetriNet,
     net_node = ET.SubElement(root,'net', 
             attrib={'type': PNML_URL,
                     'id':net.name} )
+    net_namer = ET.SubElement(net_node, "name")
+    ET.SubElement(net_namer, "text").text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
     for place in net.places:
         placeNode = ET.SubElement(page,'place', attrib={'id':str(place.pid) } )
@@ -414,6 +416,22 @@ def convert_net_to_xml(net:LabelledPetriNet,
             name_node = ET.SubElement(placeNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = place.name
+        if (include_prom_bits):
+            if isinstance(place.pid, int):
+                from random import Random
+                rd = Random(place.pid)
+                localNode = str(UUID(int=rd.getrandbits(128), version=4))
+            else:
+                localNode = place.pid
+            prom_node = ET.SubElement(
+                    placeNode, 'toolspecific',
+                    attrib={
+                        'tool' : "ProM",
+                        'version' : "6.4",
+                        'localNodeID' : localNode
+                    }
+                )
+
     for tran in net.transitions:
         tranNode = ET.SubElement(page,'transition', 
                         attrib={'id':str(tran.tid) } )
@@ -429,25 +447,15 @@ def convert_net_to_xml(net:LabelledPetriNet,
                 localNode = str(UUID(int=rd.getrandbits(128), version=4))
             else:
                 localNode = tran.tid
-            if  tran.silent:
-                prom_node = ET.SubElement(
-                    tranNode, 'toolspecific',
-                    attrib={
-                        'tool' : "ProM",
-                        'version' : "6.4",
-                        'activity' : "$invisible$",
-                        'localNodeID' : localNode
-                    }
-                )
-            else:
-                prom_node = ET.SubElement(
-                    tranNode, 'toolspecific',
-                    attrib={
-                        'tool' : "ProM",
-                        'version' : "6.4",
-                        'localNodeID' : localNode
-                    }
-                )
+            prom_node = ET.SubElement(
+                tranNode, 'toolspecific',
+                attrib={
+                    'tool' : "ProM",
+                    'version' : "6.4",
+                    'activity' : "$invisible$" if tran.silent else "",
+                    'localNodeID' : localNode
+                }
+            )
         # include stochastic info
         ts_node = ET.SubElement(tranNode,'toolspecific',
                         attrib={ 'tool':'StochasticPetriNet',
@@ -463,6 +471,23 @@ def convert_net_to_xml(net:LabelledPetriNet,
                             'target': str(arc.to_node.nodeId),
                             'id': str(arcid) } )
         arcid += 1
+        if (include_prom_bits):
+            rd = Random(arcid)
+            localNode = str(UUID(int=rd.getrandbits(128), version=4))
+            prom_node = ET.SubElement(
+                    arcNode, 'toolspecific',
+                    attrib={
+                        'tool' : "ProM",
+                        'version' : "6.4",
+                        'localNodeID' : localNode
+                    }
+                )
+            arctype = ET.SubElement(
+                arcNode, "arctype"
+            )
+            ET.SubElement(
+                arctype, "text"
+            ).text = "normal"
     return root
 
 
