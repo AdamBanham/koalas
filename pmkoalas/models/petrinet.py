@@ -475,14 +475,17 @@ def convert_net_to_xmlstr(net:LabelledPetriNet) -> str:
     ET.indent( xml ) 
     return ET.tostring(xml,encoding=ENCODING)
 
-def export_net_to_pnml(net:LabelledPetriNet,fname:str) -> None: 
+def export_net_to_pnml(
+        net:LabelledPetriNet,fname:str,
+        include_prom_bits:bool=False
+        ) -> None: 
     """
     Converts a given Petri net, to an XML structure conforming to the pnml 
     schema, then writes out the XML to a given file location (fname).
 
     No checking of file location is done for you.
     """
-    xml =  convert_net_to_xml(net)  
+    xml =  convert_net_to_xml(net,include_prom_bits=include_prom_bits)  
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
 
