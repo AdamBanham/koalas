@@ -1,3 +1,4 @@
+import doctest
 import unittest
 
 from pmkoalas.models.petrinet import *
@@ -435,5 +436,10 @@ class PetriNetFragmentTest(unittest.TestCase):
         result = create_net("test","I -> [a] -> F")
         self.assertEqual( expected, result )
 
+def load_tests(loader, tests, ignore):
+    ''' docstring tests in main module'''
+    import pmkoalas.models.pnfrag as pnfrag
+    tests.addTests(doctest.DocTestSuite(pnfrag))
+    return tests
 
 
