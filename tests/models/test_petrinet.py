@@ -204,13 +204,13 @@ class PetriNetTest(unittest.TestCase):
         parser = PetriNetFragmentParser()
         net1 = parser.create_net("dotTest","I -> {tau 2.0} -> Sweep")
         parser.add_to_net(net1,"I -> {tau 2.0} -> Student")
-        print(net1)
+        debug(net1)
         xmlStr = convert_net_to_xmlstr(net1)
-        print(xmlStr)
+        debug(xmlStr)
         debug('=================\n')
         debug(f"\n{xmlStr}\n")
         with tempfile.NamedTemporaryFile(delete=True) as outfile:
-            print(outfile.name)
+            debug(outfile.name)
             export_net_to_pnml( net1, outfile ) 
         # can't guarantee output order
         self.assertCharactersEqual(expectedXML,xmlStr)
