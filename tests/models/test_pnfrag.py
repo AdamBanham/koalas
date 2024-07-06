@@ -467,12 +467,13 @@ class PetriNetFragmentTest(unittest.TestCase):
     def test_spaces_in_labels(self):
         result = parse_net_fragments(
             "ROAD FINES NORMATIVE MODEL",
-            "I -> [  Create Fine __ 2] -> p __ 1 -> [  tau] -> F",
+            "I -> [  Create Fine __ 2] -> p__1 -> [  tau] -> F",
             "I -> [Create Fine __ 2 ] -> p __ 1 -> [tau  ] -> F",
             "I -> [  Create Fine __ 2 ] -> p __ 1 -> [   tau      ] -> F",
             "I -> {              Create Finer  __ 3   0.3} -> p __ 1 -> [tau      ] -> F",
         )
-        self.assertTrue(result == expected_net_parsed_with_spaces)
+        self.assertTrue(result == expected_net_parsed_with_spaces,
+        "The parsed net does not match the expected net.")
         
 
 def load_tests(loader, tests, ignore):
