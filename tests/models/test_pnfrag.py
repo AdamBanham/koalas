@@ -1,3 +1,4 @@
+import doctest
 import unittest
 
 from pmkoalas.models.petrinet import *
@@ -474,5 +475,10 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertTrue(result == expected_net_parsed_with_spaces)
         
 
+def load_tests(loader, tests, ignore):
+    ''' docstring tests in main module'''
+    import pmkoalas.models.pnfrag as pnfrag
+    tests.addTests(doctest.DocTestSuite(pnfrag))
+    return tests
 
 

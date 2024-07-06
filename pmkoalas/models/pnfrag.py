@@ -10,17 +10,18 @@ Weighted transitions without weights, as in {b}, are defaulted to weight 1.0.
 
 Nodes with duplicate labels can be specified using a [tranLabel__id] syntax. 
 
-Example uses::
-    net1 = pnfrag.create_net()
-    net2 = pnfrag.parse_net_fragments("tester_net",
-                "I -> [A] -> p1 -> [tau] -> F",
-                "I -> [A] -> p1 -> [B] -> p2 -> [E] -> p3 -> [G] -> F",
-                "I -> [A] -> p1 -> [C] -> p2 -> [E] -> p3 -> [H] -> F",
-                "I -> [A] -> p1 -> [D] -> p2 -> [E] -> p3 -> [K] -> F")
-    parser = pnfrag.PetriNetFragmentParser()
-    net3 = parser.create_net()
-    parser.add_to_net(net3, "I -> {a__1 3.0} -> F")
- 
+Example uses:
+>>> import pmkoalas.models.pnfrag as pnfrag
+>>> net1 = pnfrag.parse_net_fragments("example without weights",
+...         "I -> [A] -> p1 -> [tau] -> F",
+...         "I -> [A] -> p1 -> [B] -> p2 -> [E] -> p3 -> [G] -> F",
+...         "I -> [A] -> p1 -> [C] -> p2 -> [E] -> p3 -> [H] -> F",
+...         "I -> [A] -> p1 -> [D] -> p2 -> [E] -> p3 -> [K] -> F")
+>>> parser = pnfrag.PetriNetFragmentParser()
+>>> net2 = parser.create_net("example with weights and duplicate labels",
+...                          "I -> {a__1 5.0} -> F")
+>>> parser.add_to_net(net2,  "I -> {a__2 3.0} -> F")
+
 
 Weighted transitions, allowing support of Stochastic Labelled Petri Nets. 
 
@@ -104,7 +105,7 @@ class Token:
 class ParseException(Exception):
     pass
 
-def create_net(net_title, net_text) -> LabelledPetriNet:
+def create_net(net_title="", net_text="") -> LabelledPetriNet:
     return PetriNetFragmentParser().create_net(net_title,net_text)
 
 def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
