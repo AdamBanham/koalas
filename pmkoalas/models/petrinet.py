@@ -5,8 +5,11 @@ Allows explicit place or transition ids for simpler comparison, especially
 during testing.
 
 For material on Petri Nets, see:
-    - Quick and dirty introduction on wikipedia https://en.wikipedia.org/wiki/Petri_net
-    - Bause and Kritzinger (2002) - Stochastic Petri Nets: An Introduction to the Theory. Freely available textbook https://www.researchgate.net/publication/258705139_Stochastic_Petri_Nets_-An_Introduction_to_the_Theory
+    - Quick and dirty introduction on wikipedia 
+    https://en.wikipedia.org/wiki/Petri_net
+    - Bause and Kritzinger (2002) - Stochastic Petri Nets: An Introduction 
+    to the Theory. Freely available textbook at
+    https://www.researchgate.net/publication/258705139_Stochastic_Petri_Nets_-An_Introduction_to_the_Theory
 '''
 
 from collections.abc import Iterable
@@ -475,13 +478,13 @@ def convert_net_to_xml(net:LabelledPetriNet,
             rd = Random(arcid)
             localNode = str(UUID(int=rd.getrandbits(128), version=4))
             prom_node = ET.SubElement(
-                    arcNode, 'toolspecific',
-                    attrib={
-                        'tool' : "ProM",
-                        'version' : "6.4",
-                        'localNodeID' : localNode
-                    }
-                )
+                arcNode, 'toolspecific',
+                attrib={
+                    'tool' : "ProM",
+                    'version' : "6.4",
+                    'localNodeID' : localNode
+                }
+            )
             arctype = ET.SubElement(
                 arcNode, "arctype"
             )
@@ -491,12 +494,15 @@ def convert_net_to_xml(net:LabelledPetriNet,
     return root
 
 
-def convert_net_to_xmlstr(net:LabelledPetriNet) -> str: 
+def convert_net_to_xmlstr(
+        net:LabelledPetriNet,
+        include_prom_bits:bool=False             
+    ) -> str: 
     """
     Converts a given Petri net, to an XML structure, and then returns a string
     representation of the indented XML tree.
     """
-    xml = convert_net_to_xml(net)  
+    xml = convert_net_to_xml(net,include_prom_bits)  
     ET.indent( xml ) 
     return ET.tostring(xml,encoding=ENCODING)
 
