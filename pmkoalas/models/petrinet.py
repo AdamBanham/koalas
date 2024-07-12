@@ -5,14 +5,17 @@ Allows explicit place or transition ids for simpler comparison, especially
 during testing.
 
 For material on Petri Nets, see:
-    - Quick and dirty introduction on wikipedia https://en.wikipedia.org/wiki/Petri_net
-    - Bause and Kritzinger (2002) - Stochastic Petri Nets: An Introduction to the Theory. Freely available textbook https://www.researchgate.net/publication/258705139_Stochastic_Petri_Nets_-An_Introduction_to_the_Theory
+    - Quick and dirty introduction on wikipedia 
+    https://en.wikipedia.org/wiki/Petri_net
+    - Bause and Kritzinger (2002) - Stochastic Petri Nets: An Introduction 
+    to the Theory. Freely available textbook at
+    https://www.researchgate.net/publication/258705139_Stochastic_Petri_Nets_-An_Introduction_to_the_Theory
 '''
 
 from collections.abc import Iterable
 from typing import Union,FrozenSet
 import xml.etree.ElementTree as ET
-from uuid import uuid4
+from uuid import uuid4,UUID
 
 ENCODING='unicode'
 
@@ -392,8 +395,11 @@ class PetriNetDOTFormatter:
 def convert_net_to_dot(net:LabelledPetriNet) -> str:
     return PetriNetDOTFormatter(net).transform_net()
 
-PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel',
-def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element: 
+PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
+
+def convert_net_to_xml(net:LabelledPetriNet,
+        include_prom_bits:bool=False       
+    ) -> ET.Element: 
     """
     Converts a given Petri net to an XML structure that conforms with the pnml
     schema.
@@ -402,8 +408,10 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     """
     root = ET.Element('pnml')
     net_node = ET.SubElement(root,'net', 
-            attrib={'type':PNML_URL,
+            attrib={'type': PNML_URL,
                     'id':net.name} )
+    net_namer = ET.SubElement(net_node, "name")
+    ET.SubElement(net_namer, "text").text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
     for place in net.places:
         placeNode = ET.SubElement(page,'place', 
@@ -412,6 +420,22 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
             name_node = ET.SubElement(placeNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = place.name
+        if (include_prom_bits):
+            if isinstance(place.pid, int):
+                from random import Random
+                rd = Random(place.pid)
+                localNode = str(UUID(int=rd.getrandbits(128), version=4))
+            else:
+                localNode = place.pid
+            prom_node = ET.SubElement(
+                    placeNode, 'toolspecific',
+                    attrib={
+                        'tool' : "ProM",
+                        'version' : "6.4",
+                        'localNodeID' : localNode
+                    }
+                )
+
     for tran in net.transitions:
         tranNode = ET.SubElement(page,'transition', 
                         attrib={'id':"transition-"+str(tran.tid) } )
@@ -419,6 +443,24 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
             name_node = ET.SubElement(tranNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = tran.name
+        # include additional info for prom
+        if (include_prom_bits):
+            if isinstance(tran.tid, int):
+                from random import Random
+                rd = Random(tran.tid)
+                localNode = str(UUID(int=rd.getrandbits(128), version=4))
+            else:
+                localNode = tran.tid
+            prom_node = ET.SubElement(
+                tranNode, 'toolspecific',
+                attrib={
+                    'tool' : "ProM",
+                    'version' : "6.4",
+                    'activity' : "$invisible$" if tran.silent else "",
+                    'localNodeID' : localNode
+                }
+            )
+        # include stochastic info
         ts_node = ET.SubElement(tranNode,'toolspecific',
                         attrib={ 'tool':'StochasticPetriNet',
                                  'version':'0.2', 
@@ -440,26 +482,49 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
                         'target': "place-"+str(arc.to_node.nodeId),
                         'id': "arc"+str(arcid) } )
         arcid += 1
+        if (include_prom_bits):
+            rd = Random(arcid)
+            localNode = str(UUID(int=rd.getrandbits(128), version=4))
+            prom_node = ET.SubElement(
+                arcNode, 'toolspecific',
+                attrib={
+                    'tool' : "ProM",
+                    'version' : "6.4",
+                    'localNodeID' : localNode
+                }
+            )
+            arctype = ET.SubElement(
+                arcNode, "arctype"
+            )
+            ET.SubElement(
+                arctype, "text"
+            ).text = "normal"
     return root
 
 
-def convert_net_to_xmlstr(net:LabelledPetriNet) -> str: 
+def convert_net_to_xmlstr(
+        net:LabelledPetriNet,
+        include_prom_bits:bool=False             
+    ) -> str: 
     """
     Converts a given Petri net, to an XML structure, and then returns a string
     representation of the indented XML tree.
     """
-    xml = convert_net_to_xml(net)  
+    xml = convert_net_to_xml(net,include_prom_bits)  
     ET.indent( xml ) 
     return ET.tostring(xml,encoding=ENCODING)
 
-def export_net_to_pnml(net:LabelledPetriNet,fname:str) -> None: 
+def export_net_to_pnml(
+        net:LabelledPetriNet,fname:str,
+        include_prom_bits:bool=False
+        ) -> None: 
     """
     Converts a given Petri net, to an XML structure conforming to the pnml 
     schema, then writes out the XML to a given file location (fname).
 
     No checking of file location is done for you.
     """
-    xml =  convert_net_to_xml(net)  
+    xml =  convert_net_to_xml(net,include_prom_bits=include_prom_bits)  
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
 
