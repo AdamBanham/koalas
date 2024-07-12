@@ -269,9 +269,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected.add_arc_between(tb,finalPlace)
         parser = PetriNetFragmentParser()
         # This is equivalent to a single net
-	#     [a]
-	# I -/   \-> F
-	#    \[b]/
+        #     [a]
+        # I -/   \-> F
+        #    \[b]/
         net = parser.create_net("blog_example",
                              "I -> [a] -> F")
         parser.add_to_net(net, "I -> [b] -> F")
@@ -298,9 +298,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected.add_arc_between(tb,finalPlace)
         parser = PetriNetFragmentParser()
         # This is equivalent to a single net
-	#     [a]
-	# I -/   \-> F
-	#    \[b]/
+        #     [a]
+        # I -/   \-> F
+        #    \[b]/
         net = parser.create_net("multi_edge",
                              "I -> [a] -> F")
         parser.add_to_net(net, "I -> [b] -> F")
