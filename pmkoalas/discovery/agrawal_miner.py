@@ -7,10 +7,14 @@ logs,” in EDBT, ser. Lecture Notes in Computer Science, vol. 1377,
 Springer, 1998, pp. 469–483
 """
 from dataclasses import dataclass, field
-from typing import Set, Optional, List
+from typing import Set, Optional, List, Tuple
 from copy import deepcopy
+from itertools import product
 
+from pmkoalas.discovery.meta import DiscoveryTechnique
 from pmkoalas.simple import Trace
+from pmkoalas.simple import EventLog
+from pmkoalas._logging import debug
 
 @dataclass
 class DependencyNode():
@@ -107,6 +111,8 @@ class DependencyGraph():
         
 
         return False
+    
+
 
 def execution_is_consistent(trace:Trace, graph:DependencyGraph) -> bool:
     """
@@ -122,11 +128,96 @@ def execution_is_consistent(trace:Trace, graph:DependencyGraph) -> bool:
 
     return False
 
-class ArgrawalMinerInstance():
+class ArgrawalMinerInstance(DiscoveryTechnique):
     """
-    TODO
+    Mines a graph from an simplified event log using the proposed 
+    approach by R. Argrawal D. Gunopulos and F. Leymann in 1998.
+
+    The resulting graph aims to have the following properties:
+    - completeness, the graph preserves all dependencies between activities
+      presented in the event log.
+    - irredundancy, the graph should not introduce spurious dependencies 
+    - mimimality, the graph should have miminal edges.
+
+    The resulting graph represents the constraints between activities rather
+    than a system that executes to produce traces.
     """
 
     def __init__(self) -> None:
         pass
+
+    def discover(self, slog:EventLog) -> DependencyGraph:
+        """
+        Discovers the dependency graph from the given simplifed event log, 
+        using the proposed approach by R. Argrawal D. Gunopulos and F. 
+        Leymann in 1998.
+        """
+        pass
+
+    def _check_follows_for(self, trace:Trace, actB:str, actA:str) -> bool:
+        """
+        Returns True if the first instance of activity A occurs before 
+        the first instance activity B in the given trace.
+        """
+        first_a = -1
+        first_b = -1
+        for id,act in enumerate(trace.__iter__()):
+            if act == actA:
+                first_a = id
+            if act == actB:
+                first_b = id
+            if first_a != -1 and first_b != -1:
+                break
+        debug(f"checking :: {trace} for {actA} -> {actB} :: {first_a} < {first_b}")
+        return first_a < first_b
+
+    def compute_follows_relations(self, slog:EventLog) -> Set[Tuple[str,str]]:
+        """
+        Returns the set of follows relations for the given trace based on
+        def.3 and def.4 in Argrawal et al. 1998.
+
+        An acitivty B follows activity A if B starts after A in each 
+        trace that both B and A appear in, 
+        OR,
+        there exists an activity C such that C follows A and B follows C.
+        """
+        debug(slog)
+        acts = slog.seen_activities()
+        debug(acts)
+        follows = set()
+        # iterate over all traces and compute case 1
+        for actB,actA in product(acts,acts):
+            if actA == actB:
+                continue
+            debug(f"checking {actB} -> {actA}")
+            # collect all executions where both acts occur
+            traces = [ 
+                trace 
+                for trace,_ 
+                in slog.__iter__() 
+                if 
+                    actA in trace.seen_activities() 
+                    and 
+                    actB in trace.seen_activities()
+            ]
+            if (len(traces) == 0):
+                continue
+            # check if B follow A in all traces
+            debug(traces)
+            traces = [
+                1 if self._check_follows_for(t,actB,actA) else 0
+                for t 
+                in traces
+            ]
+            debug(traces)
+            if (sum(traces) == len(traces)):
+                follows.add((actB,actA))
+        # adjust follows based on case 2
+        for actB,actC in zip(acts,acts):
+            if actB == actC:
+                continue
+            for actA in acts:
+                pass
+        debug(follows)
+        return follows
 
