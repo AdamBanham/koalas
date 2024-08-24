@@ -4,17 +4,18 @@ This module is a implementation of the miner present by R. Argrawal in 1997.
 See the following article for more information about the argrawal miner:\n
 R. Agrawal, D. Gunopulos, and F. Leymann, “Mining process models from workflow
 logs,” in EDBT, ser. Lecture Notes in Computer Science, vol. 1377, 
-Springer, 1998, pp. 469–483
+Springer, 1998, pp. 469–483.
 """
 from dataclasses import dataclass, field
 from typing import Set, Optional, List, Tuple
 from copy import deepcopy
 from itertools import product
+from logging import DEBUG
 
 from pmkoalas.discovery.meta import DiscoveryTechnique
 from pmkoalas.simple import Trace
 from pmkoalas.simple import EventLog
-from pmkoalas._logging import debug, enable_logging, info
+from pmkoalas._logging import debug, enable_logging, info, get_logger
 
 @dataclass
 class DependencyNode():
@@ -42,9 +43,17 @@ class DependencyEdge():
 
     source:DependencyNode
     target:DependencyNode
+    counter:int=1
+
+    def increment(self) -> None:
+        self.counter += 1
 
     def __hash__(self) -> int:
         return hash((self.source.label,self.target.label))
+    
+    def __eq__(self, value: object) -> bool:
+        if isinstance(value, type(self)) :
+            return self.__hash__() == value.__hash__()
     
 @dataclass
 class DependencyWalk():
@@ -275,6 +284,8 @@ class DependencyGraph():
                     seen.add(edge)
                 if (edge.target not in seen):
                     stack.append(edge.target)
+        for e in self.edges().difference(seen):
+            ret.append(e)
         assert len(ret) == len(self._edges)
         return ret
 
@@ -292,23 +303,39 @@ class DependencyGraph():
                 if edge.target not in ret:
                     ret.append(edge.target)
                     stack.append(edge.target)
+        # in case that a vertex has no outedges
+        for v in self.vertices().difference(seen):
+            ret.append(v)
         assert len(ret) == len(self._vertices)
         return ret
     
     def create_dot_form(self) -> str:
         ret = "digraph{"
         ret += "dpi=150;rankdir=LR;nodesep=0.6;ranksep=0.3;"
-        ret += "node[shape=circle,fillcolor=lightgray,style=filled,width=2];"
+        ret += "node[shape=circle,fillcolor=lightgray,style=filled,width=2,penwidth=4,fontsize=18,fontname=\"roboto\"];"
+        ret += "edge[penwidth=2,fontsize=16,minlen=2,fontname=\"roboto\"];"
         nodeIds = dict()
         nid = 0
         for v in self.walk_vertices():
             nodeIds[v] = f"n{nid}"
             label = '<'+'<BR/>'.join([v.label[i:i+16] for i in range(0, len(v.label), 16)])+">"
-            ret += f"{nodeIds[v]}[label={label}];"
+            if v == self.start():
+                ret += f"{nodeIds[v]}[label={label},fillcolor=green];" 
+            elif v == self.end():
+                ret += f"{nodeIds[v]}[label={label},fillcolor=red];" 
+            else:
+                ret += f"{nodeIds[v]}[label={label}];"
             nid += 1
         assert nid == len(self._vertices)
+        elabel = 1
         for e in self.walk_edges():
-            ret += f"{nodeIds[e.source]} -> {nodeIds[e.target]};"
+            ret += f"d{elabel}[shape=none,color=black,width=0.5,"\
+                +  f"label={e.counter},style=none];"
+            ret += f"{nodeIds[e.source]} -> d{elabel}:w"\
+                + f"[arrowhead=odot];"
+            ret += f"d{elabel}:e -> {nodeIds[e.target]}"\
+                + f"[arrowtail=odot,dir=both];"
+            elabel += 1
         ret += "}"
         return ret
     
@@ -327,13 +354,14 @@ class DependencyGraph():
         ret = "DependencyGraph(\n"
         ret += "\tset([\n"
         for v in self.walk_vertices():
-            ret += f"\t\tDependencyNode('{v.label}'),\n"
+            ret += f"\t\t{v.__repr__()},\n"
         ret += "\t]),\n"
         ret += "\tset([\n"
-        for v in self.walk_edges():
+        for e in self.walk_edges():
             ret += f"\t\tDependencyEdge(\n"
-            ret += f"\t\t\tDependencyNode('{v.source.label}'),\n"
-            ret += f"\t\t\tDependencyNode('{v.target.label}'),\n"
+            ret += f"\t\t\t{e.source.__repr__()},\n"
+            ret += f"\t\t\t{e.target.__repr__()},\n"
+            ret += f"\t\t\t{e.counter},\n"
             ret += "\t\t),\n"
         ret += "\t]),\n"
         ret += ")"
@@ -580,8 +608,22 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
     than a system that executes to produce traces.
     """
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, 
+                 optimise_step_five:bool=False, 
+                 mim_instances:int=1) -> None:
+        """
+        Initialises the miner for the following calls of `discover'.
+         
+        Internal Parameters:\n
+        `optimise_step_five` (`bool=False`) 
+            which sets what version of step five should be used, sequential 
+            marking (False) or parallel marking over traces (True).
+        `mim_instances` (`int=1`)
+            which sets the number of times an edge must be observed to be
+            considered.
+        """
+        self._use_opt_five = optimise_step_five
+        self._min_instances = mim_instances
 
     def _test_for_consistent_activity_usage(self, slog:EventLog, n:int) -> bool:
         """
@@ -690,7 +732,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
                 return self._discover_general_dag(slog)
             else:
                 info("using the cyclic DAG algorithm")
-                pass
+                return self._discover_cyclic_dag(slog)
 
     def _discover_special_dag(self, slog:EventLog)-> DependencyGraph:
         """
@@ -709,45 +751,13 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
             - Compute the transitive closure of the graph.
             - Return the graph.
         """
-        acts = slog.seen_activities()
-        # step one
-        retV = set([
-            DependencyNode(act) 
-            for act 
-            in slog.seen_activities()
-        ])
-        info("step one completed")
+        retV = self._step_one(slog)
         # step two 
-        retE = set()
-        for trace,_ in slog.__iter__():
-            for left,right in product(range(len(trace)-1),range(1,len(trace))):
-                if (left >= right):
-                    continue
-                retE.add(DependencyEdge(
-                    DependencyNode(trace[left]),
-                    DependencyNode(trace[right])
-                ))
-        info("step two completed")
+        retE = self._step_two(slog)
         # step three
-        graph = DependencyGraph(retV,retE)
-        debug(graph.create_dot_form())
-        for actA in acts:
-            for actB in acts.difference({actA}):
-                one_way = DependencyEdge(
-                    DependencyNode(actA),
-                    DependencyNode(actB)
-                )
-                if one_way in retE:
-                    other_way = DependencyEdge(
-                        DependencyNode(actB),
-                        DependencyNode(actA)
-                    )
-                    if other_way in retE:
-                        retE.discard(one_way)
-                        retE.discard(other_way)
-        graph = DependencyGraph(retV,retE)
-        info("step three completed")
+        graph = self._step_three(slog,retV,retE)
         # step four 
+        info("step four started")
         graph = graph.transitive_reduction()
         info("step four completed")
         # step five
@@ -781,6 +791,97 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
             - Remove the unmarked edges in E.
             - Return the graph.
         """
+        retV = self._step_one(slog)
+        retE = self._step_two(slog)
+        graph = self._step_three(slog,retV,retE)
+        graph = self._step_four(graph,retV,retE)
+        if self._use_opt_five:
+            marked = self._step_five_opt(slog,graph)
+        else:
+            marked = self._step_five(slog,graph)
+        # step six
+        graph = self._step_six(marked,graph)
+        # step seven
+        info("returning a graph (|V|,|E|) :: ({},{})".format(
+            len(graph.vertices()),len(graph.edges()))
+            )
+        return graph
+    
+    def _suffix_repeated_activities(self, trace:Trace) -> Trace:
+        """
+        Replaces repeated activities in the trace with a suffix.
+        """
+        index = dict()
+        ret = []
+        for act in trace:
+            if act not in index:
+                ret.append(act)
+                index[act] = 0
+            else:
+                index[act] = index[act] + 1
+                id = index[act]
+                ret.append(f"{act}##{id:02d}")
+        return Trace(ret)
+    
+    def _discover_cyclic_dag(self, slog:EventLog) -> DependencyGraph:
+        """
+        Discover the cyclic DAG from the given simplifed event log,
+        using the proposed approach by R. Argrawal D. et. al. in 1998
+        through algorithm 3.
+
+        The algorithm consists of the following steps:
+            - process the log and replace repeated activities with a suffix
+            - start with a graph consisting of vertices for each activity
+                and no edges.
+            - for each execution E and activities u,v in E, add the edge of
+                (u, v) if u terminates before v starts.
+            - remove all edges that appear in both directions, i.e. 
+                for activities u,v, if the edges (u,v) and (v,u) are in 
+                the graph, remove both of them.
+            - For each strongly connected component of G, remove from E 
+                all edges between vertices in the same strongly connected 
+                component.
+            - For each process execution in L:
+                - Find the induced subgraph of G.
+                - Compute the transitive reduction of the subgraph.
+                - Mark those edges in E that are present in the transitive 
+                    reduction.
+            - Remove the unmarked edges in E.
+            - merge the vertices that correspond to the different instances
+                of the same activity and introduce edges between the merged
+                verticies, if an subinstance had a edge between unmerged 
+                vertices.
+            - Return the graph.
+        """
+        slog = EventLog([
+            self._suffix_repeated_activities(t)
+            for t,i
+            in slog
+            for n 
+            in range(i)
+        ])
+        retV = self._step_one(slog)
+        retE = self._step_two(slog)
+        graph = self._step_three(slog,retV,retE)
+        graph = self._step_four(graph,retV,retE)
+        if self._use_opt_five:
+            marked = self._step_five_opt(slog,graph)
+        else:
+            marked = self._step_five(slog,graph)
+        # step six
+        graph = self._step_six(marked,graph)
+        # step seven
+        graph = self._step_seven(graph)
+        info("returning a graph (|V|,|E|) :: ({},{})".format(
+            len(graph.vertices()),len(graph.edges()))
+            )
+        return graph
+    
+    def _step_one(self, slog:EventLog) -> Set[DependencyNode]:
+        """
+        Creates a vertex for each activity seen in the log.
+        """
+        info("step one started")
         acts = slog.seen_activities()
         # step one
         retV = set([
@@ -789,19 +890,55 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
             in slog.seen_activities()
         ])
         info("step one completed")
-        # step two 
+        return retV
+
+    def _step_two(self, slog:EventLog) -> Set[DependencyEdge]:
+        """
+        Computes the set of edges between activities, where each edge (A,B)
+        denotes that activity A was eventually followed by activity B.
+
+        If min_instances is set, then the edge must be observed at least
+        min_instances times, by default set to 1. 
+        """
+        info("step two started")
         retE = set()
-        for trace,_ in slog.__iter__():
+        edges = dict()
+        for trace,n in slog.__iter__():
             for left,right in product(range(len(trace)-1),range(1,len(trace))):
                 if (left >= right):
                     continue
-                retE.add(DependencyEdge(
+                edge = DependencyEdge(
                     DependencyNode(trace[left]),
-                    DependencyNode(trace[right])
-                ))
+                    DependencyNode(trace[right]),
+                    n
+                )
+                if edge in retE:
+                    for i in range(n):
+                        edges[edge].increment()
+                else:
+                    retE.add(edge)
+                    edges[edge] = edge
+        # filter edges based on min_instances
+        drops = set()
+        for edge in retE:
+            if edge.counter < self._min_instances:
+                drops.add(edge)
+        retE = retE.difference(drops)
         info("step two completed")
-        # step three
-        graph = DependencyGraph(retV,retE)
+        return retE
+    
+    def _step_three(self, slog:EventLog, 
+                    retV:Set[DependencyNode], retE:Set[DependencyEdge])\
+        -> DependencyGraph:
+        """
+        Removes all edges that appear in both directions.
+        """
+        info("step three started")
+        acts = slog.seen_activities()
+        if get_logger().level == DEBUG:
+            graph = DependencyGraph(retV,retE)
+            debug(graph.__repr__())
+            debug("graph before step three :: "+ graph.create_dot_form())
         for actA in acts:
             for actB in acts.difference({actA}):
                 one_way = DependencyEdge(
@@ -817,17 +954,38 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
                         retE.discard(one_way)
                         retE.discard(other_way)
         graph = DependencyGraph(retV,retE)
+        if get_logger().level == DEBUG:
+            debug("graph after step three :: "+ graph.create_dot_form())
         info("step three completed")
-        # step four
+        return graph
+
+    def _step_four(self, graph:DependencyGraph, 
+                   retV:Set[DependencyNode], retE:Set[DependencyEdge])\
+        -> DependencyGraph:
+        """
+        Finds strongly connected components in the graph and removes all
+        edges between vertices in the same strongly connected component.
+        """
+        info("step four started")
         components = find_strongly_connected_components(graph)
         for comp in components:
             for u in comp:
                 for v in comp:
                     if u != v:
                         retE.discard(DependencyEdge(u,v))
-        graph = DependencyGraph(retV,retE)
-        info("step four completed")
-        # step five
+        graph = DependencyGraph(retV,retE)     
+        if get_logger().level == DEBUG:
+            debug("graph after step four :: "+ graph.create_dot_form())
+        info("step four completed")  
+        return graph
+
+    def _step_five(self, slog:EventLog, graph:DependencyGraph)\
+        -> Set[DependencyEdge]:
+        """
+        Finds and marks all edges that are present in the induced subgraph
+        for each trace, after the transitive reduction has been computed.
+        """
+        info("step five started")
         marked = set()
         for trace,_ in slog:
             sub = graph.induce_subgraph(trace)
@@ -835,14 +993,99 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
             for edge in sub.edges():
                 marked.add(edge)
         info("step five completed")
-        # step six
+        return marked
+    
+    def _step_five_opt(self, slog:EventLog, graph:DependencyGraph)\
+        -> Set[DependencyEdge]:
+        """
+        Optimised version of step five, that marks edges in parallel for
+        all traces.
+        """
+        info("step five (opt) started")
+        from joblib import Parallel, delayed
+        from tqdm import tqdm
+        pool = Parallel(n_jobs=-2,return_as="generator")
+        # the work
+        def mark(trace:Trace, graph:DependencyGraph)\
+            -> Set[DependencyEdge]:
+            marked = set()
+            sub = graph.induce_subgraph(trace)
+            sub = sub.transitive_reduction()
+            for edge in sub.edges():
+                marked.add(edge)
+            return sub.edges()
+        # run the work
+        marks = tqdm(pool(
+            delayed(mark)(trace,graph)
+            for trace,_ in slog
+        ), desc="launching jobs for step five (opt)", total=slog.get_nvariants())
+        # sync over sets and keep the union from work
+        marked = set()
+        for markee in marks:
+            marked = marked.union(markee)
+        info("step five (opt) completed")
+        return marked
+
+    
+    def _step_six(self, marked:Set[DependencyEdge], graph:DependencyGraph)\
+        -> DependencyGraph:
+        """
+        Removed unmarked edges from the graph.
+        """
+        info("step six started")
+        retV = graph.vertices()
+        retE = graph.edges()
         retE = retE.intersection(marked)
-        graph = DependencyGraph(retV,retE)
         info("step six completed")
-        # step seven
-        info("returning a graph (|V|,|E|) :: ({},{})".format(
-            len(graph.vertices()),len(graph.edges()))
-            )
+        return DependencyGraph(retV,retE)
+
+    def _step_seven(self, graph:DependencyGraph) -> DependencyGraph:
+        """
+        Merge the vertices into groups of equivalent activities, adding 
+        edges between the merged vertices if an edge existed between a 
+        member of a group and a member of another group.
+        """
+        info("step seven started")
+        # find the groups of equivalent activities
+        if (get_logger().level == DEBUG):
+            debug("graph before step seven :: "+ graph.create_dot_form())
+        groups = dict()
+        for v in graph.vertices():
+            label = v.label.split("##")[0]
+            if label in groups:
+                groups[label].add(v)
+            else:
+                groups[label] = set([v])
+        debug(f"|groups| :: {len(groups)}")
+        debug(f"found groups :: {groups}")
+        retV = set()
+        retE = set()
+        edges = dict()
+        # recreate nodes and edges
+        for label in groups.keys():
+            retV.add(DependencyNode(label))
+            # add edges from the outedges for each member
+            for member in groups[label]:
+                for edge in graph.outedges(member):
+                    tgt = edge.target.label.split("##")[0]
+                    src = edge.source.label.split("##")[0]
+                    if tgt == src:
+                        continue
+                    edge = DependencyEdge(
+                        DependencyNode(src),
+                        DependencyNode(tgt),
+                        edge.counter
+                    )
+                    if edge in edges:
+                        for i in range(edge.counter):
+                            edges[edge].increment()
+                    else:
+                        edges[edge] = edge
+                        retE.add(edge)
+        graph = DependencyGraph(retV,retE)
+        info("step seven completed")
+        if (get_logger().level == DEBUG):
+            debug("graph after step seven :: "+ graph.create_dot_form())
         return graph
 
     def compute_follows_relations(self, slog:EventLog) -> Set[Tuple[str,str]]:

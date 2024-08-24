@@ -1,5 +1,5 @@
 import unittest
-from logging import DEBUG,ERROR
+from logging import DEBUG, ERROR, INFO
 from copy import deepcopy   
 
 from pmkoalas.simple import Trace
@@ -554,3 +554,65 @@ class TestArgrawalMinerInstance(unittest.TestCase):
         self.assertEqual(disc_graph.vertices(), expected_graph.vertices())
         self.assertEqual(disc_graph.edges(), expected_graph.edges())
         self.assertEqual(disc_graph, expected_graph)
+
+    def test_compute_cyclic_graph(self):
+        log = dtlog.convert("A B D C E", "A B D C B C E", 
+                            "A B C B D C E", "A D E")
+        expected_graph = DependencyGraph(
+            set([
+                DependencyNode("A"),
+                DependencyNode("B"),
+                DependencyNode("C"),
+                DependencyNode("D"),
+                DependencyNode("E"),
+            ]),
+            set([
+                DependencyEdge(
+                    DependencyNode("A"),
+                    DependencyNode("B")
+                ),
+                DependencyEdge(
+                    DependencyNode("A"),
+                    DependencyNode("D")
+                ),
+                DependencyEdge(
+                    DependencyNode("B"),
+                    DependencyNode("C")
+                ),
+                DependencyEdge(
+                    DependencyNode("B"),
+                    DependencyNode("D")
+                ),
+                DependencyEdge(
+                    DependencyNode("C"),
+                    DependencyNode("B")
+                ),
+                DependencyEdge(
+                    DependencyNode("C"),
+                    DependencyNode("E")
+                ),
+                DependencyEdge(
+                    DependencyNode("D"),
+                    DependencyNode("C")
+                ),
+                DependencyEdge(
+                    DependencyNode("D"),
+                    DependencyNode("E")
+                ),
+            ])
+        )
+        disc_graph = self.miner.discover(log)
+        self.assertEqual(disc_graph.vertices(), expected_graph.vertices())
+        self.assertEqual(disc_graph.edges(), expected_graph.edges())
+        self.assertEqual(disc_graph, expected_graph)
+
+class TestArgrawalMinerInstanceOpt(TestArgrawalMinerInstance):
+
+    def setUp(self):
+        self.miner = ArgrawalMinerInstance(
+            optimise_step_five=True
+        )
+        setLevel(ERROR)
+
+    def tearDown(self):
+        setLevel(ERROR)
