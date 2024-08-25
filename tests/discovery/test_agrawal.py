@@ -5,7 +5,7 @@ from copy import deepcopy
 from pmkoalas.simple import Trace
 from pmkoalas import dtlog
 from pmkoalas._logging import setLevel
-from pmkoalas.discovery.agrawal_miner import ArgrawalMinerInstance
+from pmkoalas.discovery.agrawal_miner import AgrawalMinerInstance
 from pmkoalas.discovery.agrawal_miner import DependencyEdge,DependencyNode
 from pmkoalas.discovery.agrawal_miner import DependencyGraph
 from pmkoalas.discovery.agrawal_miner import execution_is_consistent
@@ -225,7 +225,7 @@ class TestDependencyGraph(unittest.TestCase):
             f"Should be consistent with trace ({exec2})"
         )
 
-    def test_consistency_argrawal(self):
+    def test_consistency_agrawal(self):
         graph = self.fig1
         con_exec = dtlog.convertTrace("A C B E")
         incon_exec = dtlog.convertTrace("A D B E")
@@ -413,10 +413,10 @@ class TestDependencyGraph(unittest.TestCase):
         )
 
 
-class TestArgrawalMinerInstance(unittest.TestCase):
+class TestAgrawalMinerInstance(unittest.TestCase):
 
     def setUp(self):
-        self.miner = ArgrawalMinerInstance()
+        self.miner = AgrawalMinerInstance()
         setLevel(ERROR)
 
     def tearDown(self):
@@ -638,10 +638,10 @@ class TestArgrawalMinerInstance(unittest.TestCase):
         self.assertEqual(disc_graph.edges(), expected_graph.edges())
         self.assertEqual(disc_graph, expected_graph)
 
-class TestArgrawalMinerInstanceOpt(TestArgrawalMinerInstance):
+class TestAgrawalMinerInstanceOpt(TestAgrawalMinerInstance):
 
     def setUp(self):
-        self.miner = ArgrawalMinerInstance(
+        self.miner = AgrawalMinerInstance(
             optimise_step_five=True
         )
         setLevel(ERROR)

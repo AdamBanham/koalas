@@ -1,7 +1,7 @@
 """
-This module is a implementation of the miner present by R. Argrawal in 1997.
+This module is a implementation of the miner present by R. Agrawal in 1997.
 
-See the following article for more information about the argrawal miner:\n
+See the following article for more information about the agrawal miner:\n
 R. Agrawal, D. Gunopulos, and F. Leymann, “Mining process models from workflow
 logs,” in EDBT, ser. Lecture Notes in Computer Science, vol. 1377, 
 Springer, 1998, pp. 469–483.
@@ -447,7 +447,7 @@ def _check_follows_for(trace:Trace, actB:str, actA:str) -> bool:
 def compute_follows_relations(slog:EventLog) -> Set[Tuple[str,str]]:
         """
         Returns the set of follows relations for the given trace based on
-        def.3 in Argrawal et al. 1998. That is each entry in the returned
+        def.3 in Agrawal et al. 1998. That is each entry in the returned
         set (B,A) denotes that activity B follows activity A.
 
         An acitivty B follows activity A if B starts after A in each 
@@ -655,10 +655,10 @@ def find_strongly_connected_components(graph: DependencyGraph) -> List[Set[Depen
 
     return components
 
-class ArgrawalMinerInstance(DiscoveryTechnique):
+class AgrawalMinerInstance(DiscoveryTechnique):
     """
     Mines a graph from an simplified event log using the proposed 
-    approach by R. Argrawal D. Gunopulos and F. Leymann in 1998.
+    approach by R. Agrawal D. Gunopulos and F. Leymann in 1998.
 
     The resulting graph aims to have the following properties:
     - completeness, the graph preserves all dependencies between activities
@@ -750,7 +750,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
     def discover(self, slog:EventLog) -> DependencyGraph:
         """
         Discovers the dependency graph from the given simplifed event log, 
-        using the proposed approach by R. Argrawal D. Gunopulos and F. 
+        using the proposed approach by R. Agrawal D. Gunopulos and F. 
         Leymann in 1998.
 
         For discovery, the conceptualisation of a process requires a single
@@ -799,7 +799,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
     def _discover_special_dag(self, slog:EventLog)-> DependencyGraph:
         """
         Discovers the special DAG from the given simplifed event log, 
-        using the proposed approach by R. Argrawal D. et. al. in 1998 
+        using the proposed approach by R. Agrawal D. et. al. in 1998 
         through algorithm 1.
 
         The algorithm consists of the following steps:
@@ -831,7 +831,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
     def _discover_general_dag(self, slog:EventLog) -> DependencyGraph:
         """
         Discovers the general DAG from the given simplifed event log, 
-        using the proposed approach by R. Argrawal D. et. al. in 1998 
+        using the proposed approach by R. Agrawal D. et. al. in 1998 
         through algorithm 2.
 
         The algorithm consists of the following steps:
@@ -888,7 +888,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
     def _discover_cyclic_dag(self, slog:EventLog) -> DependencyGraph:
         """
         Discover the cyclic DAG from the given simplifed event log,
-        using the proposed approach by R. Argrawal D. et. al. in 1998
+        using the proposed approach by R. Agrawal D. et. al. in 1998
         through algorithm 3.
 
         The algorithm consists of the following steps:
