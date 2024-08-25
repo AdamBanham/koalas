@@ -962,7 +962,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
         If min_instances is set, then the edge must be observed at least
         min_instances times, by default set to 1. 
         """
-        if self._step_five_opt:
+        if self._use_opt_five:
             return self._step_two_opt(slog)
         info("step two started")
         retE = set()
