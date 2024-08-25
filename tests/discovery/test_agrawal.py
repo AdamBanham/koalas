@@ -380,6 +380,38 @@ class TestDependencyGraph(unittest.TestCase):
                           expect_compontents,
         )
 
+    def test_repr_is_same(self):
+        self.assertEqual(
+            self.fig1,
+            eval(repr(self.fig1)),
+            "Should return the same graph when parsed from its repr."
+        )
+        self.assertEqual(
+            self.fig1.create_dot_form(),
+            eval(repr(self.fig1)).create_dot_form(),
+            "Should return the same dot when parsed from its repr."
+        )
+        self.assertEqual(
+            self.fig2a,
+            eval(repr(self.fig2a)),
+            "Should return the same graph when parsed from its repr."
+        )
+        self.assertEqual(
+            self.fig2a.create_dot_form(),
+            eval(repr(self.fig2a)).create_dot_form(),
+            "Should return the same dot when parsed from its repr."
+        )
+        self.assertEqual(
+            self.fig2b,
+            eval(repr(self.fig2b)),
+            "Should return the same graph when parsed from its repr."
+        )
+        self.assertEqual(
+            self.fig2b.create_dot_form(),
+            eval(repr(self.fig2b)).create_dot_form(),
+            "Should return the same dot when parsed from its repr."
+        )
+
 
 class TestArgrawalMinerInstance(unittest.TestCase):
 
@@ -616,3 +648,18 @@ class TestArgrawalMinerInstanceOpt(TestArgrawalMinerInstance):
 
     def tearDown(self):
         setLevel(ERROR)
+
+    def test_repr_is_same(self):
+        log = dtlog.convert("A B D C E", "A B D C B C E", 
+                            "A B C B D C E", "A D E")
+        graph = self.miner.discover(log)
+        self.assertEqual(
+            graph,
+            eval(repr(graph)),
+            "Should return the same graph when parsed from its repr."
+        )
+        self.assertEqual(
+            graph.create_dot_form(),
+            eval(repr(graph)).create_dot_form(),
+            "Should return the same dot when parsed from its repr."
+        )

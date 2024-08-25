@@ -7,10 +7,11 @@ logs,” in EDBT, ser. Lecture Notes in Computer Science, vol. 1377,
 Springer, 1998, pp. 469–483.
 """
 from dataclasses import dataclass, field
-from typing import Set, Optional, List, Tuple
+from typing import Set, Optional, List, Tuple, Dict
 from copy import deepcopy
 from itertools import product
-from logging import DEBUG
+from logging import DEBUG, INFO
+from warnings import warn
 
 from pmkoalas.discovery.meta import DiscoveryTechnique
 from pmkoalas.simple import Trace
@@ -54,6 +55,8 @@ class DependencyEdge():
     def __eq__(self, value: object) -> bool:
         if isinstance(value, type(self)) :
             return self.__hash__() == value.__hash__()
+        else:
+            return False
     
 @dataclass
 class DependencyWalk():
@@ -82,26 +85,62 @@ class DependencyGraph():
     The graph contains one starting vertex and one ending vertex.
     """
 
-    def __init__(self, vertices:Set[DependencyNode], edges:Set[DependencyEdge]) -> None:
+    def __init__(self, 
+                 vertices:Set[DependencyNode], edges:Set[DependencyEdge],
+                 _reachability:Dict[DependencyNode,Dict[DependencyNode,bool]]=None,
+                 ignore_start_end:bool=False,
+                ) -> None:
         if (len(vertices) == 0 and len(edges) != 0):
             raise ValueError("Cannot have edges without vertices.")
-        self._vertices = set([ deepcopy(v) for v in vertices ])
-        self._acts = set([ v.label for v in self._vertices])
-        self._edges = set([ deepcopy(e) for e in edges ])
-        # find start and end vertices
+        self._vertices = set()
+        self._edges = set()
         self._start = None
         self._end = None 
-        for v in self._vertices:
-            src = [ e for e in self._edges if e.source == v]
-            tgt = [ e for e in self._edges if e.target == v]
+        self._inedges = dict()
+        self._outedges = dict()
+        if _reachability == None:
+            self._reachability = dict()
+        else:
+            self._reachability = deepcopy(_reachability)
+        # check that each vertex is in at least one edge
+        remove = set()
+        for v in vertices:
+            vedges = [ e for e in edges 
+                      if e.source == v or e.target == v]
+            if len(vedges) == 0:
+                warn("DependencyGraph was given a vertex without edges, " 
+                     +"removing.")
+                continue
+            # find start and end vertices
+            tgt = [e for e in edges if e.target == v]
+            src = [e for e in edges if e.source == v]
+            self._inedges[v] = set(tgt)
+            self._outedges[v] = set(src)
+            if (v not in self._reachability):
+                self._reachability[v] = dict()
             if len(tgt) == 0:
-                if (self.start == None):
-                    raise ValueError("Cannot have multiple start vertices.")
+                if (self._start != None):
+                    if (not ignore_start_end):
+                        raise ValueError("Cannot have multiple start vertices.")
                 self._start = v
             if len(src) == 0:
-                if (self.end == None):
-                    raise ValueError("Cannot have multiple end vertices.")
+                if (self._end != None):
+                    if (not ignore_start_end):
+                        raise ValueError("Cannot have multiple end vertices.")
                 self._end = v
+            # store vertex and edges
+            self._vertices.add(deepcopy(v))
+            for e in vedges:
+                self._edges.add(deepcopy(e))
+        # query observed activities 
+        self._acts = set([ v.label for v in self._vertices])
+        # only keep the ordered walk of vertices
+        # walkv = self.walk_vertices()
+        # walke = self.walk_edges()
+        if (self._start == None):
+            raise ValueError("Missing start vertex.")
+        if (self._end == None):
+            raise ValueError("Missing end vertex.")
 
     def is_empty(self) -> bool:
         """
@@ -113,13 +152,13 @@ class DependencyGraph():
         """
         Returns the start vertex of the graph.
         """
-        return self._start
+        return deepcopy(self._start)
     
     def end(self) -> DependencyNode:    
         """
         Returns the end vertex of the graph.
         """
-        return self._end
+        return deepcopy(self._end)
     
     def vertices(self) -> Set[DependencyNode]:
         """
@@ -149,7 +188,8 @@ class DependencyGraph():
         ])
         return DependencyGraph(
             retV,
-            retE    
+            retE,
+            ignore_start_end=True    
         )
         
     def isconnected(self) -> bool:
@@ -173,7 +213,7 @@ class DependencyGraph():
             debug(f"visiting {vertex.label}")
 
             # Get the neighbors of the current vertex
-            neighbors = [edge.target for edge in self._edges if edge.source == vertex]
+            neighbors = [ e.target for e in self.outedges(vertex) ]
 
             # Add unvisited neighbors to the stack
             unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in visited]
@@ -189,6 +229,11 @@ class DependencyGraph():
         """
         Returns True if there is a path from from_node to to_node in the graph.
         """
+        # check if the path has already been calculated
+        past = self._reachability[from_node]
+        if to_node in past:
+            return past[to_node]
+        # compute new reachability
         visited = set()
         stack = [from_node]
 
@@ -197,12 +242,14 @@ class DependencyGraph():
             visited.add(current_node)
 
             if current_node == to_node:
+                self._reachability[from_node][to_node] = True
                 return True
 
-            neighbors = [edge.target for edge in self._edges if edge.source == current_node]
+            neighbors = [ e.target for e in self.outedges(current_node) ]
             unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in visited]
             stack.extend(unvisited_neighbors)
 
+        self._reachability[from_node][to_node] = False
         return False
     
     def does_not_violate(self, trace:Trace) -> bool:
@@ -222,7 +269,7 @@ class DependencyGraph():
             return False
         # now check the body of the trace
         for act in trace.seen_activities():
-            deps = [ e for e in self._edges if e.target.label == act]
+            deps = [ e for e in self.edges() if e.target.label == act]
             for edge in deps:
                 if not _check_follows_for(trace, edge.target.label, edge.source.label):
                     return False
@@ -234,28 +281,31 @@ class DependencyGraph():
         Returns the transitive reduction of the graph.
         """
         # create a copy of the graph
-        ret = deepcopy(self)
+        retV = deepcopy(self.vertices())
+        retE = deepcopy(self.edges())
+        # calculate reachability for each pair of vertices
+        for u in self.vertices():
+            for v in self.vertices():
+                self.path_between(u, v)
+        reachability = self._reachability
         # reduce edges until only the smallest subset of edges remain that 
         # ensures that all connected members remain connected. 
-        removed = True
-        for v in self._vertices:
-            for u in self._vertices:
+        for v in self.vertices():
+            for u in self.vertices():
                 if u != v:
-                    for w in self._vertices:
+                    for w in self.vertices():
                         if w != u and w != v:
-                            if self.path_between(u, v) \
-                            and self.path_between(v, w) \
-                            and self.path_between(u, w):
+                            if reachability[u][v] and reachability[v][w] and reachability[u][w]:
                                 debug(f"removing edge {u.label} -> {w.label}")
-                                ret._edges.discard(DependencyEdge(u, w))
-        return ret
+                                retE.discard(DependencyEdge(u, w))
+        return DependencyGraph(retV, retE, ignore_start_end=True)
     
     def outedges(self, node:DependencyNode) -> Set[DependencyEdge]:
         """
         Returns the outedges of the given node.
         """
         return sorted( 
-            set([ e for e in self._edges if e.source == node]),
+            self._outedges[node],
             key=lambda e: e.target.label
         )
     
@@ -284,9 +334,7 @@ class DependencyGraph():
                     seen.add(edge)
                 if (edge.target not in seen):
                     stack.append(edge.target)
-        for e in self.edges().difference(seen):
-            ret.append(e)
-        assert len(ret) == len(self._edges)
+        assert len(ret) == len(self.edges())
         return ret
 
     def walk_vertices(self) -> List[DependencyNode]:
@@ -299,21 +347,20 @@ class DependencyGraph():
         while len(stack) > 0:
             node = stack.pop()
             seen.add(node)
+            if node not in ret and node != self.end():
+                ret.append(node)
             for edge in self.outedges(node):
-                if edge.target not in ret:
-                    ret.append(edge.target)
+                if edge.target not in seen:
                     stack.append(edge.target)
-        # in case that a vertex has no outedges
-        for v in self.vertices().difference(seen):
-            ret.append(v)
-        assert len(ret) == len(self._vertices)
+        ret.append(self.end())
+        assert len(ret) == len(self.vertices())
         return ret
     
     def create_dot_form(self) -> str:
         ret = "digraph{"
         ret += "dpi=150;rankdir=LR;nodesep=0.6;ranksep=0.3;"
-        ret += "node[shape=circle,fillcolor=lightgray,style=filled,width=2,penwidth=4,fontsize=18,fontname=\"roboto\"];"
-        ret += "edge[penwidth=2,fontsize=16,minlen=2,fontname=\"roboto\"];"
+        ret += "node[shape=circle,fillcolor=lightgray,style=filled,width=2,penwidth=8,fontsize=18,fontname=\"roboto\"];"
+        ret += "edge[penwidth=4,fontsize=16,minlen=2,fontname=\"roboto\"];"
         nodeIds = dict()
         nid = 0
         for v in self.walk_vertices():
@@ -327,16 +374,28 @@ class DependencyGraph():
                 ret += f"{nodeIds[v]}[label={label}];"
             nid += 1
         assert nid == len(self._vertices)
-        elabel = 1
-        for e in self.walk_edges():
-            ret += f"d{elabel}[shape=none,color=black,width=0.5,"\
-                +  f"label={e.counter},style=none];"
-            ret += f"{nodeIds[e.source]} -> d{elabel}:w"\
-                + f"[arrowhead=odot];"
-            ret += f"d{elabel}:e -> {nodeIds[e.target]}"\
-                + f"[arrowtail=odot,dir=both];"
-            elabel += 1
+        elabel = 0
+        seen = set()
+        for v in self.walk_vertices():
+            for e in self.outedges(v):
+                if e.target not in seen:
+                    ret += f"d{elabel}[shape=none,color=black,width=0.5,"\
+                        +  f"label={e.counter},style=none];"
+                    ret += f"{nodeIds[e.source]} -> d{elabel}:w"\
+                        + f"[arrowhead=odot,color=black];"
+                    ret += f"d{elabel}:e -> {nodeIds[e.target]}"\
+                        + f"[arrowtail=odot,dir=both,color=black];"
+                else:
+                    ret += f"d{elabel}[shape=none,color=black,width=0.5,"\
+                        +  f"label={e.counter},style=none];"
+                    ret += f"{nodeIds[e.target]} -> d{elabel}:w"\
+                        + f"[arrowhead=odot,dir=both,color=gray];"
+                    ret += f"d{elabel}:e -> {nodeIds[e.source]}"\
+                        + f"[arrowtail=odot,dir=back,color=gray];"
+                elabel += 1
+            seen.add(v)
         ret += "}"
+        assert elabel == len(self._edges)
         return ret
     
     # model access functions
@@ -507,7 +566,10 @@ def execution_is_consistent(trace:Trace, graph:DependencyGraph) -> bool:
     # check that the seen activities are a subset of the verticies 
     if (trace.seen_activities().issubset(graph._acts) == False):
         return False
-    sub = graph.induce_subgraph(trace)
+    try:
+        sub = graph.induce_subgraph(trace)
+    except ValueError:
+        return False
 
     if (sub.isconnected()):
         # now check that there exists a path between start and all 
@@ -610,7 +672,7 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
 
     def __init__(self, 
                  optimise_step_five:bool=False, 
-                 mim_instances:int=1) -> None:
+                 min_instances:int=1) -> None:
         """
         Initialises the miner for the following calls of `discover'.
          
@@ -618,12 +680,12 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
         `optimise_step_five` (`bool=False`) 
             which sets what version of step five should be used, sequential 
             marking (False) or parallel marking over traces (True).
-        `mim_instances` (`int=1`)
+        `min_instances` (`int=1`)
             which sets the number of times an edge must be observed to be
             considered.
         """
         self._use_opt_five = optimise_step_five
-        self._min_instances = mim_instances
+        self._min_instances = min_instances
 
     def _test_for_consistent_activity_usage(self, slog:EventLog, n:int) -> bool:
         """
@@ -900,6 +962,8 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
         If min_instances is set, then the edge must be observed at least
         min_instances times, by default set to 1. 
         """
+        if self._step_five_opt:
+            return self._step_two_opt(slog)
         info("step two started")
         retE = set()
         edges = dict()
@@ -926,6 +990,57 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
         retE = retE.difference(drops)
         info("step two completed")
         return retE
+    
+    def _step_two_opt(self, slog:EventLog) -> Set[DependencyEdge]:
+        """
+        Parallel version of step two, that computes all eventually follows
+        edges.
+        """
+        info("step two started")
+        retE = set()
+        edges = dict()
+        from joblib import Parallel, delayed
+        from tqdm import tqdm
+        pool = Parallel(n_jobs=-2,return_as="generator_unordered")
+        # define work 
+        def work(trace:Trace, n:int)\
+            -> Set[DependencyEdge]:
+            edges = set()
+            for left, right in product(
+                range(len(trace)-1), range(1, len(trace))):
+                if (left >= right):
+                    continue
+                edges.add(DependencyEdge( 
+                    DependencyNode(trace[left]),
+                    DependencyNode(trace[right]),
+                    n)
+                )
+            return edges
+        # prep work 
+        tasks = [(trace, n ) for trace, n in slog]
+        tasks = pool(delayed(work)(*task) for task in tasks)
+        # add pb if on INFO 
+        if get_logger().level == INFO:
+            tasks = tqdm(tasks, desc="Launching jobs for step two", 
+                         total=slog.get_nvariants())
+        # sync work
+        for workee in tasks:
+            for edge in workee:
+                if edge in edges:
+                    for i in range(edge.counter):
+                        edges[edge].increment()
+                else:
+                    edges[edge] = edge
+                    retE.add(edge)
+        # filter edges based on min_instances
+        drops = set()
+        for edge in retE:
+            if edge.counter < self._min_instances:
+                drops.add(edge)
+        retE = retE.difference(drops)
+        info("step two completed")
+        return retE
+        
     
     def _step_three(self, slog:EventLog, 
                     retV:Set[DependencyNode], retE:Set[DependencyEdge])\
@@ -1004,24 +1119,33 @@ class ArgrawalMinerInstance(DiscoveryTechnique):
         info("step five (opt) started")
         from joblib import Parallel, delayed
         from tqdm import tqdm
-        pool = Parallel(n_jobs=-2,return_as="generator")
+        pool = Parallel(n_jobs=-2,return_as="generator_unordered")
         # the work
-        def mark(trace:Trace, graph:DependencyGraph)\
-            -> Set[DependencyEdge]:
+        def mark(trace:Trace, graph:str)\
+            -> str:
+            from pmkoalas.discovery.agrawal_miner import DependencyGraph
+            from pmkoalas.discovery.agrawal_miner import DependencyEdge 
+            from pmkoalas.discovery.agrawal_miner import DependencyNode
+            graph:DependencyGraph = eval(graph)
             marked = set()
-            sub = graph.induce_subgraph(trace)
-            sub = sub.transitive_reduction()
-            for edge in sub.edges():
+            graph = graph.induce_subgraph(trace)
+            graph = graph.transitive_reduction()
+            for edge in graph.edges():
                 marked.add(edge)
-            return sub.edges()
+            return graph.edges().__repr__()
         # run the work
-        marks = tqdm(pool(
-            delayed(mark)(trace,graph)
+        graph_state = graph.__repr__()
+        marks = pool(
+            delayed(mark)(trace,graph_state)
             for trace,_ in slog
-        ), desc="launching jobs for step five (opt)", total=slog.get_nvariants())
+        )
+        if (get_logger().level == INFO):
+            marks = tqdm(marks, desc="launching jobs for step five (opt)", 
+                 total=slog.get_nvariants())
         # sync over sets and keep the union from work
         marked = set()
         for markee in marks:
+            markee = eval(markee)
             marked = marked.union(markee)
         info("step five (opt) completed")
         return marked
