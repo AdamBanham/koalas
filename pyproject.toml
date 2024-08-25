@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pmkoalas"
-version = "0.2.2.dev1"
+version = "0.3.0"
 authors = [
   { name="Adam Banham", email="adam_banham@hotmail.com" },
   { name="Adam Burke" },
 ]
 description = "A process mining library that focuses on providing pythonic interactions with event logs and languages."
-readme = "README.md"
+readme = "readme.md"
 license = { file="LICENSE" }
 requires-python = ">=3.9"
 classifiers = [
@@ -34,7 +34,7 @@ packages = [
 "pmkoalas",
 "pmkoalas.discovery",
 "pmkoalas.models",
-"pmkoalas.conformance"
+"pmkoalas.conformance",
 ]
 
 [project.urls]
