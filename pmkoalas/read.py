@@ -217,7 +217,7 @@ def read_xes_complex(filepath:str,
     return ComplexEventLog(extracted_traces, name=name, data=log_map)
 
 @enable_logging
-def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
+def read_xes_simple(filepath:str, label_attribute:List[str]=[XES_CONCEPT]) -> EventLog:
     """
     Reads an XES formatted event log and creates a simplified event log 
     object. Traces from the event log are kept in document order before 
@@ -227,9 +227,12 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
     ----------
     filepath: `str`
     \t the filepath to the xes file to read.
-    label_attribute: `str`=`concept:name`
+    label_attribute: `List[str]`=`[concept:name]`
     \t the xes attribute for the process label for an event
     """
+    # backwards compatibility for label
+    if (type(label_attribute) == str):
+        label_attribute = [label_attribute]
 
     # check that file exists
     if not path.exists(filepath):
@@ -278,14 +281,22 @@ def read_xes_simple(filepath:str, label_attribute=XES_CONCEPT) -> EventLog:
         trace_ins = [] # eache element is a EventExtract
         events = find_element(trace, "event", use_namespace)
         for id,event in enumerate(events):
-            label = None 
+            label = None
             sorter = None 
             for child in event.iter():
                 key = child.attrib.get('key')
                 # print(key)
-                if (key == label_attribute):
-                    label = XesAttribute(find_xes_type(child.tag), 
-                                        key, child.attrib.get("value"))
+                if (key in label_attribute):
+                    if (label == None):
+                        label = child.attrib.get("value")
+                    else:
+                        label = " ".join([label, child.attrib.get("value")])
+            if label == None:
+                raise ValueError(
+                    f"unable to find label attribute on :: {event}"
+                )
+            label = XesAttribute(XES_STRING_TAG, 
+                                 "concept:name", label)
             extract = EventExtract(id, label , sorter)
             trace_ins.append(extract)
         trace_ins = Trace([ t.get_label() for t in trace_ins ])
