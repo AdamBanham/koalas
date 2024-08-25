@@ -518,21 +518,35 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     net_text = ET.SubElement(net_name, "text")
     net_text.text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
+    nodes = dict()
     for place in net.places:
+         # work out the id for the transition
+        if isinstance(place.pid, int):
+            pid = f"place-{place.pid}"
+        else:
+            pid = place.pid
+        nodes[place] = pid
         placeNode = ET.SubElement(page,'place', 
-            attrib={'id': "place-"+str(place.pid) } )
+            attrib={'id': pid } )
         if place.name:
             name_node = ET.SubElement(placeNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = place.name
     for tran in net.transitions:
+        # work out the id for the transition
+        if isinstance(tran.tid, int):
+            tid = f"transition-{tran.tid}"
+        else:
+            tid = tran.tid
+        nodes[tran] = tid
         # the default attributes for transitions
-        attribs = { 'id' : str(tran.tid)}
+        attribs = { 'id' : tid}
         # check for guards 
         if isinstance(tran, GuardedTransition):
             attribs['guard'] = str(tran.guard)
+        # make a transition
         tranNode = ET.SubElement(page,'transition', 
-                        attrib={'id':"transition-"+str(tran.tid) } )
+                        attrib=attribs )
         if tran.name:
             name_node = ET.SubElement(tranNode,'name')
             text_node = ET.SubElement(name_node,'text')
@@ -546,17 +560,10 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
                                  'distributionType': 'IMMEDIATE'} )
     arcid = 1
     for arc in net.arcs:
-
-        if isinstance(arc.from_node, Place):
-            arcNode = ET.SubElement(page,'arc',
-                attrib={'source': "place-"+str(arc.from_node.nodeId), 
-                        'target': "transition-"+str(arc.to_node.nodeId),
-                        'id': "arc-"+str(arcid) } )
-        else:
-            arcNode = ET.SubElement(page,'arc',
-                attrib={'source': "transition-"+str(arc.from_node.nodeId), 
-                        'target': "place-"+str(arc.to_node.nodeId),
-                        'id': "arc"+str(arcid) } )
+        arcNode = ET.SubElement(page,'arc',
+            attrib={'source': nodes[arc.from_node], 
+                    'target': nodes[arc.to_node],
+                    'id': "arc-"+str(arcid) } )
         arcid += 1
     return root
 
