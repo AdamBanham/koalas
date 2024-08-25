@@ -250,6 +250,12 @@ class Expression():
         except Exception as e:
             debug(f"Failed to evaluate :: {e}")
             return GuardOutcomes.UNDEF
+        
+    def variables(self) -> Set[str]:
+        """
+        Returns the set of variables used in the expression.
+        """
+        return self._dom
 
     def __str__(self) -> str:
         return self._org_exp
@@ -275,6 +281,12 @@ class Guard():
         if isinstance(exp, str):
             exp = Expression(exp)
         self._exp = exp
+
+    def variables(self) -> Set[str]:
+        """
+        Returns the set of variables used in the guard.
+        """
+        return self._exp.variables()
 
     def evaluate(self, trace:ComplexTrace, i:int) -> GuardOutcomes:
         """
