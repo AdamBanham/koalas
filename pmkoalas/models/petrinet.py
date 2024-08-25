@@ -16,7 +16,7 @@ from collections.abc import Iterable
 from copy import deepcopy
 from typing import Union,FrozenSet,Dict
 import xml.etree.ElementTree as ET
-from uuid import uuid4
+from uuid import uuid4,UUID
 from xml.etree.ElementTree import parse
 from os import path
 
@@ -516,6 +516,12 @@ def convert_net_to_xml(net:LabelledPetriNet,
 
     See: http://www.pnml.org/version-2009/grammar/pnmlcoremodel.rng
     """
+    # handlers for UUID for prombits
+    from random import Random
+    rd = Random(1998)
+    def getUUID() -> str:
+        return str(UUID(int=rd.getrandbits(128), version=4))
+    # the conversion
     root = ET.Element('pnml')
     net_node = ET.SubElement(root,'net', 
             attrib={'type': PNML_URL,
@@ -545,7 +551,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                     attrib={
                         'tool' : "ProM",
                         'version' : "6.4",
-                        'localNodeID' : pid
+                        'localNodeID' : getUUID()
                     }
                 )
 
@@ -577,7 +583,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                     'tool' : "ProM",
                     'version' : "6.4",
                     'activity' : "$invisible$" if tran.silent else "",
-                    'localNodeID' : tid
+                    'localNodeID' : getUUID()
                 }
             )
         # include stochastic info
@@ -602,7 +608,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                 attrib={
                     'tool' : "ProM",
                     'version' : "6.4",
-                    'localNodeID' : aid
+                    'localNodeID' : getUUID()
                 }
             )
             arctype = ET.SubElement(
