@@ -25,5 +25,8 @@ class TestPetriNetWithData(unittest.TestCase):
         with tempfile.TemporaryDirectory() as outdir:
             export_net_to_pnml(dpn, join(outdir, "dpn"))
             other_dpn = parse_pnml_for_dpn(join(outdir, "dpn"))
-            self.assertEqual(dpn == other_dpn, True)
+            self.assertEqual(dpn.transitions, other_dpn.transitions)
+            self.assertEqual(dpn.places, other_dpn.places)
+            self.assertEqual(dpn.arcs, other_dpn.arcs)
+            self.assertEqual(dpn, other_dpn)
 
