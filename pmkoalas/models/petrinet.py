@@ -13,9 +13,20 @@ For material on Petri Nets, see:
 '''
 
 from collections.abc import Iterable
-from typing import Union,FrozenSet
+from copy import deepcopy
+from typing import Union,FrozenSet,Dict
 import xml.etree.ElementTree as ET
-from uuid import uuid4,UUID
+from uuid import uuid4
+from xml.etree.ElementTree import parse
+from os import path
+
+#typing imports
+from typing import TYPE_CHECKING
+
+from pmkoalas.conformance.tokenreplay import PetriNetMarking
+if TYPE_CHECKING:
+    from pmkoalas.conformance.tokenreplay import PetriNetMarking
+    from pmkoalas.models.guards import Guard
 
 ENCODING='unicode'
 
@@ -201,13 +212,17 @@ class LabelledPetriNet:
     labels/names and identifiers. Each instance of this class, 
     has a name or title for the net.
     """
+    
 
     def __init__(self, places:Iterable[Place], transitions:Iterable[Transition],
-                 arcs:Iterable[Arc], name:str='Petri net'):
+                 arcs:Iterable[Arc], 
+                 name:str='Petri net'):
         self._places = set(places)
         self._transitions = set(transitions)
         self._arcs = set(arcs)
         self._name = name
+        self._imarking = None 
+        self._fmarking = None
 
     @property 
     def places(self) -> FrozenSet[Place]:
@@ -224,6 +239,28 @@ class LabelledPetriNet:
     @property
     def name(self) -> str:
         return self._name
+    
+    @property
+    def initial_marking(self) -> 'PetriNetMarking':
+        return deepcopy(self._imarking)
+    
+    @property
+    def final_marking(self) -> 'PetriNetMarking':
+        return deepcopy(self._fmarking)
+    
+    def set_initial_marking(self, marked:Dict[Place, int]):
+        from pmkoalas.conformance.tokenreplay import PetriNetMarking
+        for place in self.places:
+            if place not in marked:
+                marked[place] = 0
+        self._imarking = PetriNetMarking(self, marked)
+
+    def set_final_marking(self, marked:Dict[Place, int]):
+        from pmkoalas.conformance.tokenreplay import PetriNetMarking
+        for place in self.places:
+            if place not in marked:
+                marked[place] = 0
+        self._fmarking = PetriNetMarking(self, marked)
 
     def __eq__(self,other) -> bool:
         if isinstance(other,self.__class__):
@@ -269,7 +306,6 @@ class LabelledPetriNet:
             _str += f"\t\t- {a}\n"
         return _str
     
-
 class BuildablePetriNet(LabelledPetriNet):
     """
     This class allows for the builder design pattern to be used
@@ -339,6 +375,80 @@ class BuildablePetriNet(LabelledPetriNet):
                    self._transitions == other._transitions and \
                    self._arcs   == self._arcs
         return False
+
+class GuardedTransition(Transition):
+    """
+    An abstraction for a transition with a guard.
+    """
+
+    def __init__(self, 
+                 name: str, 
+                 guard: 'Guard',
+                 tid: str = None, 
+                 silent: bool = False):
+        super().__init__(name, tid, 1, silent)
+        self._guard = deepcopy(guard)
+
+    @property
+    def guard(self):
+        return self._guard
+    
+    def __str__(self) -> str:
+        return f"[{self.name} {self.guard}]"
+    
+    def __hash__(self) -> int:
+        return hash((self.name, self.guard.__hash__(),self.silent, self.tid))
+    
+    def __eq__(self, other) -> bool:
+        if type(self) == type(other):
+            return self.name == other.name and self.tid == other.tid and  \
+                   self.guard == other.guard and self._silent == other._silent
+        return False
+    
+    def __repr__(self) -> str:
+        return f'GuardedTransition("{self.name}",guard={self.guard.__repr__()}'\
+               + f',tid="{self.tid}",silent={self.silent})'
+    
+class PetriNetWithData(LabelledPetriNet):
+    """
+    An abstraction for extending a Petri net to one with data. This abstraction
+    only includes guards.
+    """
+
+    def __init__(self, places: Iterable[Place], 
+                 transitions: Iterable[GuardedTransition], 
+                 arcs: Iterable[Arc], 
+                 name: str = 'Petri net with Data'):
+        super().__init__(places, transitions, arcs, name)
+
+    @property
+    def transitions(self) -> FrozenSet[GuardedTransition]:
+        return deepcopy(self._transitions)
+    
+    def __repr__(self) -> str:
+        repr = "PetriNetWithData(\n"
+        # add places
+        repr += "\tplaces=[\n"
+        for p in self.places:
+            repr += f"\t\t{p.__repr__()},\n"
+        repr += "\t],\n"
+        # add transitions
+        repr += "\ttransitions=[\n"
+        for t in self.transitions:
+            repr += f"\t\t{t.__repr__()},\n"
+        repr += "\t],\n"
+        # add arcs
+        repr += "\tarcs=[\n"
+        for a in self.arcs:
+            repr += f"\t\t{a.__repr__()},\n"
+        repr += "\t],\n"
+        # add name
+        repr += f"\tname='{self.name}'\n"
+        #close param
+        repr += ")"
+        return repr
+
+
 
 class PetriNetDOTFormatter:
     """
@@ -410,54 +520,64 @@ def convert_net_to_xml(net:LabelledPetriNet,
     net_node = ET.SubElement(root,'net', 
             attrib={'type': PNML_URL,
                     'id':net.name} )
-    net_namer = ET.SubElement(net_node, "name")
-    ET.SubElement(net_namer, "text").text = net.name
+    net_name = ET.SubElement(net_node, "name")
+    net_text = ET.SubElement(net_name, "text")
+    net_text.text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
+    nodes = dict()
+    attributes_for_guards = set()
     for place in net.places:
+         # work out the id for the transition
+        if isinstance(place.pid, int):
+            pid = f"place-{place.pid}"
+        else:
+            pid = place.pid
+        nodes[place] = pid
         placeNode = ET.SubElement(page,'place', 
-            attrib={'id': "place-"+str(place.pid) } )
+            attrib={'id': pid } )
         if place.name:
             name_node = ET.SubElement(placeNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = place.name
         if (include_prom_bits):
-            if isinstance(place.pid, int):
-                from random import Random
-                rd = Random(place.pid)
-                localNode = str(UUID(int=rd.getrandbits(128), version=4))
-            else:
-                localNode = place.pid
             prom_node = ET.SubElement(
                     placeNode, 'toolspecific',
                     attrib={
                         'tool' : "ProM",
                         'version' : "6.4",
-                        'localNodeID' : localNode
+                        'localNodeID' : pid
                     }
                 )
 
     for tran in net.transitions:
+        # work out the id for the transition
+        if isinstance(tran.tid, int):
+            tid = f"transition-{tran.tid}"
+        else:
+            tid = tran.tid
+        nodes[tran] = tid
+        # the default attributes for transitions
+        attribs = { 'id' : tid}
+        # check for guards 
+        if isinstance(tran, GuardedTransition):
+            attribs['guard'] = str(tran.guard)
+            attributes_for_guards.update(tran.guard.variables())
+        # make a transition
         tranNode = ET.SubElement(page,'transition', 
-                        attrib={'id':"transition-"+str(tran.tid) } )
+                        attrib=attribs )
         if tran.name:
             name_node = ET.SubElement(tranNode,'name')
             text_node = ET.SubElement(name_node,'text')
             text_node.text = tran.name
         # include additional info for prom
         if (include_prom_bits):
-            if isinstance(tran.tid, int):
-                from random import Random
-                rd = Random(tran.tid)
-                localNode = str(UUID(int=rd.getrandbits(128), version=4))
-            else:
-                localNode = tran.tid
             prom_node = ET.SubElement(
                 tranNode, 'toolspecific',
                 attrib={
                     'tool' : "ProM",
                     'version' : "6.4",
                     'activity' : "$invisible$" if tran.silent else "",
-                    'localNodeID' : localNode
+                    'localNodeID' : tid
                 }
             )
         # include stochastic info
@@ -470,27 +590,19 @@ def convert_net_to_xml(net:LabelledPetriNet,
                                  'distributionType': 'IMMEDIATE'} )
     arcid = 1
     for arc in net.arcs:
-
-        if isinstance(arc.from_node, Place):
-            arcNode = ET.SubElement(page,'arc',
-                attrib={'source': "place-"+str(arc.from_node.nodeId), 
-                        'target': "transition-"+str(arc.to_node.nodeId),
-                        'id': "arc-"+str(arcid) } )
-        else:
-            arcNode = ET.SubElement(page,'arc',
-                attrib={'source': "transition-"+str(arc.from_node.nodeId), 
-                        'target': "place-"+str(arc.to_node.nodeId),
-                        'id': "arc"+str(arcid) } )
+        aid = "arc-"+str(arcid)
+        arcNode = ET.SubElement(page,'arc',
+            attrib={'source': nodes[arc.from_node], 
+                    'target': nodes[arc.to_node],
+                    'id':  aid} )
         arcid += 1
         if (include_prom_bits):
-            rd = Random(arcid)
-            localNode = str(UUID(int=rd.getrandbits(128), version=4))
             prom_node = ET.SubElement(
                 arcNode, 'toolspecific',
                 attrib={
                     'tool' : "ProM",
                     'version' : "6.4",
-                    'localNodeID' : localNode
+                    'localNodeID' : aid
                 }
             )
             arctype = ET.SubElement(
@@ -499,6 +611,15 @@ def convert_net_to_xml(net:LabelledPetriNet,
             ET.SubElement(
                 arctype, "text"
             ).text = "normal"
+
+    # check if dpn and if so add variables
+    if (isinstance(net,PetriNetWithData)):
+        vars = ET.SubElement(net_node, 'variables')
+        for attr in attributes_for_guards:
+            var = ET.SubElement(vars, 'variable', attrib={'type':'java.lang.Double'})
+            name = ET.SubElement(var, 'name')
+            name.text = attr
+    
     return root
 
 
@@ -527,4 +648,107 @@ def export_net_to_pnml(
     xml =  convert_net_to_xml(net,include_prom_bits=include_prom_bits)  
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
+
+def parse_pnml_for_dpn(filepath:str) -> PetriNetWithData:
+    """
+    Constructs a Petri net with data from the given filepath to a pnml file.
+    """
+    from pmkoalas.models.guards import Guard,Expression
+    # setup compontents
+    initial_marking = {}
+    final_marking = {}
+    # begin parsing
+    ## check that file exists
+    if not path.exists(filepath):
+        raise FileNotFoundError("pnml file not found at :: "+filepath)
+    xml_tree = parse(filepath)
+    pnml = xml_tree.getroot()
+    net = pnml.find("net")
+    net_name = net.find("name").find("text").text
+    pages = net.findall("page")
+    tgt_page = pages[0]
+    ## we only parse the first page.
+    places = {}
+    place_ids = {}
+    transitions = {}
+    transition_ids = {}
+    arcs = set()
+    ### parse the places 
+    for place in tgt_page.findall("place"):
+        tools = place.find("toolspecific")
+        lid = None
+        if tools != None:
+            if "localNodeID" in tools.attrib:
+                lid = tools.attrib["localNodeID"]
+        id = place.attrib["id"]
+        # making a place
+        pid = lid if lid != None else id
+        place_ids[id] = pid
+        parsed = Place( place.find("name").find("text").text, pid)
+        places[pid] = parsed
+        # handle markings
+        init = place.find("initialMarking")
+        final = place.find("finalMarking")
+        if init != None:
+            initial_marking[places[pid]] = int(init.find("text").text)
+        if final != None:
+            final_marking[places[pid]] = int(final.find("text").text)
+    ### parse the transitions
+    for transition in tgt_page.findall("transition"):
+        tools = transition.find("toolspecific")
+        lid = None
+        if tools != None:
+            if "localNodeID" in tools.attrib:
+                lid = tools.attrib["localNodeID"]
+        id = transition.attrib["id"]
+        # add guards if they exist
+        if "guard" in transition.attrib:
+            guard = Guard(Expression(transition.attrib['guard']))
+        else: 
+            guard = Guard(Expression("true"))
+        # making a transition
+        tid = lid if lid != None else id 
+        transition_ids[id] = tid 
+        parsed = GuardedTransition( 
+            transition.find("name").find("text").text,
+            guard,
+            tid
+        )
+        transitions[tid] = parsed
+    ### parse the arcs    
+    nodes = deepcopy(places)
+    nodes.update(transitions)
+    node_ids = place_ids
+    node_ids.update(transition_ids)
+    for arc in tgt_page.findall("arc"):
+        tools = arc.find("toolspecific")
+        lid = None
+        if tools != None:
+            if "localNodeID" in tools.attrib:
+                lid = tools.attrib["localNodeID"]
+        id = arc.attrib["id"]
+        src = node_ids[arc.attrib["source"]]
+        tgt = node_ids[arc.attrib["target"]]
+        # making an arc 
+        aid = lid if lid != None else id  # we aren't storing the actual id??
+        src_node = nodes[src]
+        tgt_node = nodes[tgt]
+        arcs.add(Arc(
+            src_node, tgt_node
+        ))
+    # finalise compontents
+    dpn = PetriNetWithData(
+        places=set(list(places.values())),
+        transitions=set(list(transitions.values())),
+        arcs=arcs,
+        name=net_name
+    )
+    dpn.set_initial_marking(
+        initial_marking
+    )
+    dpn.set_final_marking(
+        final_marking
+    )
+    return dpn
+
 
