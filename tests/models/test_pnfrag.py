@@ -8,34 +8,6 @@ from pmkoalas.models.pnfrag import *
 
 initialI = Place("I",1)
 
-expected_net_parsed_with_spaces = LabelledPetriNet(
-        places=[
-                Place("F",pid=3),
-                Place("p",pid=1),
-                Place("I",pid=1),
-        ],
-        transitions=[
-                Transition("tau",tid=2,weight=1.0,silent=True),
-                Transition("Create Fine",tid=2,weight=1.0,silent=False),
-                Transition("Create Finer",tid=3,weight=0.3,silent=False),
-        ],
-        arcs=[
-                Arc(from_node=Transition("tau",tid=2,weight=1.0,
-                    silent=True),to_node=Place("F",pid=3)),
-                Arc(from_node=Place("I",pid=1),to_node=Transition(
-                    "Create Finer",tid=3,weight=0.3,silent=False)),
-                Arc(from_node=Place("I",pid=1),to_node=Transition(
-                    "Create Fine",tid=2,weight=1.0,silent=False)),
-                Arc(from_node=Transition("Create Finer",tid=3,weight=0.3,
-                    silent=False),to_node=Place("p",pid=1)),
-                Arc(from_node=Place("p",pid=1),to_node=Transition("tau",
-                    tid=2,weight=1.0,silent=True)),
-                Arc(from_node=Transition("Create Fine",tid=2,weight=1.0,
-                    silent=False),to_node=Place("p",pid=1)),
-        ],
-        name='ROAD FINES NORMATIVE MODEL'
-)
-
 class PetriNetFragmentTest(unittest.TestCase):
     def setUp(self):
         self.parser = PetriNetFragmentParser()
@@ -465,6 +437,33 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, result )
 
     def test_spaces_in_labels(self):
+        expected_net_parsed_with_spaces = LabelledPetriNet(
+                places=[
+                        Place("F",pid=3),
+                        Place("p",pid=1),
+                        Place("I",pid=1),
+                ],
+                transitions=[
+                        Transition("tau",tid=2,weight=1.0,silent=True),
+                        Transition("Create Fine",tid=2,weight=1.0,silent=False),
+                        Transition("Create Finer",tid=3,weight=0.3,silent=False),
+                ],
+                arcs=[
+                        Arc(from_node=Transition("tau",tid=2,weight=1.0,
+                            silent=True),to_node=Place("F",pid=3)),
+                        Arc(from_node=Place("I",pid=1),to_node=Transition(
+                            "Create Finer",tid=3,weight=0.3,silent=False)),
+                        Arc(from_node=Place("I",pid=1),to_node=Transition(
+                            "Create Fine",tid=2,weight=1.0,silent=False)),
+                        Arc(from_node=Transition("Create Finer",tid=3,weight=0.3,
+                            silent=False),to_node=Place("p",pid=1)),
+                        Arc(from_node=Place("p",pid=1),to_node=Transition("tau",
+                            tid=2,weight=1.0,silent=True)),
+                        Arc(from_node=Transition("Create Fine",tid=2,weight=1.0,
+                            silent=False),to_node=Place("p",pid=1)),
+                ],
+                name='ROAD FINES NORMATIVE MODEL'
+        )
         result = parse_net_fragments(
             "ROAD FINES NORMATIVE MODEL",
             "I -> [  Create Fine __ 2] -> p__1 -> [  tau] -> F",
@@ -472,7 +471,10 @@ class PetriNetFragmentTest(unittest.TestCase):
             "I -> [  Create Fine __ 2 ] -> p __ 1 -> [   tau      ] -> F",
             "I -> {              Create Finer  __ 3   0.3} -> p __ 1 -> [tau      ] -> F",
         )
-        self.assertTrue(result == expected_net_parsed_with_spaces,
+        self.assertEqual(result.places, expected_net_parsed_with_spaces.places)
+        self.assertEqual(result.transitions, expected_net_parsed_with_spaces.transitions)
+        self.assertEqual(result.arcs, expected_net_parsed_with_spaces.arcs)
+        self.assertEqual(result, expected_net_parsed_with_spaces,
         "The parsed net does not match the expected net.")
         
 
