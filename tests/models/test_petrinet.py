@@ -15,30 +15,30 @@ expectedXML = '''<pnml>
          <text>dotTest</text>
     </name>
     <page id="page1">
-      <place id="4">
+      <place id="place-4">
         <name>
           <text>Student</text>
         </name>
       </place>
-      <place id="3">
+      <place id="place-3">
         <name>
           <text>Sweep</text>
         </name>
       </place>
-      <place id="1">
+      <place id="place-1">
         <name>
           <text>I</text>
         </name>
       </place>
-      <transition id="2">
+      <transition id="transition-2">
         <name>
           <text>tau</text>
         </name>
         <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="2.0" distributionType="IMMEDIATE" />
       </transition>
-      <arc source="2" target="4" id="1" />
-      <arc source="1" target="2" id="2" />
-      <arc source="2" target="3" id="3" />
+      <arc source="transition-2" target="place-3" id="arc-1" />
+      <arc source="place-1" target="transition-2" id="arc-2" />
+      <arc source="transition-2" target="place-4" id="arc-3" />
     </page>
   </net>
 </pnml>

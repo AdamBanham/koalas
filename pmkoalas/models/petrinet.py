@@ -519,7 +519,8 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     net_text.text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
     for place in net.places:
-        placeNode = ET.SubElement(page,'place', attrib={'id':str(place.pid) } )
+        placeNode = ET.SubElement(page,'place', 
+            attrib={'id': "place-"+str(place.pid) } )
         if place.name:
             name_node = ET.SubElement(placeNode,'name')
             text_node = ET.SubElement(name_node,'text')
@@ -531,7 +532,7 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
         if isinstance(tran, GuardedTransition):
             attribs['guard'] = str(tran.guard)
         tranNode = ET.SubElement(page,'transition', 
-                        attrib=attribs )
+                        attrib={'id':"transition-"+str(tran.tid) } )
         if tran.name:
             name_node = ET.SubElement(tranNode,'name')
             text_node = ET.SubElement(name_node,'text')
@@ -545,10 +546,17 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
                                  'distributionType': 'IMMEDIATE'} )
     arcid = 1
     for arc in net.arcs:
-        arcNode = ET.SubElement(page,'arc',
-                    attrib={'source': str(arc.from_node.nodeId), 
-                            'target': str(arc.to_node.nodeId),
-                            'id': str(arcid) } )
+
+        if isinstance(arc.from_node, Place):
+            arcNode = ET.SubElement(page,'arc',
+                attrib={'source': "place-"+str(arc.from_node.nodeId), 
+                        'target': "transition-"+str(arc.to_node.nodeId),
+                        'id': "arc-"+str(arcid) } )
+        else:
+            arcNode = ET.SubElement(page,'arc',
+                attrib={'source': "transition-"+str(arc.from_node.nodeId), 
+                        'target': "place-"+str(arc.to_node.nodeId),
+                        'id': "arc"+str(arcid) } )
         arcid += 1
     return root
 
