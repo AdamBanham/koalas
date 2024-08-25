@@ -10,9 +10,9 @@ from logging import *
 
 
 expectedXML = '''<pnml>
-  <net type="('http://www.pnml.org/version-2009/grammar/pnmlcoremodel',)" id="dotTest">
+  <net type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel" id="dotTest">
     <name>
-         <text>dotTest</text>
+      <text>dotTest</text>
     </name>
     <page id="page1">
       <place id="place-4">
@@ -204,7 +204,9 @@ class PetriNetTest(unittest.TestCase):
         parser = PetriNetFragmentParser()
         net1 = parser.create_net("dotTest","I -> {tau 2.0} -> Sweep")
         parser.add_to_net(net1,"I -> {tau 2.0} -> Student")
+        debug(net1)
         xmlStr = convert_net_to_xmlstr(net1)
+        debug(xmlStr)
         debug('=================\n')
         debug(f"\n{xmlStr}\n")
         with tempfile.NamedTemporaryFile(delete=True) as outfile:

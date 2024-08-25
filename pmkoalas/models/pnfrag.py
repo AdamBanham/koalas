@@ -42,7 +42,7 @@ WEIGHTED_TRAN_VALUE     :: '{' TRAN_LABEL WEIGHT '}'
 WEIGHTED_TRAN_DEFAULT   :: '{' TRAN_LABEL '}'
 TRAN_LABEL		:: TLABEL || T_ID_LABEL
 T_ID_LABEL		:: TLABEL ID_PREFIX ID
-TLABEL			:: LABEL || SILENT_LABEL
+TLABEL			:: LABEL || SILENT_LABEL || LABEL TLABEL
 PLACE             	:: LABEL || P_ID_LABEL
 P_ID_LABEL              :: LABEL ID_PREFIX ID
 EDGE              	:: '->'
@@ -331,7 +331,11 @@ class PetriNetFragmentParser:
 
 
     def tran_label(self):
-        return self.lookahead.token_str
+        label = self.lookahead.token_str
+        while self.tokens[1].token_info == TokenInfo.LABEL:
+                self.next_token() 
+                label += " " + self.lookahead.token_str
+        return label
 
     def place_led_subnet(self):
         head = self.place()
