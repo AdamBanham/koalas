@@ -502,7 +502,8 @@ class PetriNetDOTFormatter:
 def convert_net_to_dot(net:LabelledPetriNet) -> str:
     return PetriNetDOTFormatter(net).transform_net()
 
-PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel',
+PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
+
 def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element: 
     """
     Converts a given Petri net to an XML structure that conforms with the pnml
@@ -519,6 +520,7 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
     net_text.text = net.name
     page = ET.SubElement(net_node,'page', id="page1")
     nodes = dict()
+    attributes_for_guards = set()
     for place in net.places:
          # work out the id for the transition
         if isinstance(place.pid, int):
@@ -544,6 +546,7 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
         # check for guards 
         if isinstance(tran, GuardedTransition):
             attribs['guard'] = str(tran.guard)
+            attributes_for_guards.update(tran.guard.variables())
         # make a transition
         tranNode = ET.SubElement(page,'transition', 
                         attrib=attribs )
@@ -565,6 +568,15 @@ def convert_net_to_xml(net:LabelledPetriNet) -> ET.Element:
                     'target': nodes[arc.to_node],
                     'id': "arc-"+str(arcid) } )
         arcid += 1
+
+    # check if dpn and if so add variables
+    if (isinstance(net,PetriNetWithData)):
+        vars = ET.SubElement(net_node, 'variables')
+        for attr in attributes_for_guards:
+            var = ET.SubElement(vars, 'variable', attrib={'type':'java.lang.Double'})
+            name = ET.SubElement(var, 'name')
+            name.text = attr
+    
     return root
 
 
