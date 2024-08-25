@@ -137,9 +137,9 @@ class DependencyGraph():
         # only keep the ordered walk of vertices
         # walkv = self.walk_vertices()
         # walke = self.walk_edges()
-        if (self._start == None):
+        if (self._start == None and len(vertices) > 0):
             raise ValueError("Missing start vertex.")
-        if (self._end == None):
+        if (self._end == None and len(vertices) > 0):
             raise ValueError("Missing end vertex.")
 
     def is_empty(self) -> bool:
