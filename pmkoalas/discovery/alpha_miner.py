@@ -13,6 +13,7 @@ from enum import Enum
 from copy import deepcopy,copy
 
 from pmkoalas.simple import EventLog
+from pmkoalas._logging import info,debug
 from pmkoalas.directly import DirectlyFollowPair
 from pmkoalas.models.petrinet import LabelledPetriNet
 from pmkoalas.discovery.meta import DiscoveryTechnique
@@ -70,9 +71,9 @@ class AlphaRelation():
         )
 
     def __repr__(self) -> str:
-        formatter = 'AlphaRelation(src="{src}",target="{target}",follow={follows})'
+        formatter = 'AlphaRelation(src="{src}",target="{target}",follows={follows})'
         return formatter.format(src=self.src, target=self.target,
-            follows=self._follows
+            follows=repr(self._follows)
         )
 
     def __hash__(self) -> int:
@@ -89,13 +90,8 @@ class AlphaPair():
     """
 
     def __init__(self, left:Set, right:Set) -> None:
-        self.left = left 
-        self.right = right 
-        ord_left = sorted(list([l for l in left]))
-        ord_right = sorted(list([r for r in right]))
-        self.__hash = hash(
-            tuple([l for l in ord_left] + [r for r in ord_right])
-        )
+        self.left = deepcopy(left) 
+        self.right = deepcopy(right)
 
     def can_add_left(self, add:str, 
         matrix:Dict[str,Dict[str,AlphaRelation]]) -> bool:
@@ -156,9 +152,20 @@ class AlphaPair():
         return True
 
     def __hash__(self) -> int:
-        return self.__hash
+        ord_left = sorted(list([l for l in self.left]))
+        ord_right = sorted(list([r for r in self.right]))
+        return hash(
+            tuple(["left:"]+[l for l in ord_left]+["right:"]+[r for r in ord_right])
+        )
 
     def __repr__(self) -> str:
+        ord_left = sorted([l for l in self.left])
+        ord_right = sorted([r for r in self.right])
+        left_str = "{" + str(ord_left)[1:-1] + "}"
+        right_str = "{" + str(ord_right)[1:-1] + "}"
+        return f"AlphaPair({left_str},{right_str})"
+    
+    def __str__(self) -> str:
         ord_left = sorted([l for l in self.left])
         ord_right = sorted([r for r in self.right])
         left_str = "{" + str(ord_left)[1:-1] + "}"
@@ -302,9 +309,10 @@ class AlphaMinerInstance(DiscoveryTechnique):
     be counted as a alpha relation.
     """
 
-    def __init__(self, min_inst:int=1):
+    def __init__(self, min_inst:int=1, optimised:bool=False) -> None:
         self._min_inst = min_inst
         self._matrix = None
+        self._opt = optimised
 
     def mine_footprint_matrix(self, log:EventLog) -> Dict[
         str,Dict[str,AlphaRelation]]:
@@ -312,6 +320,7 @@ class AlphaMinerInstance(DiscoveryTechnique):
         Mines the footprint matrix of the alpha miner relations
         between process activities.
         """
+        info("Mining footprint matrix...")
         self._matrix = dict()
         TL = self._step_one(log)
         # set up matrix 
@@ -346,6 +355,7 @@ class AlphaMinerInstance(DiscoveryTechnique):
         out = dict()
         for src in TL:
             out[src] = deepcopy(self._matrix[src])
+        info("Footprint matrix mined.")
         return deepcopy(self._matrix)
 
     def discover(self, log:EventLog) -> LabelledPetriNet:
@@ -360,20 +370,54 @@ class AlphaMinerInstance(DiscoveryTechnique):
         # find the essential elements 
         matrix = self.mine_footprint_matrix(log)
         ### the set of transitions
+        info("Discovering Petri net...")
+        info("Step one: finding transitions")
         TL = self._step_one(log)
+        info("Step one: completed")
         # others 
+        info("Step two: finding start activities")
         TI = self._step_two(log)
+        info("Step two: completed")
+        info("Step three: finding end activities")
         TO = self._step_three(log)
+        info("Step three: completed")
+        info("Step four: finding pairs")
         XL = self._step_four(log)
+        info("Step four: completed")
+        info("Step five: finding maximal pairs")
         YL = self._step_five(log, XL)
+        info("Step five: completed")
         # find the petri net components 
         ### the set of places
+        info("Step six: finding places")
         PL = self._step_six(log, YL) 
+        info("Step six: completed")
         ### the set of flow relations
+        info("Step seven: finding flow relations")
         FL = self._step_seven(log, PL, TI, TO) 
+        info("Step seven: completed")
+        info("Petri net discovered.")
         TL = set([ AlphaTransition(t) for t in TL])
         self._matrix = None
-        return LabelledPetriNet(PL, TL, FL)
+        info("Alpha Miner Returning Petri Net")
+        from pmkoalas.models.petrinet import Place, Transition, Arc
+        places = dict()
+        transitions = dict()
+        for place in PL:
+            places[place.name] = Place(place.name)
+        for transition in TL:
+            transitions[transition.name] = Transition(transition.name)
+        return LabelledPetriNet(
+            places.values(), transitions.values(),
+            [Arc(
+                places[f.src.name] if 
+                isinstance(f.src, AlphaPlace) 
+                else transitions[f.src.name],
+                places[f.tar.name] if 
+                isinstance(f.tar, AlphaPlace) 
+                else transitions[f.tar.name],
+            )
+            for f in FL])
 
     def _step_one(self, log:EventLog) -> Set[str]:
         """
@@ -425,21 +469,52 @@ class AlphaMinerInstance(DiscoveryTechnique):
         # keep expanding until pairs does not grow
         last_size = 0
         next_size = len(pairs)
+        from joblib import Parallel, delayed
+        pool = Parallel(n_jobs=-3,return_as='generator_unordered')
         while last_size != next_size:
             last_size = len(pairs)
             # to expand we do the following for each pair in pairs
             # we check for adding a new left for each pair
             # then check for adding a new right for each pair
-            new_pairs = deepcopy(pairs)
-            for t in TL:
-                for pair in pairs:
-                    if (pair.can_add_left(t, self._matrix)):
-                        new_pairs.add(pair.expand_left(t))
-                    if (pair.can_add_right(t, self._matrix)):
-                        new_pairs.add(pair.expand_right(t))
-            pairs.update(new_pairs)
+
+            if (self._opt):
+                ## optimised path
+                # define work for workers
+                def work(t:str, pairs:Set[AlphaPair], matrix) -> Set[AlphaPair]:
+                    from pmkoalas.discovery.alpha_miner import AlphaPair
+                    new_pairs = set()
+                    pairs= eval(pairs)
+                    for pair in pairs:
+                        if (pair.can_add_left(t, matrix)):
+                            gen = pair.expand_left(t)
+                            if gen not in pairs:
+                                new_pairs.add(gen)
+                        if (pair.can_add_right(t, matrix)):
+                            gen = pair.expand_right(t)
+                            if gen not in pairs:
+                                new_pairs.add(gen)
+                    return repr(new_pairs)
+                # expand pairs
+                repred_pairs = repr(pairs)
+                pool_of_pairs = pool(
+                    delayed(work)(t, repred_pairs, self._matrix)
+                    for t in TL
+                )
+                for sync_pairs in pool_of_pairs:
+                    info("worker finished expanding...")
+                    pairs.update(eval(sync_pairs))
+            else:
+                new_pairs = set()
+                for t in TL:
+                    for pair in pairs:
+                        if (pair.can_add_left(t, self._matrix)):
+                            new_pairs.add(pair.expand_left(t))
+                        if (pair.can_add_right(t, self._matrix)):
+                            new_pairs.add(pair.expand_right(t))
+                pairs.update(new_pairs)
             # update end condition
             next_size = len(pairs)
+            info(f"Pairs expanded this round: {next_size - last_size}...")
         return pairs
 
     def _step_five(self, log:EventLog, XL:Set) -> Set:

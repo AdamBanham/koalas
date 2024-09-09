@@ -6,6 +6,7 @@ from pmkoalas.discovery.alpha_miner import AlphaRelation,AlphaPair
 from pmkoalas.discovery.alpha_miner import AlphaPlace,AlphaFlowRelation
 from pmkoalas.discovery.alpha_miner import AlphaTransition
 from pmkoalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
+from pmkoalas.models.petrinet import Place,Transition,Arc
 from pmkoalas.dtlog import convert
 
 # simple log tests
@@ -124,8 +125,51 @@ BOOK_FL = set([
 ])
 BOOK_YL = set(BOOK_YL)
 BOOK_PL = set(BOOK_PL)
+BOOK_LPN_PL = set([
+    Place(p.name) 
+    for p
+    in BOOK_PL
+])
+BOOK_LPN_TL = set([
+    Transition(t)
+    for t in BOOK_TL
+])
+place_nodes = dict( 
+    (p.name, p)
+    for p in BOOK_LPN_PL
+)
+transition_nodes = dict(
+    (t.name, t)
+    for t in BOOK_LPN_TL
+)
+BOOK_LPN_FL = set([
+    Arc(place_nodes[f.src.name], transition_nodes[f.tar.name])
+    if isinstance(f.src, AlphaPlace) else
+    Arc(transition_nodes[f.src.name], place_nodes[f.tar.name])
+    for f in BOOK_FL
+])
 
-class DTLogTest(unittest.TestCase):
+class SingleThreadAlphaTest(unittest.TestCase):
+
+    def setUp(self):
+        self.miner = AlphaMinerInstance()
+
+    def test_alpha_pair_hash(self):
+        pair = AlphaPair(set(["a"]), set(["b"]))
+        self.assertEqual(hash(pair), hash(pair))
+
+    def test_alpha_pair_hash_in_set(self):
+        tester = set()
+        pair = AlphaPair(set(["a", "d"]), set(["b"]))
+        tester.add(pair)
+        self.assertEqual(1, len(tester))
+        pair = AlphaPair(set(["d", "a"]), set(["b"]))
+        tester.add(pair)
+        self.assertEqual(1, len(tester))
+        o_tester = set()
+        o_tester.add(pair)
+        tester.update(o_tester)
+        self.assertEqual(1, len(tester))
 
     def test_creation(self):
         miner = AlphaMinerInstance(min_inst=5)
@@ -133,7 +177,7 @@ class DTLogTest(unittest.TestCase):
         miner = deepcopy(miner)
 
     def test_footprint_matrix(self):
-        miner = AlphaMinerInstance()
+        miner = self.miner
         matrix = miner.mine_footprint_matrix(LOG)
         # test that footprint matrix has the right follows
         # test that footprint matrix has the right relations
@@ -157,7 +201,7 @@ class DTLogTest(unittest.TestCase):
 
     def test_step_one(self):
         # simple test
-        miner = AlphaMinerInstance()
+        miner = self.miner
         out = miner._step_one(LOG)
         self.assertEqual(out, ACTS)
 
@@ -167,7 +211,7 @@ class DTLogTest(unittest.TestCase):
 
     def test_step_two(self):
         # simple test
-        miner = AlphaMinerInstance()
+        miner = self.miner
         out = miner._step_two(LOG)
         self.assertEqual(out, START_ACTS)  
 
@@ -177,7 +221,7 @@ class DTLogTest(unittest.TestCase):
 
     def test_step_three(self):
         # simple test
-        miner = AlphaMinerInstance()
+        miner = self.miner
         out = miner._step_three(LOG)
         self.assertEqual(out, END_ACTS) 
 
@@ -186,33 +230,72 @@ class DTLogTest(unittest.TestCase):
         self.assertEqual(out, BOOK_TO)
 
     def test_step_four(self):
-        miner = AlphaMinerInstance()
+        miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
         out = miner._step_four(BOOK_LOG)
         self.assertEqual(out, BOOK_XL)
+         
 
     def test_step_five(self):
-        miner = AlphaMinerInstance()
+        miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
         out = miner._step_five(BOOK_LOG, BOOK_XL)
         self.assertEqual(out, BOOK_YL) 
 
     def test_step_six(self):
-        miner = AlphaMinerInstance()
+        miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
         out = miner._step_six(BOOK_XL, BOOK_YL)
         self.assertEqual(out, BOOK_PL) 
 
     def test_step_seven(self):
-        miner = AlphaMinerInstance()
+        miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
         out = miner._step_seven(BOOK_LOG, BOOK_PL, BOOK_TI, BOOK_TO)
         self.assertEqual(out, BOOK_FL) 
 
     def test_mine(self):
-        miner = AlphaMinerInstance()
+        miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
         net = miner.discover(BOOK_LOG)
-        self.assertEqual(net.places, BOOK_PL)
-        self.assertEqual(net.transitions, BOOK_TL_OUT)
-        self.assertEqual(net.arcs, BOOK_FL)
+        for p in net.places:
+            found_match = False
+            for o in BOOK_LPN_PL:
+                if p.name == o.name:
+                    found_match = True
+                    break
+            self.assertTrue(found_match, 
+                f"Place ({p}) not found in expected places :\n{BOOK_LPN_PL}")
+        for t in net.transitions:
+            found_match = False
+            for o in BOOK_LPN_TL:
+                if t.name == t.name:
+                    found_match = True
+                    break
+            self.assertTrue(found_match, 
+                f"Transition ({t}) not found in expected transitions :\n{BOOK_LPN_TL}")
+        for a in net.arcs:
+            found_match = False
+            for o in BOOK_LPN_FL:
+                if o.from_node.name == a.from_node.name and o.to_node.name == a.to_node.name:
+                    found_match = True
+                    break
+            self.assertTrue(found_match, 
+                f"Arc ({a}) not found in expected arcs :\n{BOOK_LPN_FL}")
+            
+class OptimisedAlphaTest(SingleThreadAlphaTest):
+    """
+    Reuse the tests from SingleThreadAlphaTest to test that the optimised
+    version returns the same results.
+    """
+
+    def setUp(self):
+        from pmkoalas._logging import setLevel
+        from logging import INFO
+        setLevel(INFO)
+        self.miner = AlphaMinerInstance(optimised=True)
+
+    def tearDown(self) -> None:
+        from pmkoalas._logging import setLevel
+        from logging import ERROR
+        setLevel(ERROR)

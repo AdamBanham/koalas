@@ -465,7 +465,7 @@ class PetriNetDOTFormatter:
         fstr = 'n{} [shape="box",margin="0, 0.1",label="{} {}",style="filled"];\n'
         tl = tran.name if tran.name and tran.name != 'tau' else '&tau;'
         fstr = f'n{str(ti)} [shape="box",margin="0, 0.1",'
-        fstr += f'label="{tran.weight}", style="filled",'
+        # fstr += f'label="{tran.weight}", style="filled",'
         height = self._default_height
         fstr += f'height="{height}", width="{height}"'
         fstr += '];\n'
@@ -476,8 +476,8 @@ class PetriNetDOTFormatter:
         return fstr.format('n' + str(pi),place.name)
 
     def transform_arc(self,arc) -> str:
-        from_node = self._nodemap[arc.from_node]
-        to_node = self._nodemap[arc.to_node]
+        from_node = self._nodemap[arc.from_node.nodeId]
+        to_node = self._nodemap[arc.to_node.nodeId]
         return f'n{from_node}->n{to_node}\n'
 
     def transform_net(self) -> str:
@@ -491,11 +491,11 @@ class PetriNetDOTFormatter:
         ni = 1
         for pl in self._pn.places:
             ni += 1
-            self._nodemap[pl] = ni
+            self._nodemap[pl.nodeId] = ni
             dotstr += self.transform_place(pl,ni)
         for tr in self._pn.transitions:
             ni += 1
-            self._nodemap[tr] = ni
+            self._nodemap[tr.nodeId] = ni
             dotstr += self.transform_transition(tr,ni)
         for ar in self._pn.arcs:
             dotstr += self.transform_arc(ar)
