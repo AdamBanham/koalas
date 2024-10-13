@@ -464,7 +464,8 @@ alpha_plus_lpn_4 = LabelledPetriNet(
         ],
         name='Petri net'
 )
-alpha_plus_log_5 = EventLog(
+alpha_plus_log_5 = eval(
+"""EventLog(
 	[Trace(['a','b','f','i','d','h','j'])] * 1+
 	[Trace(['a','b','f','d','i','h','j'])] * 1+
 	[Trace(['a','b','f','d','h','i','j'])] * 1+
@@ -1220,7 +1221,8 @@ alpha_plus_log_5 = EventLog(
 	[Trace(['a','d','b','c','b','c','b','f','i','h','j'])] * 1+
 	[Trace(['a','d','b','c','b','c','b','f','h','i','j'])] * 1+
 	[Trace(['a','d','b','c','b','c','b','h','f','i','j'])] * 1
-) 
+)"""
+)
 alpha_plus_lpn_5 = LabelledPetriNet(
         places=[
                 Place("P_sink",pid="dbdd0237-8ad1-41e6-8304-b936ae99afd0"),
