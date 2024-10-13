@@ -292,7 +292,6 @@ class OptimisedAlphaTest(SingleThreadAlphaTest):
     def setUp(self):
         from pmkoalas._logging import setLevel
         from logging import INFO
-        setLevel(INFO)
         self.miner = AlphaMinerInstance(optimised=True)
 
     def tearDown(self) -> None:
