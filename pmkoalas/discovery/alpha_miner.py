@@ -15,7 +15,7 @@ from copy import deepcopy,copy
 from pmkoalas.simple import EventLog
 from pmkoalas._logging import info,debug
 from pmkoalas.directly import DirectlyFollowPair
-from pmkoalas.models.petrinet import LabelledPetriNet
+from pmkoalas.models.petrinet import LabelledPetriNet, Arc
 from pmkoalas.discovery.meta import DiscoveryTechnique
 
 class AlphaRelationType(Enum):
