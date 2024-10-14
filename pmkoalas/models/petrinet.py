@@ -712,13 +712,19 @@ def parse_pnml_for_dpn(filepath:str) -> PetriNetWithData:
             guard = Guard(Expression(transition.attrib['guard']))
         else: 
             guard = Guard(Expression("true"))
+        # check for silence 
+        if "invisible"  in transition.attrib.keys():
+            silent = transition.attrib["invisible"] == "true"
+        else:
+            silent = False
         # making a transition
         tid = lid if lid != None else id 
         transition_ids[id] = tid 
         parsed = GuardedTransition( 
             transition.find("name").find("text").text,
             guard,
-            tid
+            tid,
+            silent
         )
         transitions[tid] = parsed
     ### parse the arcs    
