@@ -33,6 +33,7 @@ START_PLACE_COLOUR = "#c5e1a5"
 FINAL_PLACE_COLOUR = "#ef9a9a"
 PLACE_COLOUR = "#ffe0b2"
 TRANSITION_COLOUR = "#81c784"
+TAU_COLUR = "lightgray"
 ARC_COLOUR = "#263238"
 BACKWARDS_COLOUR = "gray"
 FONT_COLOUR = "black"
@@ -78,8 +79,11 @@ def lpn_prettier_dot(lpn:LabelledPetriNet):
         ret += f"\t\tnode[shape=box,style=\"rounded,filled\",fillcolor=\"{TRANSITION_COLOUR}\",width=2,penwidth=3,fontsize=18,fontname=\"roboto\",margin=\"0, 0.2\"];\n"
         for t in lpn.transitions:
             nodeIds[t.nodeId] = f"n{nid}"
-            label = '<'+'<BR/>'.join([t.name[i:i+16] for i in range(0, len(t.name), 16)])+">"
-            ret += f"\t\t{nodeIds[t.nodeId]}[label={label}];\n"
+            if (t.silent):
+                ret += f"\t\t{nodeIds[t.nodeId]}[xlabel={t.name}, fillcolor=\"{TAU_COLUR}\", width=\"0.25\", height=1, margin=0, label=\"\"];\n" 
+            else:
+                label = '<'+'<BR/>'.join([t.name[i:i+12] for i in range(0, len(t.name), 12)])+">"
+                ret += f"\t\t{nodeIds[t.nodeId]}[label={label}];\n"
             nid += 1
         assert nid == len(lpn.places) + len(lpn.transitions)
         ret += "\t}\n"
