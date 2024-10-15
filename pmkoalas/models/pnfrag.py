@@ -52,7 +52,7 @@ ID_PREFIX		:: '__'
 WEIGHT		 	:: NUM_STR
 ID             		:: NUM_STR
 NUM_STR			:: numeric string
-SILENT_LABEL            :: 'tau'
+SILENT_LABEL            :: 'tau' || 'tau' NUM_STR
 LABEL             	:: alphanumeric string
 
 This is adapted from PetriNetFragmentParser.java in the prom-helpers library.
@@ -79,7 +79,7 @@ class TokenInfo(Enum):
     WEIGHTED_TRAN_END = "\\}",
     ID_PREFIX = ID_LEXEME,
     EDGE = "->",
-    SILENT_LABEL = "tau",
+    SILENT_LABEL = "tau[0-9]*",
     LABEL = "[a-zA-Z][a-zA-Z0-9]*",
     WEIGHT = "[0-9]+\\.[0-9]+",
     ID = "[0-9]+",
