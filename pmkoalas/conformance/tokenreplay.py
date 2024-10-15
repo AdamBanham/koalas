@@ -92,11 +92,35 @@ class PetriNetMarking():
             next_mark[outcoming] = next_mark[outcoming] + 1
         return PetriNetMarking(self._net, next_mark)
     
+    def contains(self, place:'Place') -> bool:
+        """
+        Returns true if the given place is in the marking.
+        """
+        return self._mark[place] > 0
+    
+    def is_subset(self, other:'PetriNetMarking') -> bool:
+        """
+        Returns true if this marking is a subset of the other marking.
+        """
+        for place in self._mark:
+            if self._mark[place] > other._mark[place]:
+                return False
+        return True
+    
+    def reached_final(self) -> bool:
+        """
+        Returns true if the marking is the final marking of the net.
+        """
+        return self == self._net.final_marking
+    
     # data-model functions
     def __eq__(self, other: object) -> bool:
         if (isinstance(other, PetriNetMarking)):
             return self._mark == other._mark
         return False
+    
+    def __hash__(self) -> int:
+        return hash(tuple(sorted(self._mark.items(),key=lambda x: x[0].name)))
     
 class PetriNetFiringSequence():
     """
