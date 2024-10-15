@@ -7,8 +7,9 @@ from __future__ import annotations # required for typing checks
 from typing import Iterable, List, Mapping, Set, Tuple
 from copy import deepcopy
 from time import time
+from logging import DEBUG
 
-from pmkoalas._logging import info, debug, enable_logging
+from pmkoalas._logging import info, debug, enable_logging, get_logger
 from pmkoalas.directly import DirectlyFollowPair,FollowLanguage
 from pmkoalas.directly import DIRECTLY_SOURCE,DIRECTLY_END
 from pmkoalas.directly import extract_df_pairs
@@ -153,12 +154,13 @@ class EventLog():
                     continue
                 compute_time = time()
                 # build initial flow
-                info(f"working on :: {trace=} @ {freq=}")
+                debug(f"working on :: {trace=} @ {freq=}")
                 relations = extract_df_pairs(list(trace), freq=freq)
-                info(f"starting pair :: {relations[0]}")
-                for pair in relations[1:-1]:
-                    info(f"pair :: {pair}")
-                info(f"ending with :: {relations[-1]}")
+                debug(f"starting pair :: {relations[0]}")
+                if get_logger().level == DEBUG:
+                    for pair in relations[1:-1]:
+                        debug(f"pair :: {pair}")
+                debug(f"ending with :: {relations[-1]}")
 
                 # update lang
                 self._relations  = self._relations + \

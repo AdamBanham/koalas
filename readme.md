@@ -54,3 +54,9 @@ in detail.
 It is better to delete code that is not used, than to keep it
 around. You have written it once, you will write it better the 
 next time. Don't be afraid to let it go.
+
+## Politely ask for more resources
+
+While many optimisations can be done when asking for more threads and 
+resources of the user's system, such optimisations should always be turned 
+off by default. 
