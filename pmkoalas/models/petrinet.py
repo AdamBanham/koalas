@@ -576,6 +576,9 @@ def convert_net_to_xml(net:LabelledPetriNet,
         if isinstance(tran, GuardedTransition):
             attribs['guard'] = str(tran.guard)
             attributes_for_guards.update(tran.guard.variables())
+        # check for silent
+        if tran.silent:
+            attribs['invisible'] = "true"
         # make a transition
         tranNode = ET.SubElement(page,'transition', 
                         attrib=attribs )
