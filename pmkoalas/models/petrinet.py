@@ -554,11 +554,11 @@ def convert_net_to_xml(net:LabelledPetriNet,
                         'localNodeID' : getUUID()
                     }
                 )
-        if net.initial_marking and net.initial_marking.contains(place):
+        if net.initial_marking is not None and net.initial_marking.contains(place):
             imarking = ET.SubElement(placeNode,'initialMarking')
             text_node = ET.SubElement(imarking,'text')
             text_node.text = str(net.initial_marking._mark[place])
-        if net.final_marking and net.final_marking.contains(place):
+        if net.final_marking is not None and net.final_marking.contains(place):
             fmarking = ET.SubElement(placeNode,'finalMarking')
             text_node = ET.SubElement(fmarking,'text')
             text_node.text = str(net.final_marking._mark[place])
