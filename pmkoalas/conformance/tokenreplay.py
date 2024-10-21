@@ -96,7 +96,9 @@ class PetriNetMarking():
         """
         Returns true if the given place is in the marking.
         """
-        return self._mark[place] > 0
+        if (place not in self._mark.keys()):
+            return self._mark[place] > 0
+        return False
     
     def is_subset(self, other:'PetriNetMarking') -> bool:
         """
@@ -114,6 +116,11 @@ class PetriNetMarking():
         return self == self._net.final_marking
     
     # data-model functions
+    def __getitem__(self, place:'Place') -> int:
+        if (self.contains(place)):
+            return self._mark[place]
+        return 0
+
     def __str__(self) -> str:
         vals = [ (i,v) for i,v in self._mark.items() if v > 0 ]
         return str(vals)
