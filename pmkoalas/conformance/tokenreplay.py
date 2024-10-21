@@ -96,7 +96,7 @@ class PetriNetMarking():
         """
         Returns true if the given place is in the marking.
         """
-        if (place not in self._mark.keys()):
+        if (place in self._mark.keys()):
             return self._mark[place] > 0
         return False
     
