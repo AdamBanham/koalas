@@ -465,7 +465,7 @@ class PetriNetDOTFormatter:
         fstr = 'n{} [shape="box",margin="0, 0.1",label="{} {}",style="filled"];\n'
         tl = tran.name if tran.name and tran.name != 'tau' else '&tau;'
         fstr = f'n{str(ti)} [shape="box",margin="0, 0.1",'
-        fstr += f'label="{tran.weight}", style="filled",'
+        # fstr += f'label="{tran.weight}", style="filled",'
         height = self._default_height
         fstr += f'height="{height}", width="{height}"'
         fstr += '];\n'
@@ -476,8 +476,8 @@ class PetriNetDOTFormatter:
         return fstr.format('n' + str(pi),place.name)
 
     def transform_arc(self,arc) -> str:
-        from_node = self._nodemap[arc.from_node]
-        to_node = self._nodemap[arc.to_node]
+        from_node = self._nodemap[arc.from_node.nodeId]
+        to_node = self._nodemap[arc.to_node.nodeId]
         return f'n{from_node}->n{to_node}\n'
 
     def transform_net(self) -> str:
@@ -491,11 +491,11 @@ class PetriNetDOTFormatter:
         ni = 1
         for pl in self._pn.places:
             ni += 1
-            self._nodemap[pl] = ni
+            self._nodemap[pl.nodeId] = ni
             dotstr += self.transform_place(pl,ni)
         for tr in self._pn.transitions:
             ni += 1
-            self._nodemap[tr] = ni
+            self._nodemap[tr.nodeId] = ni
             dotstr += self.transform_transition(tr,ni)
         for ar in self._pn.arcs:
             dotstr += self.transform_arc(ar)
@@ -554,11 +554,11 @@ def convert_net_to_xml(net:LabelledPetriNet,
                         'localNodeID' : getUUID()
                     }
                 )
-        if net.initial_marking and net.initial_marking.contains(place):
+        if net.initial_marking is not None and net.initial_marking.contains(place):
             imarking = ET.SubElement(placeNode,'initialMarking')
             text_node = ET.SubElement(imarking,'text')
             text_node.text = str(net.initial_marking._mark[place])
-        if net.final_marking and net.final_marking.contains(place):
+        if net.final_marking is not None and net.final_marking.contains(place):
             fmarking = ET.SubElement(placeNode,'finalMarking')
             text_node = ET.SubElement(fmarking,'text')
             text_node.text = str(net.final_marking._mark[place])
@@ -576,6 +576,9 @@ def convert_net_to_xml(net:LabelledPetriNet,
         if isinstance(tran, GuardedTransition):
             attribs['guard'] = str(tran.guard)
             attributes_for_guards.update(tran.guard.variables())
+        # check for silent
+        if tran.silent:
+            attribs['invisible'] = "true"
         # make a transition
         tranNode = ET.SubElement(page,'transition', 
                         attrib=attribs )
@@ -663,7 +666,8 @@ def export_net_to_pnml(
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
 
-def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
+def parse_pnml_into_lpn(filepath:str,
+        use_localnode_id:bool=True) -> LabelledPetriNet:
     """
     Constructs a labelled Petri net from the given filepath to a pnml file.
     """
@@ -695,7 +699,7 @@ def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
                 lid = tools.attrib["localNodeID"]
         id = place.attrib["id"]
         # making a place
-        pid = lid if lid != None else id
+        pid = lid if lid != None and use_localnode_id else id
         place_ids[id] = pid
         parsed = Place( place.find("name").find("text").text, pid)
         places[pid] = parsed
@@ -720,7 +724,7 @@ def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
         else:
             silent = False
         # making a transition
-        tid = lid if lid != None else id 
+        tid = lid if lid != None and use_localnode_id else id 
         transition_ids[id] = tid 
         parsed = Transition( 
             transition.find("name").find("text").text,
@@ -744,7 +748,7 @@ def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
         src = node_ids[arc.attrib["source"]]
         tgt = node_ids[arc.attrib["target"]]
         # making an arc 
-        aid = lid if lid != None else id  # we aren't storing the actual id??
+        aid = lid if lid != None and use_localnode_id else id  # we aren't storing the actual id??
         src_node = nodes[src]
         tgt_node = nodes[tgt]
         arcs.add(Arc(

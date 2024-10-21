@@ -30,7 +30,7 @@ expectedXML = '''<pnml>
           <text>I</text>
         </name>
       </place>
-      <transition id="transition-2">
+      <transition id="transition-2" invisible="true">
         <name>
           <text>tau</text>
         </name>

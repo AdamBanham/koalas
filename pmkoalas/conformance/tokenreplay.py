@@ -3,13 +3,13 @@ This module focuses on providing ways to produce a log from models in the class
 of Petri nets.
 """
 from copy import deepcopy
-from typing import Dict, Iterable, Mapping,Set,List
+from typing import Dict, Iterable, Mapping,Set,List,Tuple
 
 from pmkoalas import __version__
 from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
-from pmkoalas.simple import Trace
+from pmkoalas.simple import Trace, EventLog
 from pmkoalas.models.transitiontree import TransitionTreeGuard
-from pmkoalas._logging import info, InfoQueueProcessor, InfoIteratorProcessor
+from pmkoalas._logging import info, debug, InfoQueueProcessor, InfoIteratorProcessor
 
 #typing imports
 from typing import TYPE_CHECKING
@@ -96,7 +96,9 @@ class PetriNetMarking():
         """
         Returns true if the given place is in the marking.
         """
-        return self._mark[place] > 0
+        if (place in self._mark.keys()):
+            return self._mark[place] > 0
+        return False
     
     def is_subset(self, other:'PetriNetMarking') -> bool:
         """
@@ -114,6 +116,15 @@ class PetriNetMarking():
         return self == self._net.final_marking
     
     # data-model functions
+    def __getitem__(self, place:'Place') -> int:
+        if (self.contains(place)):
+            return self._mark[place]
+        return 0
+
+    def __str__(self) -> str:
+        vals = [ (i,v) for i,v in self._mark.items() if v > 0 ]
+        return str(vals)
+    
     def __eq__(self, other: object) -> bool:
         if (isinstance(other, PetriNetMarking)):
             return self._mark == other._mark
@@ -245,6 +256,47 @@ class PlayoutTrace(ComplexTrace):
         Returns the guard of the i-th step.
         """
         return self[i].guard
+    
+def generate_traces_from_lpn(
+        model:'LabelledPetriNet', max_length:int,
+        strict:bool=False, updates_on:int=1000) \
+    -> EventLog:
+    """
+    Generates a simple log of a sample traces from a model with a length 
+    of max_length. By default returns traces that did not reach the final
+    marking. If strict is set to True, only traces that reach the final
+    marking are returned.
+    """
+    inprogress:List[Tuple[Trace,PetriNetMarking]] = [ 
+        (Trace([]), deepcopy(model.initial_marking)) ]
+    completed = []
+    pcount = 0
+    while len(inprogress) > 0:
+        trace, mark = inprogress.pop(0)
+        debug(f"processing trace {str(trace)} with marking {str(mark)}")
+        if len(trace) == max_length:
+            if strict:
+                if mark.reached_final():
+                    completed.append(trace)
+            else:
+                completed.append(trace)
+        else:
+            if mark.reached_final():
+                completed.append(trace)
+            else:
+                firable = mark.can_fire()
+                for t in firable:
+                    new_mark = mark.remark(t)
+                    new_trace = Trace(trace.sequence + [t.name])
+                    inprogress.append((new_trace, new_mark))
+        pcount += 1
+        if (pcount % updates_on == 0):
+            info(f"processing {len(inprogress)} partial executions of the lpn")
+            info(f"shortest trace :: {len(inprogress[0][0])}")
+            info(f"longest trace :: {len(inprogress[-1][0])}")
+            pcount = 0
+    return EventLog(completed, f"Generated traces from LPN ({model.name})")
+
 
 def construct_playout_log(model:'PetriNetWithData', max_length:int, 
         initial_marking:'PetriNetMarking', final_marking:'PetriNetMarking') \
