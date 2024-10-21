@@ -11,6 +11,7 @@ from pyparsing import (
     Word,
     nums,
     alphas,
+    printables,
     Combine,
     oneOf,
     opAssoc,
@@ -90,6 +91,7 @@ class EvalComparisonOp:
         "&gt;" : lambda a, b: a > b,
         "&gt;=" : lambda a,b: a >= b,
         "==": lambda a, b: a == b,
+        "!=": lambda a, b: a != b,
         '&amp;&amp;': lambda a,b: a and b,
         "<" : lambda a, b: a < b,
         "<=" : lambda a,b: a <= b,
@@ -157,8 +159,10 @@ class ExpressionParser():
         values = booleans | pos_real | neg_real | integer 
         values.setParseAction(self._constant)
 
-        literal = Combine('&#34;' + Word(alphas+" ") + '&#34;')
-        literal = literal | Combine('"' + Word(alphas+" "+"/") + '"')
+        non_op_chars = "".join([c for c in printables if c not in "<>=!&|'\""])
+
+        literal = Combine('&#34;' + Word(alphas+nums+non_op_chars+" ") + '&#34;')
+        literal = literal | Combine('"' + Word(alphas+nums+non_op_chars+" "+"/") + '"')
         literal.setParseAction(self._literal)
 
         variable = Combine(Word(alphas,exact=1) + Word(alphas + nums + "_:$"))
@@ -167,7 +171,7 @@ class ExpressionParser():
         self._operand = values | literal | variable
 
     def _expr_form(self) -> None:
-        comparisonop = oneOf("&lt;= <= &gt;= >= &lt; < &gt; > ==")
+        comparisonop = oneOf("&lt;= <= &gt;= >= &lt; < &gt; > == !=")
         self._expr = infixNotation(
             self._operand,
             [
