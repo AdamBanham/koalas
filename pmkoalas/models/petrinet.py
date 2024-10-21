@@ -663,7 +663,8 @@ def export_net_to_pnml(
     ET.indent( xml ) 
     ET.ElementTree(xml).write(fname,xml_declaration=True, encoding="utf-8")
 
-def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
+def parse_pnml_into_lpn(filepath:str,
+        use_localnode_id:bool=True) -> LabelledPetriNet:
     """
     Constructs a labelled Petri net from the given filepath to a pnml file.
     """
@@ -695,7 +696,7 @@ def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
                 lid = tools.attrib["localNodeID"]
         id = place.attrib["id"]
         # making a place
-        pid = lid if lid != None else id
+        pid = lid if lid != None and use_localnode_id else id
         place_ids[id] = pid
         parsed = Place( place.find("name").find("text").text, pid)
         places[pid] = parsed
@@ -720,7 +721,7 @@ def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
         else:
             silent = False
         # making a transition
-        tid = lid if lid != None else id 
+        tid = lid if lid != None and use_localnode_id else id 
         transition_ids[id] = tid 
         parsed = Transition( 
             transition.find("name").find("text").text,
@@ -744,7 +745,7 @@ def parse_pnml_into_lpn(filepath:str) -> LabelledPetriNet:
         src = node_ids[arc.attrib["source"]]
         tgt = node_ids[arc.attrib["target"]]
         # making an arc 
-        aid = lid if lid != None else id  # we aren't storing the actual id??
+        aid = lid if lid != None and use_localnode_id else id  # we aren't storing the actual id??
         src_node = nodes[src]
         tgt_node = nodes[tgt]
         arcs.add(Arc(
