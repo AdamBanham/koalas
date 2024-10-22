@@ -19,6 +19,8 @@ import xml.etree.ElementTree as ET
 from uuid import uuid4,UUID
 from xml.etree.ElementTree import parse
 from os import path
+from enum import Enum
+from dataclasses import dataclass
 
 #typing imports
 from typing import TYPE_CHECKING
@@ -408,7 +410,32 @@ class GuardedTransition(Transition):
     def __repr__(self) -> str:
         return f'GuardedTransition("{self.name}",guard={self.guard.__repr__()}'\
                + f',tid="{self.tid}",silent={self.silent})'
-    
+
+
+class PetriNetWithDataVariableType(Enum):
+    """
+    Enum for the types of variables in a PetriNetWithData.
+    """
+    CATEGORICAL = 1
+    NUMERIC = 2
+
+    def get_java_type(self) -> str:
+        """
+        Returns the Java type for the variable type.
+        """
+        if self == PetriNetWithDataVariableType.CATEGORICAL:
+            return 'java.lang.String'
+        elif self == PetriNetWithDataVariableType.NUMERIC:
+            return 'java.lang.Double'
+
+@dataclass(frozen=True,unsafe_hash=True)
+class PetriNetWithDataVariable():
+    """
+    Helper interface to handle variables in a PetriNetWithData.
+    """
+    name: str
+    type: PetriNetWithDataVariableType
+
 class PetriNetWithData(LabelledPetriNet):
     """
     An abstraction for extending a Petri net to one with data. This abstraction
@@ -420,11 +447,85 @@ class PetriNetWithData(LabelledPetriNet):
                  arcs: Iterable[Arc], 
                  name: str = 'Petri net with Data'):
         super().__init__(places, transitions, arcs, name)
+        self._variables = dict()
+        self._writes = dict()
+        self._reads = dict()
 
     @property
     def transitions(self) -> FrozenSet[GuardedTransition]:
-        return deepcopy(self._transitions)
+        return frozenset(self._transitions)
     
+    @property
+    def variables(self) -> FrozenSet[PetriNetWithDataVariable]:
+        """
+        Returns the set of variables noted on the net.
+        """
+        return frozenset(self._variables.values())
+    
+    def writes(self, transition: GuardedTransition) -> \
+        FrozenSet[PetriNetWithDataVariable]:
+        """
+        Returns the variables written by the given transition.
+        """
+        if transition not in self._writes:
+            return frozenset()
+        return frozenset(self._writes[transition])
+    
+    def reads(self, transition: GuardedTransition) -> \
+        FrozenSet[PetriNetWithDataVariable]:
+        """
+        Returns the variables read by the given transition.
+        """
+        if transition not in self._reads:
+            return frozenset()
+        return frozenset(self._reads[transition])
+    
+    def add_write(self, transition: GuardedTransition, 
+                  variable: PetriNetWithDataVariable) -> None:
+        """
+        Adds a write constraint to the given transition.
+        """
+        if transition not in self._writes:
+            self._writes[transition] = set()
+        self._writes[transition].add(variable)
+
+    def add_read(self, transition: GuardedTransition, 
+                 variable: PetriNetWithDataVariable) -> None:
+        """
+        Adds a read constraint to the given transition.
+        """
+        if transition not in self._reads:
+            self._reads[transition] = set()
+        self._reads[transition].add(variable)
+    
+    def _detect_read_constraints(self,
+            mapping:Dict[str,PetriNetWithDataVariableType]=None) -> None:
+        """
+        Helper function to detect read constraints based on the transitions
+        of the net.
+        
+        Defaults to the type of variables to numerical, but a mapping can be
+        passed to specify the type of variables.
+        """
+        self._reads = dict()
+        if mapping is None:
+            mapping = dict()
+        for transition in self.transitions:
+            self._reads[transition] = set()
+            for var in transition.guard.variables():
+                vtype = mapping.get(var) if var in mapping.keys() else \
+                            PetriNetWithDataVariableType.NUMERIC
+                variable = PetriNetWithDataVariable(
+                        var, vtype
+                    )
+                if var not in self._variables:
+                    self._variables[var] = variable
+                else:
+                    assert self._variables[var] == variable, \
+                        f"Variable {var} has inconsistent types with {variable} from {transition}"
+                self._reads[transition].add(self._variables[var])
+
+
     def __repr__(self) -> str:
         repr = "PetriNetWithData(\n"
         # add places
@@ -605,6 +706,11 @@ def convert_net_to_xml(net:LabelledPetriNet,
                                  'priority': '1',
                                  'weight' : str(tran.weight),
                                  'distributionType': 'IMMEDIATE'} )
+        # include writes constraints
+        if isinstance(net,PetriNetWithData):
+            for write in net.writes(tran):
+                write_node = ET.SubElement(tranNode,'writeVariable')
+                write_node.text = write.name
     arcid = 1
     for arc in net.arcs:
         aid = "arc-"+str(arcid)
@@ -632,10 +738,10 @@ def convert_net_to_xml(net:LabelledPetriNet,
     # check if dpn and if so add variables
     if (isinstance(net,PetriNetWithData)):
         vars = ET.SubElement(net_node, 'variables')
-        for attr in attributes_for_guards:
-            var = ET.SubElement(vars, 'variable', attrib={'type':'java.lang.Double'})
+        for attr in net.variables:
+            var = ET.SubElement(vars, 'variable', attrib={'type': attr.type.get_java_type()})
             name = ET.SubElement(var, 'name')
-            name.text = attr
+            name.text = attr.name
     
     return root
 
