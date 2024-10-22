@@ -259,7 +259,9 @@ class PlayoutTrace(ComplexTrace):
     
 def generate_traces_from_lpn(
         model:'LabelledPetriNet', max_length:int,
-        strict:bool=False, updates_on:int=1000) \
+        strict:bool=False, updates_on:int=1000,
+        use_id_as_concept:bool=False,
+        use_parallel:bool=False) \
     -> EventLog:
     """
     Generates a simple log of a sample traces from a model with a length 
@@ -271,30 +273,88 @@ def generate_traces_from_lpn(
         (Trace([]), deepcopy(model.initial_marking)) ]
     completed = []
     pcount = 0
-    while len(inprogress) > 0:
-        trace, mark = inprogress.pop(0)
-        debug(f"processing trace {str(trace)} with marking {str(mark)}")
-        if len(trace) == max_length:
-            if strict:
+    if (use_parallel):
+        # define work and pool
+        from joblib import Parallel, delayed
+        worker_pool = Parallel(n_jobs=-2, verbose=10)
+        def work(trace:Trace, mark:PetriNetMarking) \
+            -> List[Tuple[str,Trace,PetriNetMarking]]:
+            debug(f"processing trace {str(trace)} with marking {str(mark)}")
+            if len(trace) == max_length:
+                if strict:
+                    if mark.reached_final():
+                        return ("C",trace, mark)
+                    else:
+                        return ("E", None, None)
+                else:
+                    return ("C",trace, mark)
+            else:
                 if mark.reached_final():
+                    return ("C",trace, mark)
+                else:
+                    ret = []
+                    firable = mark.can_fire()
+                    for t in firable:
+                        new_mark = mark.remark(t)
+                        if (use_id_as_concept):
+                            new_trace = Trace(trace.sequence + [t.tid])
+                        else:
+                            new_trace = Trace(trace.sequence + [t.name])
+                        ret.append((new_trace, new_mark))
+                    return ("IP",ret)
+        # batch work and sync after each batch
+        while len(inprogress) > 0:
+            batch = inprogress[:updates_on]
+            inprogress = inprogress[updates_on:]
+            debug(f"processing batch of partial states :: {len(batch)}")
+            results = worker_pool(
+                delayed(work)(trace, mark) for trace, mark in batch
+            )
+            for result in results:
+                if result[0] == "C":
+                    completed.append(result[1])
+                elif result[0] == "IP":
+                    for (trace, mark) in result[1]:
+                        inprogress.append((trace, mark))
+                else:
+                    # do nothing the worker did not produce
+                    pass
+            pcount += len(batch)
+            if (pcount > updates_on):
+                info(f"processing {len(inprogress)} partial executions of the lpn")
+                info(f"shortest trace :: {len(inprogress[0][0])}/{max_length}")
+                info(f"longest trace :: {len(inprogress[-1][0])}/{max_length}")
+                info(f"generated {len(completed)} executions that have reached the final marking")
+                pcount = pcount - updates_on
+    else:
+        while len(inprogress) > 0:
+            trace, mark = inprogress.pop(0)
+            debug(f"processing trace {str(trace)} with marking {str(mark)}")
+            if len(trace) == max_length:
+                if strict:
+                    if mark.reached_final():
+                        completed.append(trace)
+                else:
                     completed.append(trace)
             else:
-                completed.append(trace)
-        else:
-            if mark.reached_final():
-                completed.append(trace)
-            else:
-                firable = mark.can_fire()
-                for t in firable:
-                    new_mark = mark.remark(t)
-                    new_trace = Trace(trace.sequence + [t.name])
-                    inprogress.append((new_trace, new_mark))
-        pcount += 1
-        if (pcount % updates_on == 0):
-            info(f"processing {len(inprogress)} partial executions of the lpn")
-            info(f"shortest trace :: {len(inprogress[0][0])}")
-            info(f"longest trace :: {len(inprogress[-1][0])}")
-            pcount = 0
+                if mark.reached_final():
+                    completed.append(trace)
+                else:
+                    firable = mark.can_fire()
+                    for t in firable:
+                        new_mark = mark.remark(t)
+                        if (use_id_as_concept):
+                            new_trace = Trace(trace.sequence + [t.tid])
+                        else:
+                            new_trace = Trace(trace.sequence + [t.name])
+                        inprogress.append((new_trace, new_mark))
+            pcount += 1
+            if (pcount % updates_on == 0):
+                info(f"processing {len(inprogress)} partial executions of the lpn")
+                info(f"shortest trace :: {len(inprogress[0][0])}/{max_length}")
+                info(f"longest trace :: {len(inprogress[-1][0])}/{max_length}")
+                info(f"generated {len(completed)} executions that have reached the final marking")
+                pcount = 0
     return EventLog(completed, f"Generated traces from LPN ({model.name})")
 
 
