@@ -57,6 +57,7 @@ def verbosecmp(obj1:object,obj2:object) -> str:
                         + f"  {obj1.__dict__[k]} vs\n  {obj2.__dict__[k]}\n"
     return result
 
+
 class Place:
     """
     This a hashable and identifable place for a petri net.
@@ -97,6 +98,7 @@ class Place:
 
     def __repr__(self) -> str:
         return f'Place("{self.name}",pid="{self.pid}")'
+
 
 class Transition:
     """
@@ -156,6 +158,7 @@ class Transition:
         return f'Transition("{self.name}",tid="{self.tid}",weight={self.weight},' \
                + f'silent={self.silent})'
 
+
 SILENT_TRANSITION_DEFAULT_NAME='tau'
 def silent_transition(name=None,tid=None,weight=None):
     tn = SILENT_TRANSITION_DEFAULT_NAME
@@ -168,6 +171,7 @@ def silent_transition(name=None,tid=None,weight=None):
     if weight:
         tw = weight
     return Transition(name=tn,weight=tw,tid=ttid,silent=True)
+
 
 class Arc:
     """
@@ -203,6 +207,7 @@ class Arc:
         return f'Arc(from_node={self.from_node.__repr__()},' \
                + f'to_node={self.to_node.__repr__()})'
 
+
 class LabelledPetriNet:
     """
     This is a data structure for a class of Petri Nets.
@@ -212,7 +217,6 @@ class LabelledPetriNet:
     labels/names and identifiers. Each instance of this class, 
     has a name or title for the net.
     """
-    
 
     def __init__(self, places:Iterable[Place], transitions:Iterable[Transition],
                  arcs:Iterable[Arc], 
@@ -306,6 +310,7 @@ class LabelledPetriNet:
             _str += f"\t\t- {a}\n"
         return _str
     
+
 class BuildablePetriNet(LabelledPetriNet):
     """
     This class allows for the builder design pattern to be used
@@ -376,6 +381,7 @@ class BuildablePetriNet(LabelledPetriNet):
                    self._arcs   == self._arcs
         return False
 
+
 class GuardedTransition(Transition):
     """
     An abstraction for a transition with a guard.
@@ -409,6 +415,7 @@ class GuardedTransition(Transition):
         return f'GuardedTransition("{self.name}",guard={self.guard.__repr__()}'\
                + f',tid="{self.tid}",silent={self.silent})'
     
+
 class PetriNetWithData(LabelledPetriNet):
     """
     An abstraction for extending a Petri net to one with data. This abstraction
