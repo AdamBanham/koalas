@@ -339,7 +339,7 @@ def find_alignments_for_variants_pm4py(log:EventLog, lpn:LabelledPetriNet) \
                 debug("****")
                 ret[Trace(variant)] = Alignment(moves)
     else:
-        raise ImportError("pm4py (~2.2.22) is required for this engine to function.")
+        raise ImportError("pm4py (~2.7) is required for this engine to function.")
 
     ret.lock()
     return ret

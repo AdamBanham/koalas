@@ -189,16 +189,13 @@ class ClassificationProblem:
             for k,v in col_types.items():
                 temp[k] = v.pop()
             col_types = temp
-            print(col_types)
             cat_cols = list( k for k,v in col_types.items() if v == str )
-            print(cat_cols)
             # create dataset in pandas for target and columns
             cols = sorted(list(self._seen_vars))
             num_cols = [ c for c in cols if c not in cat_cols ]
             X = [ [ e.data[c] if c in e.data.keys() else np.nan for c in cols] 
                  for e in self._examples ]
             X = pd.DataFrame(X, columns=cols)
-            print(X.head(5))
             targets = sorted(list( t.name for t in self._targets))
             targets = dict( (t,i) for i,t in enumerate(targets) )
             Y = [ targets[e.target.name] for e in self._examples ]
@@ -215,7 +212,6 @@ class ClassificationProblem:
             num_imputer = SimpleImputer(strategy="constant", 
                                         fill_value=-99,copy=False)
             X[num_cols] = num_imputer.fit_transform(X[num_cols])
-            print(X.head(5))
             cat_transformers = Pipeline(steps=[
                 ('impute', cat_imputer),
                 ('encode', OneHotEncoder(handle_unknown='ignore',
@@ -242,7 +238,7 @@ class ClassificationProblem:
                      class_names=sorted(list( t.name for t in self._targets)),  
                      filled=True, rounded=True,  
                      special_characters=True)  
-            print(dot_data)
+            debug("discovered decision tree:: "+dot_data)
             # input("Press enter to continue")
             # attempt to construct guards from paths for all targets
             guards = dict()
@@ -280,7 +276,7 @@ class ClassificationProblem:
                     lclass = class_names[np.argmax(values[left][0])]
                     rclass = class_names[np.argmax(values[right][0])]
                     if lclass == rclass:
-                        print("both children are leaf nodes with the same class")
+                        debug("both children are leaf nodes with the same class")
                         completed.append(hist+[("F",node_id)])
                         continue
                 # check to see if both children are leaf nodes 
@@ -297,7 +293,7 @@ class ClassificationProblem:
                     completed.append(hist+[("F",node_id)])
             # for each path, construct the guard
             for path in completed:
-                print(path)
+                debug(path)
                 if len(path) == 0:
                     continue
                 elif len(path) == 1:
@@ -312,7 +308,7 @@ class ClassificationProblem:
                             feature_names[feature[node_id]],
                             "<=", threshold[node_id], 
                             num_cols, cat_cols)
-                        print(f"converted left node :: {converted_dnode}")
+                        debug(f"converted left node :: {converted_dnode}")
                         guard.append( 
                             converted_dnode
                         )
@@ -321,7 +317,7 @@ class ClassificationProblem:
                             feature_names[feature[node_id]],
                             ">", threshold[node_id], 
                             num_cols, cat_cols)
-                        print(f"converted right node :: {converted_dnode}")
+                        debug(f"converted right node :: {converted_dnode}")
                         guard.append( 
                             converted_dnode
                         )
@@ -330,12 +326,12 @@ class ClassificationProblem:
                 guards[leaf_class].append("&&".join(guard))
             ret_guards = dict()
             for tar in self._targets:
-                print(f"Guards for {tar.name} ::")
+                debug(f"Guards for {tar.name} ::")
                 if tar.name in guards.keys():
                     if len(guards[tar.name]) >= 1:
                         ret_gaurd = ""
                         for g in guards[tar.name]:
-                            print(f"\t{g}")
+                            debug(f"\t{g}")
                             ret_gaurd += f"({g})||"
                         ret_guards[tar] = Guard(ret_gaurd[:-2])
                     else:
@@ -348,17 +344,17 @@ class ClassificationProblem:
                     ])
                     assert len(list(l for l in red if l == "(")) == \
                            len(list(l for l in red if l == ")"))
-                    print(f"reduction completed for '{tar.name}'::")
-                    print(red)
+                    debug(f"reduction completed for '{tar.name}'::")
+                    debug(red)
                     g = Guard(red)
                     ret_guards[tar] = g
-                    print(f"where the reduced guard (pmkoalas) is ::\n\t{g}")
+                    debug(f"where the reduced guard (pmkoalas) is ::\n\t{g}")
                 except Exception as e:
-                    print(f"Failed to reduce :: {str(e)}")
+                    debug(f"Failed to reduce :: {str(e)}")
                 # input("Press enter to continue")
             return ret_guards, col_types
         else:
-            raise ImportError("sklearn (~x.x.x) is required to solve " \
+            raise ImportError("sklearn (~1.5) is required to solve " \
                               +"classification problems")
 
     def describe(self) -> str:
