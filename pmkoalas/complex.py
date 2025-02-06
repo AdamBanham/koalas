@@ -29,13 +29,6 @@ class ComplexEvent():
     def __init__(self, activity:str, data:Mapping[str,object]) -> None:
         self._act = activity
         self._map = deepcopy(data)
-        self._hash = hash(
-            tuple(
-                [self._act,]+
-                [hash(tuple([key,val])) for key,val 
-                 in self._map.items()]
-                )
-        )
 
     def activity(self) -> str:
         """ the process activity denoted by this event """
@@ -71,7 +64,18 @@ class ComplexEvent():
         return repr
     
     def __hash__(self) -> int:
-        return self._hash
+        return hash(
+            tuple(
+                [self._act,]+
+                [hash(tuple([key,val])) for key,val 
+                 in self._map.items()]
+                )
+        )
+    
+    def __eq__(self, value):
+        if (isinstance(value, ComplexEvent)):
+            return self.activity() == value.activity() \
+                   and self.data() == value.data()
     
 class ComplexTrace():
     """
