@@ -1,0 +1,278 @@
+<?xml version='1.0' encoding='utf-8'?>
+<pnml>
+  <net type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel" id="example_parallel_net">
+    <name>
+      <text>example_parallel_net</text>
+    </name>
+    <page id="page1">
+      <place id="place-5">
+        <name>
+          <text>p7</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="5fe3163b-202c-499e-b382-fa0f975ef186" />
+      </place>
+      <place id="place-3">
+        <name>
+          <text>p6</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="c962d003-199f-4ced-ab4f-ee6dbe2c83a8" />
+      </place>
+      <place id="place-9">
+        <name>
+          <text>F</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="c8a04fa8-4cc9-40ba-8be3-b0f3cae4c359" />
+        <finalMarking>
+          <text>1</text>
+        </finalMarking>
+      </place>
+      <place id="place-2">
+        <name>
+          <text>p2</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="6776797d-6238-49fb-afe9-160d3903dc72" />
+      </place>
+      <place id="place-4">
+        <name>
+          <text>p3</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="2ff37885-dac4-4cf1-b58b-1fccbf8d6886" />
+      </place>
+      <place id="place-10">
+        <name>
+          <text>p9</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="3823dc9a-8a92-4e9a-af69-62acec9acd30" />
+      </place>
+      <place id="place-6">
+        <name>
+          <text>p4</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="4494e239-4369-4fa0-afe9-68d333002884" />
+      </place>
+      <place id="place-8">
+        <name>
+          <text>p5</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="f9408176-8da9-4379-b157-cc9006f20e87" />
+      </place>
+      <place id="place-1">
+        <name>
+          <text>I</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="217b8508-fda6-4b88-9592-c7cd5db86f73" />
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="place-7">
+        <name>
+          <text>p8</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" localNodeID="52084277-b37f-4c29-81fc-e8e49fbf035e" />
+      </place>
+      <transition id="transition-111" invisible="true">
+        <name>
+          <text>tau</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="61414486-649e-4ebe-b49d-347d918f4d14" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-113">
+        <name>
+          <text>e</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="b8a3069a-efef-419d-99f2-1299105cdd15" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-116">
+        <name>
+          <text>g</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="35e37d56-7953-4778-9762-c7fd5a955435" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-118">
+        <name>
+          <text>d</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="6d9eaaf9-67a6-427e-a780-6cddbf2e8228" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-117">
+        <name>
+          <text>b</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="e0c07096-d046-4b09-b801-1c011d7399e7" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-114">
+        <name>
+          <text>c</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="2456d40b-d589-4475-b260-2cfda2a9d41c" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-112">
+        <name>
+          <text>a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="8ee15471-82a3-4911-a62d-832a8f01a45b" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-119" invisible="true">
+        <name>
+          <text>tau2</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="52ba2f4d-1e76-476e-9246-75ceb5867c58" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-120">
+        <name>
+          <text>h</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="e393fb14-4fdf-4de0-8b4e-cac20d0fca84" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="transition-115">
+        <name>
+          <text>f</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="" localNodeID="663053d4-61ba-4a5a-ac80-551d0a640a45" />
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1.0" distributionType="IMMEDIATE" />
+      </transition>
+      <arc source="transition-111" target="place-3" id="arc-1">
+        <toolspecific tool="ProM" version="6.4" localNodeID="dc14aece-9827-4a3e-9c0c-77ad59111dc0" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-10" target="transition-119" id="arc-2">
+        <toolspecific tool="ProM" version="6.4" localNodeID="6880ad7f-a9a3-490d-849d-82470af5379e" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-4" target="transition-117" id="arc-3">
+        <toolspecific tool="ProM" version="6.4" localNodeID="dabe4151-753c-43d7-9b53-837c6abbeeb6" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-120" target="place-10" id="arc-4">
+        <toolspecific tool="ProM" version="6.4" localNodeID="c152ab7d-d631-43be-8163-98bedb74853c" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-1" target="transition-111" id="arc-5">
+        <toolspecific tool="ProM" version="6.4" localNodeID="67bcedeb-b8ee-4439-8544-2426e69abf93" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-4" target="transition-114" id="arc-6">
+        <toolspecific tool="ProM" version="6.4" localNodeID="8547ef6d-bcca-4e3d-91a4-a53fa2debee9" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-112" target="place-4" id="arc-7">
+        <toolspecific tool="ProM" version="6.4" localNodeID="5b69b377-cbce-450d-8808-c6bdf0e1cd39" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-7" target="transition-120" id="arc-8">
+        <toolspecific tool="ProM" version="6.4" localNodeID="e8f739cd-a648-496a-83db-e8a7cc09553e" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-118" target="place-8" id="arc-9">
+        <toolspecific tool="ProM" version="6.4" localNodeID="426a270c-ac72-4843-8e2d-92e978db056e" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-111" target="place-2" id="arc-10">
+        <toolspecific tool="ProM" version="6.4" localNodeID="be6db44d-689e-4bc3-889b-80135134ed89" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-8" target="transition-119" id="arc-11">
+        <toolspecific tool="ProM" version="6.4" localNodeID="b585f3f6-1fae-42fd-8ab9-5da3bc756528" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-2" target="transition-112" id="arc-12">
+        <toolspecific tool="ProM" version="6.4" localNodeID="1b558975-9738-46aa-98d9-b6875dcea6f0" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-3" target="transition-113" id="arc-13">
+        <toolspecific tool="ProM" version="6.4" localNodeID="d4499f95-d0e2-4250-91da-41b9e97f7251" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-7" target="transition-116" id="arc-14">
+        <toolspecific tool="ProM" version="6.4" localNodeID="914cdf5b-cd23-4172-ae38-a2286d01f526" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-113" target="place-5" id="arc-15">
+        <toolspecific tool="ProM" version="6.4" localNodeID="d22c0758-3658-48c4-8491-5dcbabbf137e" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-117" target="place-6" id="arc-16">
+        <toolspecific tool="ProM" version="6.4" localNodeID="5f720628-a79e-4aae-a657-6c7fb3a212bf" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-115" target="place-7" id="arc-17">
+        <toolspecific tool="ProM" version="6.4" localNodeID="6cc6f1bd-b7f7-43e6-90f2-fadea48c2ca2" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-6" target="transition-118" id="arc-18">
+        <toolspecific tool="ProM" version="6.4" localNodeID="c8b0ef14-ad04-4e80-8c57-c09fcf54aa73" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-119" target="place-9" id="arc-19">
+        <toolspecific tool="ProM" version="6.4" localNodeID="5ce2285c-d2e0-4728-803c-9d5f0e526dea" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="place-5" target="transition-115" id="arc-20">
+        <toolspecific tool="ProM" version="6.4" localNodeID="5e03c6df-278f-4c9d-92d0-f041fb40d16b" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-116" target="place-5" id="arc-21">
+        <toolspecific tool="ProM" version="6.4" localNodeID="4b14e82c-d1b8-4a64-942a-5e499f132fa1" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc source="transition-114" target="place-6" id="arc-22">
+        <toolspecific tool="ProM" version="6.4" localNodeID="a2decf36-c6c5-4aba-9669-077f19f2f1d3" />
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+    </page>
+  </net>
+</pnml>
