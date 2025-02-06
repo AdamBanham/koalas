@@ -110,8 +110,8 @@ def create_net(net_title="", net_text="") -> LabelledPetriNet:
 
 def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
     """
-    Given a set of fragments following the gammar mentioned below, this function
-    returns a Petri net that contains all the fragments.
+    Returns a Petri net that is the result of progressively parsing each 
+    fragment.
 
     See the module documentation for a full grammar.
     """
