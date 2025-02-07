@@ -18,16 +18,19 @@ from pmkoalas.models.petrinet import LabelledPetriNet, PetriNetWithData
 from pmkoalas.models.petrinet import GuardedTransition, Arc, Place
 from pmkoalas.models.petrinet import PetriNetWithDataVariableType
 from pmkoalas.models.petrinet import PetriNetWithDataVariable
+from pmkoalas.models.petrinet import PetriNetMarking
 from pmkoalas.models.petrinet import export_net_to_pnml
+from pmkoalas.models.petrinet import preset_of_transition
 from pmkoalas.models.guards import Guard
 from pmkoalas._logging import info,debug
+from pmkoalas._struct import Stack
 
 from pmkoalas.enhancement.alignments import AlignmentMapping
 from pmkoalas.enhancement.alignments import AlignmentMoveType, Alignment
 from pmkoalas.enhancement.alignments import find_alignments_for_variants
 from pmkoalas.enhancement.classification_problems import find_classification_problems
 
-from typing import Set, Union, Literal, Tuple
+from typing import Set, Union, Literal, Tuple, Dict
 from copy import deepcopy
 
 def __find_new_place(dpn: PetriNetWithData) -> Place:
@@ -60,70 +63,6 @@ def __find_new_tau(dpn: PetriNetWithData) -> GuardedTransition:
         )
     return new_tau
 
-def __expand_by_adding_dummy_for_transition(dpn: PetriNetWithData,
-        variables:Set[PetriNetWithDataVariable], t: GuardedTransition) \
-    -> Tuple[PetriNetWithData, GuardedTransition]:
-    """
-    Expands the dpn with a silent transition to ensure that the given
-    variables are free before the firing of the given transition.
-    """
-    new_place = __find_new_place(dpn)
-    new_tau = __find_new_tau(dpn)
-    ## determine what flows need to be moved
-    input_flows = set([
-        f 
-        for f in dpn.arcs
-        if f.to_node == t
-    ])
-    ## redirect flows to new tau 
-    ## direct new place to old transition
-    new_places = set(dpn.places)
-    new_places.add(new_place)
-    new_transitions = set(dpn.transitions)
-    new_transitions.add(new_tau)
-    new_flows = set()
-    for f in dpn.arcs:
-        if f in input_flows:
-            new_flows.add(
-                Arc(
-                    f.from_node,
-                    new_tau
-                )
-            )
-        else:
-            new_flows.add(f)
-    new_flows.add(
-        Arc(
-            new_tau,
-            new_place
-        )
-    )
-    new_flows.add(
-        Arc(
-            new_place,
-            t
-        )
-    )
-    ## construct the new dpn
-    new_dpn = PetriNetWithData(
-        new_places, new_transitions, new_flows, dpn.name
-    )
-    new_dpn.set_initial_marking(dpn.initial_marking._mark)
-    new_dpn.set_final_marking(dpn.final_marking._mark)
-    new_dpn._detect_read_constraints(
-        dict( (v.name, v.type) 
-             for v in dpn.variables
-            )
-    )
-    ### add the new write constraints
-    for v in variables:
-        new_dpn.add_write(new_tau, v)
-    ### add old write constraints
-    for t in dpn.transitions:
-        for v in dpn.writes(t):
-            new_dpn.add_write(t, v)
-    return new_dpn, new_tau
-
 def __expand_by_adding_dummy_from_src(dpn: PetriNetWithData, 
         variables:Set[PetriNetWithDataVariable]) -> \
         Tuple[PetriNetWithData, GuardedTransition]:
@@ -139,50 +78,33 @@ def __expand_by_adding_dummy_from_src(dpn: PetriNetWithData,
     src = None
     for p in dpn.places:
         if dpn.initial_marking.contains(p):
+            if src is not None:
+                raise Exception("multiple source places detected, expected"
+                                + " a workflow net with one input place.")
             src = p
-            break
-    ## determine what flows need to be moved
-    postset_of_src = dpn.initial_marking.enabled()
-    postset_flows = set([
-        f 
-        for f in dpn.arcs
-        if f.from_node == src
-        and f.to_node in postset_of_src
-    ])
-    ## update flows with new arcs for tau 
-    ## and existing pointing to the alt src place
+    ## add new tau and new src to old src
     new_places = set(dpn.places)
     new_places.add(new_place)
     new_transitions = set(dpn.transitions)
     new_transitions.add(new_tau)
-    new_flows = set()
-    for f in dpn.arcs:
-        if f in postset_flows:
-            new_flows.add(
-                Arc(
-                    new_place,
-                    f.to_node
-                )
-            )
-        else:
-            new_flows.add(f)
+    new_flows = set(dpn.arcs)
     new_flows.add(
         Arc(
-            src,
+            new_place,
             new_tau
         )
     )
     new_flows.add(
         Arc(
             new_tau,
-            new_place
+            src
         )
     )
     ## construct the new dpn
     new_dpn = PetriNetWithData(
         new_places, new_transitions, new_flows, dpn.name
     )
-    new_dpn.set_initial_marking(dpn.initial_marking._mark)
+    new_dpn.set_initial_marking({new_place: 1})
     new_dpn.set_final_marking(dpn.final_marking._mark)
     new_dpn._detect_read_constraints(
         dict( (v.name, v.type) 
@@ -197,6 +119,75 @@ def __expand_by_adding_dummy_from_src(dpn: PetriNetWithData,
         for v in dpn.writes(t):
             new_dpn.add_write(t, v)
     return new_dpn, new_tau
+
+def __prefix_expansion(N:PetriNetWithData, f:GuardedTransition,
+                       ) -> PetriNetWithData:
+    """
+    Expands the given net N by adding a silent transition and a new place,
+    the silent transition has all writes needed for f to be satisfied, and 
+    the new place is swapped with a place from the preset of f. 
+    """
+    new_place = __find_new_place(N)
+    new_tau = __find_new_tau(N)
+    ## select a place from the preset of f
+    swap = list(preset_of_transition(N, f)).pop()
+    vars = N.reads(f)
+    ## construct the new net
+    new_places = set(N.places)
+    new_places.add(new_place)
+    new_transitions = set(N.transitions)
+    new_transitions.add(new_tau)
+    new_flows = set(N.arcs).difference(set( 
+        [Arc(swap, f)]
+    ))
+    new_flows.add(
+        Arc(
+            swap,
+            new_tau
+        )
+    )
+    new_flows.add(
+        Arc(
+            new_tau,
+            new_place
+        )
+    )
+    new_flows.add(
+        Arc(
+            new_place,
+            f
+        )
+    )
+    ## construct the new dpn
+    ret = PetriNetWithData(
+        new_places, new_transitions, new_flows, N.name
+    )
+    ret.set_initial_marking(N.initial_marking._mark)
+    ret.set_final_marking(N.final_marking._mark)
+    ret._detect_read_constraints(
+        dict( (v.name, v.type) 
+             for v in N.variables
+            )
+    )
+    ### add the new write constraints
+    for v in N.reads(f):
+        ret.add_write(new_tau, v)
+    ### add old write constraints
+    for t in N.transitions:
+        for v in N.writes(t):
+            ret.add_write(t, v)
+    return ret, new_tau
+
+def __add_expansion(N:PetriNetWithData, f:GuardedTransition, 
+                    vars:Set[PetriNetWithDataVariable]) \
+    -> PetriNetWithData:
+    """
+    Adds all variables as write constraints to the transition f for the 
+    given net N. 
+    """
+    for var in vars:
+        N.add_write(f, var)
+    return N
 
 
 def _expand_dpn_for_writes(dpn: PetriNetWithData,
@@ -231,71 +222,128 @@ def _expand_dpn_for_writes(dpn: PetriNetWithData,
         info("expanding dpn for write constraints using case 2")
         # add a silent transition before source to acount for write constraints
         ret_dpn, _ = __expand_by_adding_dummy_from_src(dpn, dpn.variables)
-        export_net_to_pnml(ret_dpn, 
-            debug_file_format.format(expansion=expansion),
-            include_prom_bits=True
-        )
         return ret_dpn 
     # case three : variables are used and there are shared variables between
     # transitions
     history = []
     info("expanding dpn for write constraints using case 3")
+    # add silient initialising transition for variables
     ret_dpn, nt = __expand_by_adding_dummy_from_src(dpn, dpn.variables)
-    history.append(nt)
-    export_net_to_pnml(ret_dpn, 
-            debug_file_format.format(expansion=expansion),
-            include_prom_bits=True
-    )
     expansion += 1
     # using the given path, travese the dpn and add constraints as needed
     path = ali.projected_path()
-    debug(f"length of path used for expansion :: {path}")
+    # add new tau to path
+    path = Stack(path[::-1])
+    path.push(nt)
+    info(f"length of path used for expansion :: {path}")
     ## now traverse the path and add write constraints via silent
     ## transitions as needed, i.e. when a variable is required but
     ## does not have a free write available
     seen = set()
-    free = set(ret_dpn.variables) 
-    name_to_var = deepcopy(ret_dpn._variables) 
+    f = None
+    N = ret_dpn
+    M = N.initial_marking
+    free:Set[PetriNetWithDataVariable]= set()
+    visited:Dict[PetriNetMarking, Set] = dict() 
+    # helpers
+    def find(old, N:PetriNetWithData) -> GuardedTransition:
+        for t in N.transitions:
+            if t.tid == old.tid:
+                return t
+        raise Exception(f"transition {old} not found in net")
+    def clr(free:Set,f:GuardedTransition, N:PetriNetWithData) -> Set:
+        return (free.difference(N.reads(f))).union(N.writes(f))
+    def psh(visited:dict, M:PetriNetMarking, free:Set) -> None:
+        visited[M] = deepcopy(free)
+    def fire(M:PetriNetMarking, f:GuardedTransition) -> PetriNetMarking:
+        return M.remark(f)
+    def reset(N:PetriNetWithData) -> PetriNetMarking:
+        ret = N.initial_marking
+        for fired in history:
+            ret = ret.remark(fired)
+        return ret
     # traverse path
-    for t in path:
-        curr_mark = ret_dpn.initial_marking
-        for ot in history:
-            assert ot in curr_mark.enabled(), f"transition was {ot} not enabled at marking {curr_mark._mark} in expanded dpn :: firable was {curr_mark.enabled()}"
-            curr_mark = curr_mark.remark(ot)
-        firable = curr_mark.enabled()
-        firable_ids = set([t.tid for t in firable])
-        assert t.tid in firable_ids, f"transition was {t.tid} not enabled at marking {curr_mark._mark} in expanded dpn :: firable was {firable}"
-        fired = set( ot for ot in ret_dpn.transitions if t.tid == ot.tid)
-        fired = fired.pop()
-        fired_vars = ret_dpn.reads(fired)
-        if len(fired_vars) > 0:
-            if len(fired_vars.intersection(free)) != len(fired_vars):
-                debug("expansion needed due to over overlap")
-                ret_dpn, nt = __expand_by_adding_dummy_for_transition(
-                    ret_dpn, fired_vars, fired
-                ) 
-                history.append(nt)
-        # remove used variables from firing
-        free = free.difference(fired_vars)       
-        history.append(fired)
-        # debug out expansion
-        export_net_to_pnml(ret_dpn, 
-            debug_file_format.format(expansion=expansion),
-            include_prom_bits=True
-        )
+    while not path.is_empty():
+        f = find(path.pop(),N)
+        info(f"working on transition:: {repr(f)}")
+        debug(f"current marking:: {M}")
+        debug(f"set of firable: {M.enabled()}")
+        # case 1: if we dont need any, and we have not visited next; or
+        # if we dont need any, and we are revisiting, but after firing 
+        # visted matches free.
+        need = len(N.reads(f)) > 0
+        visiting = M in visited
+        vmatchfree = visited[M].issubset(clr(free,f,N)) if visiting else False
+        if (
+            (not need and not visiting) 
+            or
+            (not need and visiting and vmatchfree)
+        ):
+            # trigger continue 
+            psh(visited, M, free)
+            M = fire(M, f)
+            free = clr(free, f, N)
+            history.append(f)
+            continue 
+        # case 2:  if we dont need any, and we are revisiting, but 
+        # after firing visited wont match free; or we are revisiting,
+        # and have f is satfied by free, but after firing visisted wont 
+        # match free.
+        fsat = N.reads(f).issubset(free)
+        if (
+            (not need and visiting and not vmatchfree)
+            or 
+            (visiting and fsat and not vmatchfree)
+        ):
+            # trigger add expansion
+            expansion += 1
+            info(f"triggered add expansion ({expansion})")
+            N = __add_expansion(N, f, visited[M])
+            psh(visited, M, free)
+            M = fire(M, f)
+            free = clr(free, f, N)
+            history.append(f)
+            continue
+        # case 3: if we are not revisiting, and f is satisfied by free; or,
+        # if we are revisiting, and f is satisfied by free, and after 
+        # firing visited will match free.
+        if (
+            (not visiting and fsat)
+            or 
+            (visiting and fsat and vmatchfree)
+        ):
+            # trigger continue 
+            psh(visited, M, free)
+            M = fire(M, f)
+            free = clr(free, f, N)
+            history.append(f)
+            continue
+        # otherwise, trigger prefix expansion
         expansion += 1
+        info(f"triggered prefix expansion ({expansion})")
+        N, nt = __prefix_expansion(N, f)
+        M = reset(N)
+        # readd f and add new tau to path
+        path.push(f)
+        path.push(nt)
+    # set ret as the last copy of N
+    ret_dpn = N
     # check that the path is still traversable
     curr_mark = ret_dpn.initial_marking
+    debug(f"final path :: {history}")
+    debug(f"initial marking :: {curr_mark}")
     for ot in history:
-        assert ot in curr_mark.enabled() , f"transition {ot} is not firabled in expanded dpn"
+        assert ot in curr_mark.enabled() , f"transition {ot} is not firable in expanded dpn"
         curr_mark = curr_mark.remark(ot)
+        debug(f"transition {ot} fired :: {curr_mark}")
+    debug(f"final marking :: {curr_mark}")
     assert curr_mark.reached_final(), "final marking not reached in expanded dpn"
     return ret_dpn
 
 DM_IGNORED_ATTRS = set(["time:", "lifecycle:"])
 
 def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
-    classification:Literal["single-bag","postset","marking","regions"]="postset",
+    identification:Literal["single-bag","postset","marking","regions"]="postset",
     alignment:AlignmentMapping=None, expand_on_writes:bool=True,
     ignored_attrs:Set[str]=DM_IGNORED_ATTRS) \
     -> PetriNetWithData:
@@ -312,7 +360,7 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
     else:
         ali = alignment
     # obtain the classification problems
-    problems = find_classification_problems(lpn, classification)
+    problems = find_classification_problems(lpn, identification)
     for prob in problems:
         info(f"found problem ::\n\t{prob}")
     for trace, instances in log.__iter__():
@@ -347,7 +395,7 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
                         )
             i += 1
             if i % 25 == 0 and i != 0:
-                info(f"handled {i}/{len(instances)} instances...")
+                info(f"handled {i}/{len(instances)} instances for {str(trace)}...")
         for prob in problems:
             info(prob.describe())
     # solve the classification problems
@@ -390,13 +438,15 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
                 t.tid,
                 t.silent
             )
+            info(f"adding guard :: {resulting[t]} to transition :: {t}")
         else:
-             mapping_trans[t] = GuardedTransition(
+            mapping_trans[t] = GuardedTransition(
                 t.name,
                 Guard("true"),
                 t.tid,
                 t.silent
             )
+            info(f"adding guard :: true to transition :: {t}")
     new_flows = set()
     for f in lpn.arcs:
         new_src = f.from_node
@@ -438,8 +488,6 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
         mapping
     )
     # expand the dpn to include write constraints
-    export_net_to_pnml(dpn, 'dpn_expansion_000.pnml', 
-                       include_prom_bits=True)
     if (expand_on_writes):
         # find the alignment with the longest projected path
         longest = -1
@@ -450,5 +498,6 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
                 long = ali 
                 longest = len(path)
         # expand using the longest projected path
-        dpn = _expand_dpn_for_writes(dpn, ali=long)
+        info(f"longest path :: {longest}")
+        dpn = _expand_dpn_for_writes(dpn, long)
     return dpn
