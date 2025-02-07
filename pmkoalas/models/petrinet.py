@@ -306,7 +306,26 @@ class LabelledPetriNet:
         for a in self.arcs:
             _str += f"\t\t- {a}\n"
         return _str
-    
+
+def preset_of_transition(net:LabelledPetriNet,transition:Transition
+    ) -> FrozenSet[Place]:
+    """
+    Returns the set of places that need to be marked for transition
+    to fire, or the preset of a transition.
+    """
+    return frozenset([arc.from_node 
+                      for arc in net.arcs 
+                      if arc.to_node == transition])
+
+def postset_of_transition(net:LabelledPetriNet,transition:Transition
+    ) -> FrozenSet[Place]:
+    """
+    Returns the set of places that are marked after the transition fires,
+    or the postset of a transition.
+    """
+    return frozenset([arc.to_node 
+                      for arc in net.arcs 
+                      if arc.from_node == transition])
 
 class BuildablePetriNet(LabelledPetriNet):
     """
