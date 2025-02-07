@@ -203,14 +203,14 @@ class ClassificationProblem:
             tree = DecisionTreeClassifier(
                 max_depth=15,
                 min_samples_split=max(int(len(self._examples)*0.05), 20),
-                min_samples_leaf=max(int(len(self._examples)*0.025), 1),
+                min_samples_leaf=max(int(len(self._examples)*0.025), 2),
                 ccp_alpha=0.01,
-                # class_weight="balanced"
+                class_weight="balanced"
             )
             cat_imputer = SimpleImputer(strategy="constant", 
                                         fill_value="unset",copy=False)
             num_imputer = SimpleImputer(strategy="constant", 
-                                        fill_value=-99,copy=False)
+                                        fill_value=0,copy=False)
             X[num_cols] = num_imputer.fit_transform(X[num_cols])
             cat_transformers = Pipeline(steps=[
                 ('impute', cat_imputer),
