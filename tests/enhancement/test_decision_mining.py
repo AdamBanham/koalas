@@ -20,7 +20,6 @@ class DecisionMiningTests(unittest.TestCase):
     def setUp(self):
         self.log = read_xes_complex(RF_LOG_FILE)
         self.lpn = parse_pnml_into_lpn(RF_PNML_FILE)
-        setLevel(INFO)
 
     @unittest.skipIf(SKIP_SLOW, "testing can take up to 90s")
     def test_postset_mining(self):
@@ -40,4 +39,3 @@ class DecisionMiningTests(unittest.TestCase):
     def tearDown(self):
         del self.log 
         del self.lpn
-        setLevel(ERROR)
