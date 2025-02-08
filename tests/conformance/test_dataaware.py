@@ -104,3 +104,13 @@ class DataawareTests(unittest.TestCase):
     def test_determinism_min(self):
         measure = compute_determinism(self.DPN_D)
         self.assertEqual(measure, 0.0, "expected a measure of 0.0")
+
+    def test_determinism_ignored(self):
+        measure = compute_determinism(self.DPN_A, ignore_dp=True)
+        self.assertEqual(measure, 7.0/8.0, "expected a measure of 7/8")
+        measure = compute_determinism(self.DPN_B, ignore_dp=True)
+        self.assertEqual(measure, 7.0/8.0, "expected a measure of 7/8")
+        measure = compute_determinism(self.DPN_C, ignore_dp=True)
+        self.assertEqual(measure, 3.0/8.0, "expected a measure of 3/8")
+        measure = compute_determinism(self.DPN_D, ignore_dp=True)
+        self.assertEqual(measure, 0.0/8.0, "expected a measure of 0/8")

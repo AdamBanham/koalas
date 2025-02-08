@@ -1,7 +1,7 @@
 import unittest
 
-from pmkoalas.enhancement.alignments import AlignmentMove, AlignmentMoveType
-from pmkoalas.enhancement.alignments import Alignment
+from pmkoalas.conformance.alignments import AlignmentMove, AlignmentMoveType
+from pmkoalas.conformance.alignments import Alignment
 
 from pmkoalas.models.pnfrag import parse_net_fragments
 from pmkoalas.complex import ComplexEvent, ComplexTrace

@@ -5,12 +5,17 @@ creating data Petri nets (DPNs).
 To dervie the guards, we deduce classification problems from the given net
 and then populate examples of these problems using alignments. In order to
 do these steps, we rely on third-party libraries, such as pm4py and 
-scikit-learn. These are not included as dependencies of this package, as 
-in future we hope to implement our version of these functionalities. 
+scikit-learn. These are not included as dependencies of this package. 
+In future we hope to implement our version of these functionalities. 
 
 To get started on deriving guards for transitions and adding write constraints 
 to form a DPN, use the following function:
     -`mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog)`
+        - if you would like to include write constraints, set the parameter
+          `expand_on_writes` to True.
+        - Several expansion strategies are available, and the default is to
+          an earnst expansion strategy, others can be selected using the 
+          `expansion` parameter.
 '''
 
 from pmkoalas.complex import ComplexEventLog
@@ -20,14 +25,14 @@ from pmkoalas.models.petrinet import PetriNetWithDataVariableType
 from pmkoalas.models.petrinet import PetriNetWithDataVariable
 from pmkoalas.models.petrinet import PetriNetMarking
 from pmkoalas.models.petrinet import export_net_to_pnml
-from pmkoalas.models.petrinet import preset_of_transition
+from pmkoalas.models.petrinet import preset_of_transition, postset_of_transition
 from pmkoalas.models.guards import Guard
 from pmkoalas._logging import info,debug
 from pmkoalas._struct import Stack
 
-from pmkoalas.enhancement.alignments import AlignmentMapping
-from pmkoalas.enhancement.alignments import AlignmentMoveType, Alignment
-from pmkoalas.enhancement.alignments import find_alignments_for_variants
+from pmkoalas.conformance.alignments import AlignmentMapping
+from pmkoalas.conformance.alignments import AlignmentMoveType, Alignment
+from pmkoalas.conformance.alignments import find_alignments_for_variants
 from pmkoalas.enhancement.classification_problems import find_classification_problems
 
 from typing import Set, Union, Literal, Tuple, Dict
@@ -43,12 +48,31 @@ def __find_new_place(dpn: PetriNetWithData) -> Place:
         new_place = Place(f"p{pid}", pid)
     return new_place
 
+def __dup_trans(trans:Set[GuardedTransition], t:GuardedTransition) -> GuardedTransition:
+    tid = 1
+    tids = set([t.tid for t in trans])
+    new_trans = GuardedTransition(
+        t.name,
+        Guard("true"),
+        tid,
+        t.silent
+    )
+    while new_trans.tid in tids:
+        tid += 1
+        new_trans = GuardedTransition(
+            t.name,
+            Guard("true"),
+            tid,
+            t.silent
+        )
+    return new_trans
+
 def __find_new_tau(dpn: PetriNetWithData) -> GuardedTransition:
     tid = 1
     names = set([t.name for t in dpn.transitions])
     tids = set([t.tid for t in dpn.transitions])
     new_tau = GuardedTransition(
-        f"tau{tid}",
+        f"tau_{tid}",
         Guard("true"),
         tid,
         True
@@ -62,6 +86,30 @@ def __find_new_tau(dpn: PetriNetWithData) -> GuardedTransition:
             True
         )
     return new_tau
+
+def __rebuild_net(old:PetriNetWithData, 
+                  places:Set[Place], 
+                  transitions:Set[GuardedTransition], 
+                  flows:Set[Arc], 
+    ) -> PetriNetWithData:
+    """
+    Rebuilds a PetriNetWithData object from the given sets of places, 
+    transitions, and flows. 
+    """
+    ret = PetriNetWithData(
+        places, transitions, flows, old.name
+    )
+    ret.set_initial_marking(old.initial_marking._mark)
+    ret.set_final_marking(old.final_marking._mark)
+    ret._detect_read_constraints(
+        dict( (v.name, v.type) 
+             for v in old.variables
+            )
+    )
+    for t in old.transitions:
+        for v in old.writes(t):
+            ret.add_write(t, v)
+    return ret
 
 def __expand_by_adding_dummy_from_src(dpn: PetriNetWithData, 
         variables:Set[PetriNetWithDataVariable]) -> \
@@ -101,23 +149,11 @@ def __expand_by_adding_dummy_from_src(dpn: PetriNetWithData,
         )
     )
     ## construct the new dpn
-    new_dpn = PetriNetWithData(
-        new_places, new_transitions, new_flows, dpn.name
-    )
-    new_dpn.set_initial_marking({new_place: 1})
-    new_dpn.set_final_marking(dpn.final_marking._mark)
-    new_dpn._detect_read_constraints(
-        dict( (v.name, v.type) 
-             for v in dpn.variables
-            )
-    )
+    new_dpn = __rebuild_net(dpn, new_places, new_transitions, new_flows)
+    new_dpn.set_initial_marking({new_place:1})
     ### add the new write constraints
     for v in variables:
         new_dpn.add_write(new_tau, v)
-    ### add old write constraints
-    for t in dpn.transitions:
-        for v in dpn.writes(t):
-            new_dpn.add_write(t, v)
     return new_dpn, new_tau
 
 def __prefix_expansion(N:PetriNetWithData, f:GuardedTransition,
@@ -159,23 +195,10 @@ def __prefix_expansion(N:PetriNetWithData, f:GuardedTransition,
         )
     )
     ## construct the new dpn
-    ret = PetriNetWithData(
-        new_places, new_transitions, new_flows, N.name
-    )
-    ret.set_initial_marking(N.initial_marking._mark)
-    ret.set_final_marking(N.final_marking._mark)
-    ret._detect_read_constraints(
-        dict( (v.name, v.type) 
-             for v in N.variables
-            )
-    )
+    ret = __rebuild_net(N, new_places, new_transitions, new_flows)
     ### add the new write constraints
     for v in N.reads(f):
         ret.add_write(new_tau, v)
-    ### add old write constraints
-    for t in N.transitions:
-        for v in N.writes(t):
-            ret.add_write(t, v)
     return ret, new_tau
 
 def __add_expansion(N:PetriNetWithData, f:GuardedTransition, 
@@ -190,7 +213,7 @@ def __add_expansion(N:PetriNetWithData, f:GuardedTransition,
     return N
 
 
-def _expand_dpn_for_writes(dpn: PetriNetWithData,
+def _earnst_expansion(dpn: PetriNetWithData,
         ali:Alignment,
         ) -> PetriNetWithData:
     """
@@ -340,11 +363,94 @@ def _expand_dpn_for_writes(dpn: PetriNetWithData,
     assert curr_mark.reached_final(), "final marking not reached in expanded dpn"
     return ret_dpn
 
+def _shortcut_expansion(dpn:PetriNetWithData,) -> PetriNetWithData:
+    """
+    This a cheaters approach to expansion to ensure that the net is relaxed
+    data-sound. It simply adds a silent transition from the source place to
+    sink place. The silent transition has a naively true guard, and no write
+    constraints.
+    """
+    ret = None 
+    ## find src 
+    src = None
+    for p in dpn.places:
+        if dpn.initial_marking.contains(p):
+            if src is not None:
+                raise Exception("multiple source places detected, expected"
+                                + " a workflow net with one input place.")
+            src = p
+    ## find sink
+    sink = None
+    for p in dpn.places:
+        if dpn.final_marking.contains(p):
+            if sink is not None:
+                raise Exception("multiple sink places detected, expected"
+                                + " a workflow net with one output place.")
+            sink = p
+    ## add new tau and new src to old src
+    new_tau = __find_new_tau(dpn)
+    new_flows = set(dpn.arcs)
+    new_flows.add(
+        Arc(
+            src,
+            new_tau
+        )
+    )
+    new_flows.add(
+        Arc(
+            new_tau,
+            sink,
+        )
+    )
+    new_places = set(dpn.places)
+    new_transitions = set(dpn.transitions)
+    new_transitions.add(new_tau)
+    ## construct the new dpn
+    ret = __rebuild_net(dpn, new_places, new_transitions, new_flows)
+    assert ret is not None, "shortcut expansion not implemented"
+    return ret 
+
+def _duplicate_expansion(dpn:PetriNetWithData,) -> PetriNetWithData:
+    """
+    This a cheaters approach to expansion to ensure that the net is relaxed
+    data-sound. This approach duplicates transitions with non-trivial guards,
+    where the duplicated trannsitions have a trivial guard and no write 
+    contraints.
+    """
+    ret = None
+    new_flows = set(dpn.arcs)
+    new_transitions = set(dpn.transitions)
+    for t in dpn.transitions:
+        if t.guard.trivial():
+            continue
+        new_tau = __dup_trans(new_transitions, t)
+        for pre in preset_of_transition(dpn, t):
+            new_flows.add(
+                Arc(
+                    pre,
+                    new_tau
+                )
+            )
+        for post in postset_of_transition(dpn, t):
+            new_flows.add(
+                Arc(
+                    new_tau,
+                    post
+                )
+            )
+        new_transitions.add(new_tau)
+    # build new dpn
+    ret = __rebuild_net(dpn, dpn.places, new_transitions, new_flows)
+    assert ret is not None, "duplicate expansion not implemented"
+    return ret
+
 DM_IGNORED_ATTRS = set(["time:", "lifecycle:"])
 
 def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
     identification:Literal["single-bag","postset","marking","regions"]="postset",
-    alignment:AlignmentMapping=None, expand_on_writes:bool=True,
+    alignment:AlignmentMapping=None, 
+    expand_on_writes:bool=True,
+    expansion:Literal["earnest","shortcut","duplicate"]="earnest",
     ignored_attrs:Set[str]=DM_IGNORED_ATTRS) \
     -> PetriNetWithData:
     """
@@ -489,15 +595,22 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
     )
     # expand the dpn to include write constraints
     if (expand_on_writes):
-        # find the alignment with the longest projected path
-        longest = -1
-        long = None
-        for ali in ali._storage.values():
-            path = ali.projected_path()
-            if len(path) > longest:
-                long = ali 
-                longest = len(path)
-        # expand using the longest projected path
-        info(f"longest path :: {longest}")
-        dpn = _expand_dpn_for_writes(dpn, long)
+        if (expansion == "earnest"):
+            # find the alignment with the longest projected path
+            longest = -1
+            long = None
+            for ali in ali._storage.values():
+                path = ali.projected_path()
+                if len(path) > longest:
+                    long = ali 
+                    longest = len(path)
+            # expand using the longest projected path
+            info(f"longest path :: {longest}")
+            dpn = _earnst_expansion(dpn, long)
+        elif (expansion == "shortcut"):
+            dpn = _shortcut_expansion(dpn)
+        elif (expansion == "duplicate"):
+            dpn = _duplicate_expansion(dpn)
+        else:
+            raise Exception(f"unsupported expansion strategy :: {expansion}")
     return dpn
