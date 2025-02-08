@@ -335,7 +335,7 @@ def compute_guard_precision(log:ComplexEventLog, model:PetriNetWithData,
         return _computation_guard_precision(tree, matching, log)
     
 @enable_logging
-def compute_determinism(model:PetriNetWithData) -> float:
+def compute_determinism(model:PetriNetWithData, ignore_dp:bool=False) -> float:
     """
     Computes the determinism of a Petri net with Data. Based on the defintion
     in Banham, Adam, Leemans, Sander, Wynn, Moe Thandar, & Andrews, Robert 
@@ -349,6 +349,8 @@ def compute_determinism(model:PetriNetWithData) -> float:
           or are decision points, and
         - that have an associated (non-trivial) precondition (defined and 
           not equal to a literal truth).
+    Alterantively, a flag `ignore_dp` can be set to evaluate the proportion
+    of all transitions that have an associated (non-trivial) precondition.
     
     Returns a measure between 0 and 1.
     A value of 1 for determinism implies that all transitions that are involved
@@ -361,15 +363,18 @@ def compute_determinism(model:PetriNetWithData) -> float:
     # find all transitions that are in the postsets of places 
     # with two or more transitions
     dtrans:Set[GuardedTransition] = set()
-    for place in model.places:
-        outgoing_nodes = set([
-            arc.to_node
-            for arc
-            in model.arcs
-            if arc.from_node == place
-        ])
-        if (len(outgoing_nodes) >= 2):
-            dtrans = dtrans.union(outgoing_nodes)
+    if (not ignore_dp):
+        for place in model.places:
+            outgoing_nodes = set([
+                arc.to_node
+                for arc
+                in model.arcs
+                if arc.from_node == place
+            ])
+            if (len(outgoing_nodes) >= 2):
+                dtrans = dtrans.union(outgoing_nodes)
+    else:
+        dtrans = set(model.transitions)
     info(f"number of decision transitions: {len(dtrans)}")
     # find the subset of transitions with an associated 
     atrans:Set[GuardedTransition] = set()
