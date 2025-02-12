@@ -1,0 +1,228 @@
+<?xml version='1.0' encoding='utf-8'?>
+<pnml>
+  <net type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel" id="Decision mined net of :: New version of ROAD FINES NORMATIVE MODEL">
+    <name>
+      <text>Decision mined net of :: New version of ROAD FINES NORMATIVE MODEL</text>
+    </name>
+    <page id="page1">
+      <place id="0dbb8766-ab49-48da-8c7f-78c85a430293">
+        <name>
+          <text>F</text>
+        </name>
+        <finalMarking>
+          <text>1</text>
+        </finalMarking>
+      </place>
+      <place id="b9248d18-bca3-4f14-80f2-466bfed178f0">
+        <name>
+          <text>I</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="2dc260ee-67ab-4ccc-ab23-7a98fbfb8ba7">
+        <name>
+          <text>p1</text>
+        </name>
+      </place>
+      <place id="041fc672-d29b-484c-ab8c-ac2f3aeca955">
+        <name>
+          <text>p2</text>
+        </name>
+      </place>
+      <place id="d25b0ab6-0b93-469a-b0bc-a1673979e1da">
+        <name>
+          <text>p3</text>
+        </name>
+      </place>
+      <place id="a2abf799-f419-4b05-b457-1afa00226adc">
+        <name>
+          <text>p4</text>
+        </name>
+      </place>
+      <place id="a0e43fe3-7a0f-4636-8711-2612458c8ca8">
+        <name>
+          <text>p5</text>
+        </name>
+      </place>
+      <place id="03e8f59c-a8af-4035-b09f-d90776bb6b52">
+        <name>
+          <text>p6</text>
+        </name>
+      </place>
+      <place id="5db71268-b50f-4f3e-bdaf-79bb8ab171c6">
+        <name>
+          <text>p7</text>
+        </name>
+      </place>
+      <transition id="ab982947-6238-41f6-86a5-7f3ade92c661" guard="((expense &lt;= 10.500)&amp;&amp;(paymentAmount &lt;= 5.810)&amp;&amp;(expense &lt;= 5.280)||(expense &gt; 10.500))">
+        <name>
+          <text>Insert Fine Notification</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="0d54dac0-ae59-4b6f-a75f-500a0b416298" guard="((expense &lt;= 10.500)&amp;&amp;((paymentAmount &gt; 5.810)))" invisible="true">
+        <name>
+          <text>tau2</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="a253a4b0-c728-4659-b7cd-40a43d796d2e" guard="true">
+        <name>
+          <text>Send Appeal to Prefecture</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="10d06484-e60d-46b5-b14f-8d98c9755c3d" guard="((amount &gt; 39.180)&amp;&amp;((points &lt;= 0.500)&amp;&amp;((expense &lt;= 15.800)&amp;&amp;(((amount &lt;= 79.750)&amp;&amp;((totalPaymentAmount &gt; 56.055)||(totalPaymentAmount &lt;= 56.055)&amp;&amp;(paymentAmount &lt;= 25.250)))||(amount &gt; 79.750)))))">
+        <name>
+          <text>Payment</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="c6cbfa46-cde1-4db6-ac75-a44a2b295ede" guard="true" invisible="true">
+        <name>
+          <text>tau3</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="fff25743-af71-4ae4-9a12-25302f605426" guard="((amount &lt;= 39.180))">
+        <name>
+          <text>Appeal to Judge</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="bb82a4d2-770a-4644-9755-37cd2925c5e9" guard="((totalPaymentAmount &gt; 18.390))" invisible="true">
+        <name>
+          <text>tau</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="262ed86f-33ba-41de-991c-c5dbb8c9d8f7" guard="((expense &gt; 15.800)&amp;&amp;(dismissal == &quot;NIL&quot;)||(expense &lt;= 15.800)&amp;&amp;(lastSent == &quot;N&quot;)&amp;&amp;(expense &gt; 12.395))">
+        <name>
+          <text>Receive Result Appeal from Prefecture</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="8e8bab91-481c-4565-921c-b994c4c231dc" guard="((amount &gt; 39.180)&amp;&amp;((points &gt; 0.500)||(points &lt;= 0.500)&amp;&amp;(expense &gt; 15.800)))">
+        <name>
+          <text>Add Penalty</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="dcf61a71-f6eb-4def-903f-4d5b78349d36" guard="((expense &gt; 15.800)&amp;&amp;(dismissal != &quot;NIL&quot;)||((expense &lt;= 15.800)&amp;&amp;((lastSent != &quot;N&quot;)||(lastSent == &quot;N&quot;)&amp;&amp;(expense &lt;= 12.395))))" invisible="true">
+        <name>
+          <text>tau6</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="caa8b5f3-95b8-4282-87b8-bce65cfcd7d7" guard="((amount &gt; 39.180)&amp;&amp;((points &lt;= 0.500)&amp;&amp;((expense &lt;= 15.800)&amp;&amp;((amount &lt;= 79.750)&amp;&amp;((totalPaymentAmount &lt;= 56.055)&amp;&amp;((paymentAmount &gt; 25.250)))))))">
+        <name>
+          <text>Insert Date Appeal to Prefecture</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="5326cf59-54a8-4e82-bba1-300db8dc21ee" guard="((dismissal == &quot;NIL&quot;)&amp;&amp;((expense &lt;= 15.580)&amp;&amp;((amount &lt;= 291.750))))" invisible="true">
+        <name>
+          <text>tau5</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="a0fd89d6-e0fe-4c17-bd62-5c554ce40de4" guard="((expense &lt;= 10.500)&amp;&amp;((paymentAmount &lt;= 5.810)&amp;&amp;((expense &gt; 5.280))))">
+        <name>
+          <text>Payment</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="48a1988c-0679-4a20-a205-55476a32bdd1" guard="(((dismissal == &quot;NIL&quot;)&amp;&amp;((expense &gt; 15.580)||(expense &lt;= 15.580)&amp;&amp;(amount &gt; 291.750)))||(dismissal != &quot;NIL&quot;))" invisible="true">
+        <name>
+          <text>tau4</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="67c838fc-01c6-4cba-9475-3194c0d3b538" guard="true">
+        <name>
+          <text>Create Fine</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="6a92c9bd-94ee-4dad-8f3e-605caa9c7c91" guard="((totalPaymentAmount &lt;= 18.390)&amp;&amp;((amount &gt; 91.200)))">
+        <name>
+          <text>Send Fine</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="69bacd9a-d0ef-4da0-99c6-a4e8761c6038" guard="((totalPaymentAmount &lt;= 18.390)&amp;&amp;((amount &lt;= 91.200)))">
+        <name>
+          <text>Payment</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <transition id="0ab36b00-23d2-4874-afe5-c7320bfaba5d" guard="true">
+        <name>
+          <text>Notify Result Appeal to Offender</text>
+        </name>
+        <toolspecific tool="StochasticPetriNet" version="0.2" invisible="False" priority="1" weight="1" distributionType="IMMEDIATE" />
+      </transition>
+      <arc source="262ed86f-33ba-41de-991c-c5dbb8c9d8f7" target="5db71268-b50f-4f3e-bdaf-79bb8ab171c6" id="arc-1" />
+      <arc source="d25b0ab6-0b93-469a-b0bc-a1673979e1da" target="fff25743-af71-4ae4-9a12-25302f605426" id="arc-2" />
+      <arc source="48a1988c-0679-4a20-a205-55476a32bdd1" target="0dbb8766-ab49-48da-8c7f-78c85a430293" id="arc-3" />
+      <arc source="fff25743-af71-4ae4-9a12-25302f605426" target="a2abf799-f419-4b05-b457-1afa00226adc" id="arc-4" />
+      <arc source="041fc672-d29b-484c-ab8c-ac2f3aeca955" target="ab982947-6238-41f6-86a5-7f3ade92c661" id="arc-5" />
+      <arc source="d25b0ab6-0b93-469a-b0bc-a1673979e1da" target="10d06484-e60d-46b5-b14f-8d98c9755c3d" id="arc-6" />
+      <arc source="d25b0ab6-0b93-469a-b0bc-a1673979e1da" target="c6cbfa46-cde1-4db6-ac75-a44a2b295ede" id="arc-7" />
+      <arc source="a0e43fe3-7a0f-4636-8711-2612458c8ca8" target="a253a4b0-c728-4659-b7cd-40a43d796d2e" id="arc-8" />
+      <arc source="d25b0ab6-0b93-469a-b0bc-a1673979e1da" target="8e8bab91-481c-4565-921c-b994c4c231dc" id="arc-9" />
+      <arc source="8e8bab91-481c-4565-921c-b994c4c231dc" target="d25b0ab6-0b93-469a-b0bc-a1673979e1da" id="arc-10" />
+      <arc source="6a92c9bd-94ee-4dad-8f3e-605caa9c7c91" target="041fc672-d29b-484c-ab8c-ac2f3aeca955" id="arc-11" />
+      <arc source="0d54dac0-ae59-4b6f-a75f-500a0b416298" target="0dbb8766-ab49-48da-8c7f-78c85a430293" id="arc-12" />
+      <arc source="2dc260ee-67ab-4ccc-ab23-7a98fbfb8ba7" target="69bacd9a-d0ef-4da0-99c6-a4e8761c6038" id="arc-13" />
+      <arc source="dcf61a71-f6eb-4def-903f-4d5b78349d36" target="0dbb8766-ab49-48da-8c7f-78c85a430293" id="arc-14" />
+      <arc source="ab982947-6238-41f6-86a5-7f3ade92c661" target="d25b0ab6-0b93-469a-b0bc-a1673979e1da" id="arc-15" />
+      <arc source="5db71268-b50f-4f3e-bdaf-79bb8ab171c6" target="0ab36b00-23d2-4874-afe5-c7320bfaba5d" id="arc-16" />
+      <arc source="2dc260ee-67ab-4ccc-ab23-7a98fbfb8ba7" target="6a92c9bd-94ee-4dad-8f3e-605caa9c7c91" id="arc-17" />
+      <arc source="03e8f59c-a8af-4035-b09f-d90776bb6b52" target="dcf61a71-f6eb-4def-903f-4d5b78349d36" id="arc-18" />
+      <arc source="b9248d18-bca3-4f14-80f2-466bfed178f0" target="67c838fc-01c6-4cba-9475-3194c0d3b538" id="arc-19" />
+      <arc source="2dc260ee-67ab-4ccc-ab23-7a98fbfb8ba7" target="bb82a4d2-770a-4644-9755-37cd2925c5e9" id="arc-20" />
+      <arc source="5326cf59-54a8-4e82-bba1-300db8dc21ee" target="d25b0ab6-0b93-469a-b0bc-a1673979e1da" id="arc-21" />
+      <arc source="bb82a4d2-770a-4644-9755-37cd2925c5e9" target="0dbb8766-ab49-48da-8c7f-78c85a430293" id="arc-22" />
+      <arc source="041fc672-d29b-484c-ab8c-ac2f3aeca955" target="a0fd89d6-e0fe-4c17-bd62-5c554ce40de4" id="arc-23" />
+      <arc source="a2abf799-f419-4b05-b457-1afa00226adc" target="48a1988c-0679-4a20-a205-55476a32bdd1" id="arc-24" />
+      <arc source="10d06484-e60d-46b5-b14f-8d98c9755c3d" target="d25b0ab6-0b93-469a-b0bc-a1673979e1da" id="arc-25" />
+      <arc source="03e8f59c-a8af-4035-b09f-d90776bb6b52" target="262ed86f-33ba-41de-991c-c5dbb8c9d8f7" id="arc-26" />
+      <arc source="a2abf799-f419-4b05-b457-1afa00226adc" target="5326cf59-54a8-4e82-bba1-300db8dc21ee" id="arc-27" />
+      <arc source="69bacd9a-d0ef-4da0-99c6-a4e8761c6038" target="2dc260ee-67ab-4ccc-ab23-7a98fbfb8ba7" id="arc-28" />
+      <arc source="0ab36b00-23d2-4874-afe5-c7320bfaba5d" target="d25b0ab6-0b93-469a-b0bc-a1673979e1da" id="arc-29" />
+      <arc source="67c838fc-01c6-4cba-9475-3194c0d3b538" target="2dc260ee-67ab-4ccc-ab23-7a98fbfb8ba7" id="arc-30" />
+      <arc source="c6cbfa46-cde1-4db6-ac75-a44a2b295ede" target="0dbb8766-ab49-48da-8c7f-78c85a430293" id="arc-31" />
+      <arc source="d25b0ab6-0b93-469a-b0bc-a1673979e1da" target="caa8b5f3-95b8-4282-87b8-bce65cfcd7d7" id="arc-32" />
+      <arc source="a253a4b0-c728-4659-b7cd-40a43d796d2e" target="03e8f59c-a8af-4035-b09f-d90776bb6b52" id="arc-33" />
+      <arc source="caa8b5f3-95b8-4282-87b8-bce65cfcd7d7" target="a0e43fe3-7a0f-4636-8711-2612458c8ca8" id="arc-34" />
+      <arc source="a0fd89d6-e0fe-4c17-bd62-5c554ce40de4" target="041fc672-d29b-484c-ab8c-ac2f3aeca955" id="arc-35" />
+      <arc source="041fc672-d29b-484c-ab8c-ac2f3aeca955" target="0d54dac0-ae59-4b6f-a75f-500a0b416298" id="arc-36" />
+    </page>
+    <variables>
+      <variable type="java.lang.Double">
+        <name>totalPaymentAmount</name>
+      </variable>
+      <variable type="java.lang.Double">
+        <name>points</name>
+      </variable>
+      <variable type="java.lang.Double">
+        <name>amount</name>
+      </variable>
+      <variable type="java.lang.String">
+        <name>dismissal</name>
+      </variable>
+      <variable type="java.lang.String">
+        <name>lastSent</name>
+      </variable>
+      <variable type="java.lang.Double">
+        <name>paymentAmount</name>
+      </variable>
+      <variable type="java.lang.Double">
+        <name>expense</name>
+      </variable>
+    </variables>
+  </net>
+</pnml>
