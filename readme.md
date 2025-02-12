@@ -1,6 +1,7 @@
-# pmkoalas: A Process Mining Project
-[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)   [![Testing](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml)
 
+<img src="./project_header.png" style="width=325px; height:auto;"/>
+
+[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)   [![Testing](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-unittests.yml)
 
 `pmkoalas` provides data structures for process mining research in a well-organized pythonic style.
 
