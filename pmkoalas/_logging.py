@@ -37,11 +37,11 @@ class InfoIteratorProcessor():
     """
     LOGGER_MSG = "{name} :: {curr}/{size}"
 
-    def __init__(self, itername:str, iter:Iterator, stack:int=3) -> None:
+    def __init__(self, itername:str, iter:Iterator, stack:int=3, size=None) -> None:
         self._iter = iter 
         self._name = itername 
         self._curr = 0
-        self._size = len(iter)
+        self._size = len(iter) if size is None else size
         self._reportstack = stack
 
     def __iter__(self) -> Iterator:
