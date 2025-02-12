@@ -641,7 +641,14 @@ def convert_net_to_xml(net:LabelledPetriNet,
     # handlers for UUID for prombits
     from random import Random
     rd = Random(1998)
-    def getUUID() -> str:
+    def getUUID(ob:Union[Place,Transition]) -> str:
+        id = ob.pid if isinstance(ob,Place) else ob.tid
+        if isinstance(id,str):
+            try:
+                UUID(id, version=4)
+                return id 
+            except ValueError:
+                pass
         return str(UUID(int=rd.getrandbits(128), version=4))
     # the conversion
     root = ET.Element('pnml')
@@ -654,7 +661,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
     page = ET.SubElement(net_node,'page', id="page1")
     nodes = dict()
     attributes_for_guards = set()
-    for place in net.places:
+    for place in sorted(list(net.places), key=lambda x: x.name):
          # work out the id for the transition
         if isinstance(place.pid, int):
             pid = f"place-{place.pid}"
@@ -673,7 +680,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                     attrib={
                         'tool' : "ProM",
                         'version' : "6.4",
-                        'localNodeID' : getUUID()
+                        'localNodeID' : getUUID(place)
                     }
                 )
         if net.initial_marking is not None and net.initial_marking.contains(place):
@@ -716,7 +723,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                     'tool' : "ProM",
                     'version' : "6.4",
                     'activity' : "$invisible$" if tran.silent else "",
-                    'localNodeID' : getUUID()
+                    'localNodeID' : getUUID(tran)
                 }
             )
         # include stochastic info
@@ -746,7 +753,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                 attrib={
                     'tool' : "ProM",
                     'version' : "6.4",
-                    'localNodeID' : getUUID()
+                    'localNodeID' : str(UUID(int=rd.getrandbits(128), version=4))
                 }
             )
             arctype = ET.SubElement(
@@ -839,24 +846,32 @@ def parse_pnml_into_lpn(filepath:str,
             final_marking[places[pid]] = int(final.find("text").text)
     ### parse the transitions
     for transition in tgt_page.findall("transition"):
-        tools = transition.find("toolspecific")
+        tools = transition.findall("toolspecific")
+        silent = False
+        weight = 1
         lid = None
-        if tools != None:
-            if "localNodeID" in tools.attrib:
-                lid = tools.attrib["localNodeID"]
+        for tool in tools:
+            if tool.attrib["tool"] == "ProM" and tool.attrib["version"] == "6.4":
+                if "localNodeID" in tool.attrib:
+                    lid = tool.attrib["localNodeID"]
+                if "activity" in tool.attrib:
+                    silent = tool.attrib["activity"] == "$invisible$"
+            if tool.attrib["tool"] == "StochasticPetriNet":
+                weight = float(tool.attrib["weight"])
         id = transition.attrib["id"]
         # check for silence 
-        if "invisible"  in transition.attrib.keys():
-            silent = transition.attrib["invisible"] == "true"
-        else:
-            silent = False
+        if (not silent):
+            if "invisible"  in transition.attrib.keys():
+                silent = transition.attrib["invisible"] == "true"
+            else:
+                silent = False
         # making a transition
         tid = lid if lid != None and use_localnode_id else id 
         transition_ids[id] = tid 
         parsed = Transition( 
             transition.find("name").find("text").text,
             tid,
-            1,
+            weight,
             silent
         )
         transitions[tid] = parsed
@@ -989,6 +1004,21 @@ def parse_pnml_for_dpn(filepath:str) -> PetriNetWithData:
         arcs.add(Arc(
             src_node, tgt_node
         ))
+    # find variables
+    named_vars = {}
+    vars = net.find("variables")
+    if (vars is not None):
+        vars = vars.findall("variable")
+        for var in vars:
+            name = var.find("name").text
+            vtype = var.attrib["type"]
+            if vtype == "java.lang.String":
+                vtype = PetriNetWithDataVariableType.CATEGORICAL
+            elif vtype == "java.lang.Double":
+                vtype = PetriNetWithDataVariableType.NUMERIC
+            else:
+                raise ValueError("Unknown variable type :: "+vtype)
+            named_vars[name] = vtype
     # finalise compontents
     dpn = PetriNetWithData(
         places=set(list(places.values())),
@@ -1001,6 +1031,9 @@ def parse_pnml_for_dpn(filepath:str) -> PetriNetWithData:
     )
     dpn.set_final_marking(
         final_marking
+    )
+    dpn._detect_read_constraints(
+        named_vars
     )
     return dpn
 
