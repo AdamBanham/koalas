@@ -26,7 +26,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [ 
-  'xmlschema'
+  'xmlschema',
+  'pm4py~=2.7.13.1',
+  'scikit-learn~=1.5.0',
 ]
 
 [tool.setuptools]
@@ -35,6 +37,8 @@ packages = [
 "pmkoalas.discovery",
 "pmkoalas.models",
 "pmkoalas.conformance",
+"pmkoalas.enhancement",
+"pmkoalas._struct"
 ]
 
 [project.urls]
