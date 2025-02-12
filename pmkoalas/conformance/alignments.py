@@ -54,6 +54,12 @@ class AlignmentMove():
             raise ValueError("Log moves do not have transitions.")
         return self.transition
     
+    # data functions 
+    def __repr__(self) -> str:
+        return f"AlignmentMove( "\
+            +f"{repr(self.type)},{repr(self.transition)}, "\
+            +f"{repr(self.activity)},{repr(self.marking)},{repr(self.state)})"""
+    
 
 class Alignment():
     """
@@ -185,6 +191,9 @@ class Alignment():
     # data model functions
     def __str__(self) -> str:
         return "|"+"-->".join( str(m.type) for m in self.moves() )+"|"
+    
+    def __repr__(self) -> str:
+        return f"Alignment({repr(self.moves())})"
 
 class AlignmentMapping():
     """
@@ -192,9 +201,12 @@ class AlignmentMapping():
     variant.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, init:Dict[Trace, Alignment]=None) -> None:
         self._locked = False
-        self._storage:Dict[Trace, Alignment] = dict()
+        if init is None:
+            self._storage:Dict[Trace, Alignment] = dict()
+        else:
+            self._storage = init
 
     def lock(self) -> None:
         self._locked = True
@@ -212,6 +224,10 @@ class AlignmentMapping():
     def __getitem__(self,variant:Trace) -> Alignment:
         if isinstance(variant, Trace):
             return self._storage[variant]
+        
+    # data model functions
+    def __repr__(self):
+        return f"AlignmentMapping(\n\t{repr(self._storage)}\n)"
 
 def find_alignments_for_variants(log:Union[EventLog, ComplexEventLog], lpn:LabelledPetriNet, 
         engine:Literal["pm4py"]) -> AlignmentMapping:
@@ -258,7 +274,10 @@ def find_alignments_for_variants_pm4py(log:EventLog, lpn:LabelledPetriNet) \
             export_net_to_pnml(lpn, net_file, True)
             # pass net and log to pm4py
             net, im, fm = read_pnml(net_file, auto_guess_final_marking=True)
+            debug(fm)
+            debug(im)
             knet = parse_pnml_into_lpn(net_file, use_localnode_id=False)
+            export_net_to_pnml(knet, "dummy.pnml", True)
             plog = xes_importer.apply(log_file)
             # call the dogs breakfeast of alignment tuples from pm4py
             aligned_traces = alignments.apply(plog, net, im, fm, 
@@ -271,6 +290,7 @@ def find_alignments_for_variants_pm4py(log:EventLog, lpn:LabelledPetriNet) \
                 aligned_trace = aligned_traces[index]
                 variant = [ ev["concept:name"] for ev in trace ]
                 marking = knet.initial_marking
+                debug(f"starting marking :: {marking}")
                 tlen = 0
                 debug(f"{variant}")
                 evariant = []
@@ -289,12 +309,14 @@ def find_alignments_for_variants_pm4py(log:EventLog, lpn:LabelledPetriNet) \
                         tname = implicit_step[1]
                         alitype = AlignmentMoveType.SYNC
                         tlen += 1
+                        assert tid is not None, f"Expected either tid or tname to be set, got {tid} {tname}"
                     elif (">>" in explict_step):
                         if ">>" == explict_step[0]:
                             tid = explict_step[1]
                             tname = implicit_step[1]
                             alitype = AlignmentMoveType.MODEL
                             debug(f"model move")
+                            assert tid is not None, f"Expected either tid or tname to be set, got {tid} {tname}"
                         else:
                             debug(f"log move")
                             ename = implicit_step[0]
@@ -333,7 +355,7 @@ def find_alignments_for_variants_pm4py(log:EventLog, lpn:LabelledPetriNet) \
                 debug(evariant, tlen)
                 assert tlen == len(variant)
                 assert Trace(evariant) == Trace(variant)
-                assert marking.reached_final() == True
+                assert marking.reached_final() == True, f"Should have reached final marking, expected {lpn.final_marking}, got {marking}"
                 debug("****")
                 debug(moves)
                 debug("****")

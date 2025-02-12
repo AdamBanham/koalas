@@ -27,15 +27,18 @@ from pmkoalas.models.petrinet import PetriNetMarking
 from pmkoalas.models.petrinet import export_net_to_pnml
 from pmkoalas.models.petrinet import preset_of_transition, postset_of_transition
 from pmkoalas.models.guards import Guard
-from pmkoalas._logging import info,debug
+from pmkoalas._logging import info,debug, InfoIteratorProcessor
 from pmkoalas._struct import Stack
 
-from pmkoalas.conformance.alignments import AlignmentMapping
+from pmkoalas.conformance.alignments import AlignmentMapping, AlignmentMove
 from pmkoalas.conformance.alignments import AlignmentMoveType, Alignment
 from pmkoalas.conformance.alignments import find_alignments_for_variants
 from pmkoalas.enhancement.classification_problems import find_classification_problems
+from pmkoalas.enhancement.classification_problems import ClassificationProblem
+from joblib import Parallel, delayed
 
-from typing import Set, Union, Literal, Tuple, Dict
+
+from typing import Set, Union, Literal, Tuple, Dict, List
 from copy import deepcopy
 
 def __find_new_place(dpn: PetriNetWithData) -> Place:
@@ -212,6 +215,24 @@ def __add_expansion(N:PetriNetWithData, f:GuardedTransition,
         N.add_write(f, var)
     return N
 
+def __crashout(fired:GuardedTransition, 
+               N:PetriNetWithData,
+               M:PetriNetMarking,
+               history:List[GuardedTransition],):
+    if (fired not in M.enabled()):
+        info("crashout triggered")
+        export_net_to_pnml(N, "reset_crash_expansion.pnml", include_prom_bits=True)
+        with open("reset_crash_expansion_history.stderr", "w") as f:
+            f.write(repr(history))
+            f.write("\nFired::\n")
+            f.write(repr(fired))
+            f.write("\nMarkings::\n")
+            f.write(str(M))
+            f.write("\n")
+            f.write(repr(M))
+            f.write("\n")
+            f.write(repr(M.enabled()))
+
 
 def _earnst_expansion(dpn: PetriNetWithData,
         ali:Alignment,
@@ -268,6 +289,7 @@ def _earnst_expansion(dpn: PetriNetWithData,
     M = N.initial_marking
     free:Set[PetriNetWithDataVariable]= set()
     visited:Dict[PetriNetMarking, Set] = dict() 
+    prefixed:Dict[PetriNetMarking, Dict[GuardedTransition,GuardedTransition]] = dict()
     # helpers
     def find(old, N:PetriNetWithData) -> GuardedTransition:
         for t in N.transitions:
@@ -280,9 +302,12 @@ def _earnst_expansion(dpn: PetriNetWithData,
         visited[M] = deepcopy(free)
     def fire(M:PetriNetMarking, f:GuardedTransition) -> PetriNetMarking:
         return M.remark(f)
-    def reset(N:PetriNetWithData) -> PetriNetMarking:
+    def reset(N:PetriNetWithData, history) -> PetriNetMarking:
         ret = N.initial_marking
         for fired in history:
+            if (fired not in ret.enabled()):
+                __crashout(fired, N, ret, history)
+                assert fired in ret.enabled(), f"transition {repr(fired)} not firable in marking {repr(ret)}, expected one of the following: {repr(ret.enabled())}"
             ret = ret.remark(fired)
         return ret
     # traverse path
@@ -290,19 +315,33 @@ def _earnst_expansion(dpn: PetriNetWithData,
         f = find(path.pop(),N)
         info(f"working on transition:: {repr(f)}")
         debug(f"current marking:: {M}")
+        debug(f"current free variables:: {free}")
         debug(f"set of firable: {M.enabled()}")
+        if (f not in M.enabled()):
+            if str(M) in prefixed.keys():
+                path.push(f)
+                pre = prefixed[str(M)][f]
+                path.push(pre)
+                info(f"transition {f} was prefixed berfore firing {pre}")
+                continue
+            __crashout(f, N, M, history)
+        assert f in M.enabled(), f"transition {f} not firable in marking {M}"
+        debug(f"next possible marking:: {M.remark(f)}")
+        
         # case 1: if we dont need any, and we have not visited next; or
         # if we dont need any, and we are revisiting, but after firing 
         # visted matches free.
+        M_prime = M.remark(f)
         need = len(N.reads(f)) > 0
-        visiting = M in visited
-        vmatchfree = visited[M].issubset(clr(free,f,N)) if visiting else False
+        visiting = M_prime in visited
+        vmatchfree = visited[M_prime].issubset(clr(free,f,N)) if visiting else False
         if (
             (not need and not visiting) 
             or
             (not need and visiting and vmatchfree)
         ):
             # trigger continue 
+            info("triggered continue")
             psh(visited, M, free)
             M = fire(M, f)
             free = clr(free, f, N)
@@ -321,7 +360,7 @@ def _earnst_expansion(dpn: PetriNetWithData,
             # trigger add expansion
             expansion += 1
             info(f"triggered add expansion ({expansion})")
-            N = __add_expansion(N, f, visited[M])
+            N = __add_expansion(N, f, visited[M_prime])
             psh(visited, M, free)
             M = fire(M, f)
             free = clr(free, f, N)
@@ -336,6 +375,7 @@ def _earnst_expansion(dpn: PetriNetWithData,
             (visiting and fsat and vmatchfree)
         ):
             # trigger continue 
+            info("triggered continue")
             psh(visited, M, free)
             M = fire(M, f)
             free = clr(free, f, N)
@@ -345,7 +385,10 @@ def _earnst_expansion(dpn: PetriNetWithData,
         expansion += 1
         info(f"triggered prefix expansion ({expansion})")
         N, nt = __prefix_expansion(N, f)
-        M = reset(N)
+        if not (str(M) in prefixed):
+            prefixed[str(M)] = {}
+        prefixed[str(M)][f] = nt
+        M = reset(N,history)
         # readd f and add new tau to path
         path.push(f)
         path.push(nt)
@@ -446,34 +489,20 @@ def _duplicate_expansion(dpn:PetriNetWithData,) -> PetriNetWithData:
 
 DM_IGNORED_ATTRS = set(["time:", "lifecycle:"])
 
-def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
-    identification:Literal["single-bag","postset","marking","regions"]="postset",
-    alignment:AlignmentMapping=None, 
-    expand_on_writes:bool=True,
-    expansion:Literal["earnest","shortcut","duplicate"]="earnest",
-    ignored_attrs:Set[str]=DM_IGNORED_ATTRS) \
-    -> PetriNetWithData:
+def _identify_problems(lpn:LabelledPetriNet,
+    identification:Literal["single-bag","postset","marking","regions"]
+    ) -> Set[ClassificationProblem]:
     """
-    Performs decision mining on the given lpn using diagonstic information
-    from alignments to annoate guards on transitions in the lpn.
+    step one: deduce classification problems from the net.
+    """
+    return find_classification_problems(lpn, identification)
 
-    Note that the returned dpn may contain further silent transitions 
-    to model write constraints by default. However, the visible language of
-    the net will be the same as the given lpn.
-    """
-    if alignment is None:
-        ali = find_alignments_for_variants(log, lpn, "pm4py")
-    else:
-        ali = alignment
-    # obtain the classification problems
-    problems = find_classification_problems(lpn, identification)
-    for prob in problems:
-        info(f"found problem ::\n\t{prob}")
-    for trace, instances in log.__iter__():
-        debug(f"{trace}")
-        alignment = ali[trace]
-        debug(f"{alignment}")
-        i = 0
+def _old_populate_problems(log:ComplexEventLog,
+                       alignment:AlignmentMapping, 
+                       problems:Set[ClassificationProblem],
+                       ignored_attrs:Set[str]
+                    ) -> Set[ClassificationProblem]:
+    for trace,instances in InfoIteratorProcessor('processed variants', log):
         for inst in instances:
             debug(f"contextulising on :: {inst}")
             context = alignment.contextualise(inst)
@@ -499,14 +528,195 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
                             move.transition,
                             data
                         )
-            i += 1
-            if i % 25 == 0 and i != 0:
-                info(f"handled {i}/{len(instances)} instances for {str(trace)}...")
+    return problems
+
+def _populate_problems(log:ComplexEventLog,
+                       alignment:AlignmentMapping, 
+                       problems:Set[ClassificationProblem],
+                       ignored_attrs:Set[str]
+                    ) -> Set[ClassificationProblem]:
+    """
+    step two: populate the classification problems with examples from
+    alignments.
+    """
+    pool = Parallel(n_jobs=6, verbose=10, return_as='generator_unordered',
+                    batch_size=1, backend='loky')
+    # TODO: this for loop could be parallelised for a speedup
+    # the work of the outer loop
+    def work(contexters, problems, problem_places):
+        ret = dict(
+            (prob, [])
+            for prob in problems
+        )
+        from joblib import Parallel, delayed, parallel_backend
+        # the work of the inner loop
+        def iwork(context:List[AlignmentMove],
+                  problem_places:Dict[ClassificationProblem, List[int]]):
+            iret = dict(
+                (prob, [])
+                for prob in problems
+            )
+            for prob in problem_places.keys():
+                temp = []
+                positions = problem_places[prob]
+                for pos in positions:
+                    data = dict()
+                    move = context[pos]
+                    if move.state is not None: 
+                        for k,v in move.state.data().items():
+                            ignored = False
+                            for ignore in ignored_attrs:
+                                if k.startswith(ignore):
+                                    ignored = True 
+                                    break
+                            if ignored:
+                                continue
+                            data[k] = v
+                        temp.append(
+                            (move.transition, data)
+                        )
+                iret[prob] += temp
+            return iret
+        # decide whether to run the pool or not
+        if (len(contexters) > 60):
+            with parallel_backend("loky", inner_max_num_threads=6):
+                # decide on workload pattern
+                if (len(contexters) > 240):
+                        extracts = Parallel(n_jobs=6, verbose=5,
+                                            pre_dispatch='3*n_jobs',
+                                            batch_size=25,
+                                            return_as='generator_unordered')(
+                            delayed(iwork)(context, problem_places)
+                            for context in contexters
+                        )
+                else:
+                    batchsize = int(len(contexters)/6)
+                    extracts = Parallel(n_jobs=6, verbose=5,
+                                        pre_dispatch='2 * n_jobs',
+                                        batch_size=batchsize,
+                                        return_as='generator_unordered')(
+                        delayed(iwork)(context, problem_places)
+                        for context in contexters
+                    )
+                # sync the work
+                for extract in extracts:
+                    for prob in problems:
+                        ret[prob] += extract[prob]
+        else:
+            for context in contexters:
+                for prob in problems:
+                    temp = []
+                    positions = problem_places[prob]
+                    for pos in positions:
+                        data = dict()
+                        move = context[pos]
+                        if move.state is not None: 
+                            for k,v in move.state.data().items():
+                                ignored = False
+                                for ignore in ignored_attrs:
+                                    if k.startswith(ignore):
+                                        ignored = True 
+                                        break
+                                if ignored:
+                                    continue
+                                data[k] = v
+                            temp.append(
+                                (move.transition, data)
+                            )
+                    ret[prob] += temp
+        return ret
+    # step one preload contextulised alignment
+    def contextulise(instances, alignment:Alignment, 
+                     problems:Set[ClassificationProblem]):
+        "preps the work for the outer loop"
+        def find_problem_places(problems, alignment:Alignment):
+            ret = dict(
+                (prob, [])
+                for prob in problems
+            )
+            for pos,move in enumerate(alignment.moves()):
+                if move.type == AlignmentMoveType.LOG:
+                        continue
+                for prob in problems:
+                    if prob.reached(move.marking):
+                        ret[prob].append(pos)
+            return ret
+        # contextualise and add problem places
+        return ([
+            alignment.contextualise(inst)
+            for inst in instances
+        ], find_problem_places(problems, alignment))
+    # the work of step one
+    orderwork = sorted(
+        [ (trace,instances) for trace,instances in log],
+        key=lambda x: len(x[1]),
+        reverse=True)
+    contexts = Parallel(n_jobs=-1, verbose=5,)(
+        delayed(contextulise)(instances, alignment[trace], problems)
+        for trace,instances in InfoIteratorProcessor(
+            'processing alignments', orderwork, stack=11, 
+            size=log.get_nvariants()
+        )
+    )
+    # step two launch the outer loop in parallel
+    # the work of step 2
+    results = pool(delayed(work)
+        (contexters, problems, problem_places)
+        for contexters, problem_places in InfoIteratorProcessor(
+            '#variants processing', contexts, 
+            stack=13, size=log.get_nvariants()
+        )
+    )
+    # step four sync the work with the problems
+    i = 1
+    for extract in results:
         for prob in problems:
-            info(prob.describe())
+            prob.add_examples(extract[prob])
+        info(f"finished processing variant :: {i}/{log.get_nvariants()}")
+        i += 1
+    info(f"finished processing all ({log.get_nvariants()}) variants...")
+    # return the populated problems
+    return problems
+    
+
+def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
+    alignment:AlignmentMapping=None, 
+    identification:Literal["single-bag","postset","marking","regions"]="postset",
+    problems:Set[ClassificationProblem]=None,
+    populated:bool=False,
+    expand_on_writes:bool=True,
+    expansion:Literal["earnest","shortcut","duplicate"]="earnest",
+    ignored_attrs:Set[str]=DM_IGNORED_ATTRS) \
+    -> PetriNetWithData:
+    """
+    Performs decision mining on the given lpn using diagonstic information
+    from alignments to annoate guards on transitions in the lpn.
+
+    Note that the returned dpn may contain further silent transitions 
+    to model write constraints by default. However, the visible language of
+    the net will be the same as the given lpn.
+    """
+    # step zero: check if we need to find alignments
+    if alignment is None:
+        ali = find_alignments_for_variants(log, lpn, "pm4py")
+    else:
+        ali = alignment
+    info("step zero finished, found alignments...")
+    # step one: deduce classification problems from the net.
+    # obtain the classification problems
+    if problems is None:
+        problems = _identify_problems(lpn, identification)
+    info("step one finished, identified classification problems...")
+    for prob in problems:
+        info(f"found problem ::\n\t{prob}")
+    info("step two, populating classification problems...")
+    if (not populated):
+        problems = _populate_problems(log, ali, problems, ignored_attrs) 
+    info("step two finished, populated classification problems...")
     # solve the classification problems
     resulting = dict()
     resulting_types = dict()
+    info("step three, solving classification problems...")
     for prob in problems:
         print(prob.describe())
         mapping,var_types = prob.solve()
@@ -535,6 +745,7 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
                         + f"{k} :: {past} != {v}"                                    
                     )
     # translate the mined guards to the dpn
+    info("step three-b, translating mined guards to dpn...")
     mapping_trans = dict()
     for t in lpn.transitions:
         if (t in resulting.keys()):
@@ -593,8 +804,10 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
     dpn._detect_read_constraints(
         mapping
     )
+    info("step three finished, construct dpn without write constraints...")
     # expand the dpn to include write constraints
     if (expand_on_writes):
+        info("step four, expanding dpn for write constraints...")
         if (expansion == "earnest"):
             # find the alignment with the longest projected path
             longest = -1
@@ -606,6 +819,7 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
                     longest = len(path)
             # expand using the longest projected path
             info(f"longest path :: {longest}")
+            info(f"longest alignment being used for expansion :: {repr(long)}")
             dpn = _earnst_expansion(dpn, long)
         elif (expansion == "shortcut"):
             dpn = _shortcut_expansion(dpn)
@@ -613,4 +827,6 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
             dpn = _duplicate_expansion(dpn)
         else:
             raise Exception(f"unsupported expansion strategy :: {expansion}")
+        info("step four finished, expansion complete...")
+    info("finished mining guards for lpn")
     return dpn

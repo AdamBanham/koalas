@@ -12,7 +12,7 @@ from pmkoalas.models.petrinet import PetriNetMarking
 from pmkoalas.models.guards import Guard
 from pmkoalas._logging import debug
 
-from typing import Set, Literal, Mapping, List
+from typing import Set, Literal, Mapping, List, Tuple
 from copy import deepcopy
 from abc import abstractmethod
 
@@ -74,13 +74,19 @@ class ClassificationProblem:
                     return True
         return False
     
-    def add_example(self, target:Transition, data:Mapping[str,object]) -> None:
+    def _prep_example(self, target:Transition, data:Mapping[str,object]) -> ClassficiationProblemExample:
         if target not in self._targets:
             raise ValueError(f"Target {repr(target)} not in the set of "\
                              +f"targets ({self._targets})")
         self._seen_vars = self._seen_vars.union(set(data.keys()))
         self._seen_tars[target.name] += 1
-        self._examples.append(ClassficiationProblemExample(target, data))
+        return ClassficiationProblemExample(target, data)
+    
+    def add_example(self, target:Transition, data:Mapping[str,object]) -> None:
+        self._examples.append(self._prep_example(target, data))
+
+    def add_examples(self, extract:List[Tuple[Transition,Mapping[str,object]]]) -> None:
+        self._examples += [ self._prep_example(t,d) for t,d in extract ]
 
     def _rule_reduction(self, rules:List[List[str]]) -> str:
         """
@@ -162,6 +168,12 @@ class ClassificationProblem:
         Solves the classification problem, by finding a decision tree.
         """
         from importlib.util import find_spec
+
+        if self.num_examples() < 1:
+            ret = dict()
+            for tar in self._targets:
+                ret[tar] = Guard("true")
+            return ret, dict()
         
         if find_spec("sklearn"):
             import numpy as np
@@ -379,6 +391,9 @@ class ClassificationProblem:
     @property
     def sources(self) -> Set[PetriNetMarking]:
         return deepcopy(self._sources)
+    
+    def num_examples(self) -> int:
+        return len(self._examples)
     
     def __str__(self) -> str:
         return "Problem awaits " \

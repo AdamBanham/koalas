@@ -49,6 +49,9 @@ class PetriNetMarking():
     def __init__(self, model:'LabelledPetriNet', marking:Dict['Place',int]) -> None:
         self._net = model
         self._mark = deepcopy(marking)
+        for place in model.places:
+            if place not in self._mark:
+                self._mark[place] = 0
         # for each transition compute the incoming and outcoming places
         self._incoming:Dict[Transition,Set[Place]] = dict()
         self._outcoming:Dict[Transition,Set[Place]] = dict()
@@ -67,7 +70,7 @@ class PetriNetMarking():
         for trans in self._net.transitions:
             enabled = True
             for place in self._incoming[trans]:
-                enabled = enabled and self._mark[place] > 0
+                enabled = enabled and self.contains(place)
             if (enabled):
                 ret.add(trans)
         return ret
@@ -122,16 +125,19 @@ class PetriNetMarking():
         return 0
 
     def __str__(self) -> str:
-        vals = [ (i,v) for i,v in self._mark.items() if v > 0 ]
+        vals = [ (i,v) for i,v in sorted(self._mark.items(), key=lambda x: x[0].name) if v > 0 ]
         return str(vals)
     
     def __eq__(self, other: object) -> bool:
         if (isinstance(other, PetriNetMarking)):
-            return self._mark == other._mark
+            return self._mark == other._mark and self._net == other._net
         return False
     
     def __hash__(self) -> int:
         return hash(tuple(sorted(self._mark.items(),key=lambda x: x[0].name)))
+    
+    def __repr__(self):
+        return f"PetriNetMarking({repr(self._net), repr(self._mark)})"
     
 class PetriNetFiringSequence():
     """
