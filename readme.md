@@ -12,7 +12,6 @@
 <href/>[![Python 3.[12,13]](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml)  
 
 </div>
-
 </div>
 
 ---------------------------------
