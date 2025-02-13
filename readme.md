@@ -8,8 +8,8 @@
 </div>
 <div>
 
-<href/>[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)  
-<href/>[![Python 3.[12,13]](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml)  
+[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)  
+[![Python 3.[12,13]](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml)  
 
 </div>
 </div>
