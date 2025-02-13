@@ -1,6 +1,4 @@
 <img src="./project_header.png" style="width=325px; height:auto;"/>
-
-
 <div style="display: flex; flex-direction: row;">
 <div style="margin-right:15px">
 
