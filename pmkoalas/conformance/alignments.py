@@ -87,6 +87,7 @@ class Alignment():
         trace_type = isinstance(trace, ComplexTrace)
         state = ComplexEvent("I", dict())
         eid = 0 
+        last_trans = None
         for move in self.moves():
             debug(move)
             if move.is_sync():
@@ -118,6 +119,7 @@ class Alignment():
                         trace[eid].activity(), data
                     )
                 eid += 1
+                last_trans = move.transition
             elif move.is_model():
                 state = ComplexEvent(
                     "missing", state.data()
@@ -131,6 +133,7 @@ class Alignment():
                         state
                     )
                 )
+                last_trans = move.transition
             elif move.is_log():
                 debug(f"move {move.activity} trace {trace[eid]}")
                 if trace_type:
@@ -165,7 +168,10 @@ class Alignment():
                 raise ValueError(f"Unknown move type {move.type}")
         assert eid == len(trace)
         assert len(ret) == len(self._sequence)
-        assert ret[-1].marking.remark(ret[-1].transition).reached_final() == True
+        assert (ret[-1].marking.reached_final()) \
+            or \
+            (ret[-1].marking.remark(last_trans).reached_final() == True) \
+            , f"Expected final marking, got {ret[-1].marking} or {ret[-1].marking.remark(last_trans)} ({last_trans=})"
         return ret
     
     def projected_path(self) -> List[Transition]:

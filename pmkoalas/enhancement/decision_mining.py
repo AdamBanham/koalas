@@ -629,7 +629,8 @@ def _populate_problems(log:ComplexEventLog,
     def contextulise(instances, alignment:Alignment, 
                      problems:Set[ClassificationProblem]):
         "preps the work for the outer loop"
-        def find_problem_places(problems, alignment:Alignment):
+        def find_problem_places(problems:Set[ClassificationProblem], 
+                                alignment:Alignment):
             ret = dict(
                 (prob, [])
                 for prob in problems
@@ -638,8 +639,9 @@ def _populate_problems(log:ComplexEventLog,
                 if move.type == AlignmentMoveType.LOG:
                         continue
                 for prob in problems:
-                    if prob.reached(move.marking):
-                        ret[prob].append(pos)
+                    if prob.reached(move.marking) \
+                        and move.transition in prob.targets:
+                            ret[prob].append(pos)
             return ret
         # contextualise and add problem places
         return ([
