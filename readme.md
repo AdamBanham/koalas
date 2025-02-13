@@ -1,7 +1,9 @@
-
 <img src="./project_header.png" style="width=325px; height:auto;"/>
 
-[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)  [![Python 3.[12,13]](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml)
+[![image](https://img.shields.io/pypi/v/pmkoalas.svg)](https://python.org/pypi/pmkoalas)  [![image](https://img.shields.io/pypi/l/pmkoalas.svg)](https://python.org/pypi/pmkoalas)
+[![Python 3.[9,10,11]](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml/badge.svg?branch=main)](https://github.com/AdamBanham/koalas/actions/workflows/python-version.yml)  [![Python 3.[12,13]](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml/badge.svg)](https://github.com/AdamBanham/koalas/actions/workflows/python-version-latest.yml)  
+
+---
 
 `pmkoalas` provides data structures for process mining research in a well-organized pythonic style.
 
