@@ -10,7 +10,7 @@ from pmkoalas.models.petrinet import LabelledPetriNet
 from pmkoalas.models.petrinet import Transition
 from pmkoalas.models.petrinet import PetriNetMarking
 from pmkoalas.models.guards import Guard
-from pmkoalas._logging import debug
+from pmkoalas._logging import debug, info
 
 from typing import Set, Literal, Mapping, List, Tuple
 from copy import deepcopy
@@ -169,12 +169,27 @@ class ClassificationProblem:
         """
         from importlib.util import find_spec
 
+        # check to see that we have examples
         if self.num_examples() < 1:
+            info(f"No examples for problem, returning all true guards")
             ret = dict()
             for tar in self._targets:
                 ret[tar] = Guard("true")
             return ret, dict()
-        
+        # check to see if we have examples of each target
+        observed = 0
+        for tar in self.targets:
+            if self._seen_tars[tar.name] < 1:
+                info(f"No examples for target {tar.name}")
+            else:
+                observed += 1
+        if observed <= 1:
+            info(f"Only one target has examples, returning all true guards")
+            ret = dict()
+            for tar in self._targets:
+                ret[tar] = Guard("true")
+            return ret, dict()
+        # check to see if we have the required libraries
         if find_spec("sklearn"):
             import numpy as np
             import pandas as pd
