@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_l9uvoOqNEe-dbZCk5QSLQw" name="petrinet-redesign">
+  <packagedElement xmi:type="uml:Interface" xmi:id="_uBqw4OqNEe-dbZCk5QSLQw" name="Marking">
+    <ownedAttribute xmi:id="_IEF5gOqlEe-tFoh6goz9lA" name="mark">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_IEF5geqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_IEF5guqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_FHPkUOqZEe-tFoh6goz9lA" name="Net">
+    <ownedAttribute xmi:id="_CdrroOqaEe-tFoh6goz9lA" name="nodes">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_CdxyQOqaEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_CdzncOqaEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_N3dAQOqaEe-tFoh6goz9lA" name="edges">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_N3dnUOqaEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_N3dnUeqaEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_9et2Q-qkEe-tFoh6goz9lA" name="Edge" type="_vULDIOqkEe-tFoh6goz9lA" association="_9etPMOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_9eudUOqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_9eudUeqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_-a1gQuqkEe-tFoh6goz9lA" name="Node" type="_qVuMIOqkEe-tFoh6goz9lA" association="_-a05MOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_-a1gQ-qkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_-a1gROqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedOperation xmi:id="_n4L9QOqlEe-tFoh6goz9lA" name="postset"/>
+    <ownedOperation xmi:id="_pAEyYOqlEe-tFoh6goz9lA" name="preset"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_GoVjoOqZEe-tFoh6goz9lA" name="PetriNet">
+    <ownedAttribute xmi:id="_YLFAoOqkEe-tFoh6goz9lA" name="places">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_YLFnsOqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_YLFnseqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_ZKEYcOqkEe-tFoh6goz9lA" name="transitions">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_ZKE_gOqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_ZKE_geqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_jPxdIOqkEe-tFoh6goz9lA" name="Transition" type="_2sUEcOqbEe-tFoh6goz9lA" association="_jPw2EOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_jPxdIeqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_jPxdIuqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_kxaPAeqkEe-tFoh6goz9lA" name="Place" type="_3qSIkOqbEe-tFoh6goz9lA" association="_kxZn8OqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_kxaPAuqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_kxaPA-qkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_4Hvxk-qkEe-tFoh6goz9lA" name="Arc" type="_uJYD8OqkEe-tFoh6goz9lA" association="_4HvKgOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_4HvxlOqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_4HvxleqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_TfmTgeqlEe-tFoh6goz9lA" name="AcceptingPetriNet" type="_KZe6AOqZEe-tFoh6goz9lA" aggregation="composite" association="_TfmTgOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_Tfm6kOqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_Tfm6keqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_KZe6AOqZEe-tFoh6goz9lA" name="AcceptingPetriNet">
+    <ownedAttribute xmi:id="_Tfm6kuqlEe-tFoh6goz9lA" name="PetriNet" type="_GoVjoOqZEe-tFoh6goz9lA" association="_TfmTgOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_Tfm6k-qlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_Tfm6lOqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_ahuSc-qlEe-tFoh6goz9lA" name="PetriNetMarking" type="_NqYzoOqlEe-tFoh6goz9lA" association="_ahtrYOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_ahuSdOqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_ahuSdeqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_dEETYOqlEe-tFoh6goz9lA" name="net">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_dEETYeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_dEETYuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_djL4UOqlEe-tFoh6goz9lA" name="imark">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_djL4UeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_djL4UuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_hTqgUOqlEe-tFoh6goz9lA" name="fmarks">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_hTrHYOqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_hTrHYeqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_rms2YOqlEe-tFoh6goz9lA" name="NetSemantics" type="__pI1gOqbEe-tFoh6goz9lA" aggregation="composite" association="_rmsPUOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_rms2YeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_rms2YuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_tnkh8OqlEe-tFoh6goz9lA" name="ExecutablePN" type="_sXjaoOqcEe-tFoh6goz9lA" aggregation="composite" association="_tnj64OqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_tnkh8eqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_tnkh8uqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedOperation xmi:id="_kM0ewOqlEe-tFoh6goz9lA" name="reachedFinal"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_2sUEcOqbEe-tFoh6goz9lA" name="Transition">
+    <ownedAttribute xmi:id="_jPw2EeqkEe-tFoh6goz9lA" name="PetriNet" type="_GoVjoOqZEe-tFoh6goz9lA" aggregation="composite" association="_jPw2EOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_jPw2EuqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_jPw2E-qkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3qSIkOqbEe-tFoh6goz9lA" name="Place" isAbstract="true">
+    <ownedAttribute xmi:id="_kxZn8eqkEe-tFoh6goz9lA" name="PetriNet" type="_GoVjoOqZEe-tFoh6goz9lA" aggregation="composite" association="_kxZn8OqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_kxZn8uqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_kxaPAOqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="__pI1gOqbEe-tFoh6goz9lA" name="NetSemantics">
+    <ownedAttribute xmi:id="_rms2Y-qlEe-tFoh6goz9lA" name="AcceptingPetriNet" type="_KZe6AOqZEe-tFoh6goz9lA" association="_rmsPUOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_rms2ZOqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_rms2ZeqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_s9EMYOqlEe-tFoh6goz9lA" name="ExecutablePN" type="_sXjaoOqcEe-tFoh6goz9lA" aggregation="composite" association="_s9DlUOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_s9EMYeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_s9EMYuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_78fZEOqlEe-tFoh6goz9lA" name="anet">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_78fZEeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_78fZEuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_9fO-MOqlEe-tFoh6goz9lA" name="curr">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_9fO-MeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_9fO-MuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedOperation xmi:id="_uDj6YOqlEe-tFoh6goz9lA" name="firable"/>
+    <ownedOperation xmi:id="_zdaT8OqlEe-tFoh6goz9lA" name="peek"/>
+    <ownedOperation xmi:id="_2TZCkOqlEe-tFoh6goz9lA" name="fire"/>
+    <ownedOperation xmi:id="_4K4vsOqlEe-tFoh6goz9lA" name="reached"/>
+    <ownedOperation xmi:id="_AS_fQOqmEe-tFoh6goz9lA" name="create"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_sXjaoOqcEe-tFoh6goz9lA" name="ExecutablePN">
+    <ownedAttribute xmi:id="_s9EMY-qlEe-tFoh6goz9lA" name="NetSemantics" type="__pI1gOqbEe-tFoh6goz9lA" association="_s9DlUOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_s9EMZOqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_s9EMZeqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_tnkh8-qlEe-tFoh6goz9lA" name="AcceptingPetriNet" type="_KZe6AOqZEe-tFoh6goz9lA" association="_tnj64OqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_tnkh9OqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_tnkh9eqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_6qGkIOqlEe-tFoh6goz9lA" name="anet">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_6qGkIeqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_6qGkIuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_E0cRMOqmEe-tFoh6goz9lA" name="sem">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_E0c4QOqmEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_E0c4QeqmEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedOperation xmi:id="_CNv7wOqmEe-tFoh6goz9lA" name="semantics"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Association" xmi:id="_jPw2EOqkEe-tFoh6goz9lA" memberEnd="_jPw2EeqkEe-tFoh6goz9lA _jPxdIOqkEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_kxZn8OqkEe-tFoh6goz9lA" memberEnd="_kxZn8eqkEe-tFoh6goz9lA _kxaPAeqkEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_qVuMIOqkEe-tFoh6goz9lA" name="Node" isAbstract="true">
+    <ownedAttribute xmi:id="_-a05MeqkEe-tFoh6goz9lA" name="Net" type="_FHPkUOqZEe-tFoh6goz9lA" aggregation="composite" association="_-a05MOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_-a1gQOqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_-a1gQeqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_KJY8oOqmEe-tFoh6goz9lA" name="name">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_KJY8oeqmEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_KJY8ouqmEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_LCaPUOqmEe-tFoh6goz9lA" name="id">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_LCaPUeqmEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_LCaPUuqmEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_uJYD8OqkEe-tFoh6goz9lA" name="Arc">
+    <ownedAttribute xmi:id="_4HvxkOqkEe-tFoh6goz9lA" name="PetriNet" type="_GoVjoOqZEe-tFoh6goz9lA" aggregation="composite" association="_4HvKgOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_4HvxkeqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_4HvxkuqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_PDAW8OqmEe-tFoh6goz9lA" name="id">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_PDAW8eqmEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_PDAW8uqmEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_vULDIOqkEe-tFoh6goz9lA" name="Edge" isAbstract="true">
+    <ownedAttribute xmi:id="_9et2QOqkEe-tFoh6goz9lA" name="Net" type="_FHPkUOqZEe-tFoh6goz9lA" aggregation="composite" association="_9etPMOqkEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_9et2QeqkEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_9et2QuqkEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_McgOwOqmEe-tFoh6goz9lA" name="to">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_Mcg10OqmEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_Mcg10eqmEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+    <ownedAttribute xmi:id="_NHGD4OqmEe-tFoh6goz9lA" name="from">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_NHGD4eqmEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_NHGD4uqmEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Realization" xmi:id="_yoZM8OqkEe-tFoh6goz9lA" client="_qVuMIOqkEe-tFoh6goz9lA" supplier="_3qSIkOqbEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Realization" xmi:id="_znOMsOqkEe-tFoh6goz9lA" client="_FHPkUOqZEe-tFoh6goz9lA" supplier="_GoVjoOqZEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Realization" xmi:id="_25-W4OqkEe-tFoh6goz9lA" client="_qVuMIOqkEe-tFoh6goz9lA" supplier="_2sUEcOqbEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Realization" xmi:id="_3fk-UOqkEe-tFoh6goz9lA" client="_vULDIOqkEe-tFoh6goz9lA" supplier="_uJYD8OqkEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_4HvKgOqkEe-tFoh6goz9lA" memberEnd="_4HvxkOqkEe-tFoh6goz9lA _4Hvxk-qkEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_9etPMOqkEe-tFoh6goz9lA" memberEnd="_9et2QOqkEe-tFoh6goz9lA _9et2Q-qkEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_-a05MOqkEe-tFoh6goz9lA" memberEnd="_-a05MeqkEe-tFoh6goz9lA _-a1gQuqkEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_NqYzoOqlEe-tFoh6goz9lA" name="PetriNetMarking">
+    <ownedAttribute xmi:id="_ahuScOqlEe-tFoh6goz9lA" name="AcceptingPetriNet" type="_KZe6AOqZEe-tFoh6goz9lA" aggregation="composite" association="_ahtrYOqlEe-tFoh6goz9lA">
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_ahuSceqlEe-tFoh6goz9lA" value="1"/>
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_ahuScuqlEe-tFoh6goz9lA" value="1"/>
+    </ownedAttribute>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Realization" xmi:id="_QkmiAOqlEe-tFoh6goz9lA" client="_uBqw4OqNEe-dbZCk5QSLQw" supplier="_NqYzoOqlEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_TfmTgOqlEe-tFoh6goz9lA" memberEnd="_TfmTgeqlEe-tFoh6goz9lA _Tfm6kuqlEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_ahtrYOqlEe-tFoh6goz9lA" memberEnd="_ahuScOqlEe-tFoh6goz9lA _ahuSc-qlEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_rmsPUOqlEe-tFoh6goz9lA" memberEnd="_rms2YOqlEe-tFoh6goz9lA _rms2Y-qlEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_s9DlUOqlEe-tFoh6goz9lA" memberEnd="_s9EMYOqlEe-tFoh6goz9lA _s9EMY-qlEe-tFoh6goz9lA"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_tnj64OqlEe-tFoh6goz9lA" memberEnd="_tnkh8OqlEe-tFoh6goz9lA _tnkh8-qlEe-tFoh6goz9lA"/>
+</uml:Model>
