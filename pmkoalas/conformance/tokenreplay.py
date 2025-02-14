@@ -10,13 +10,12 @@ from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.models.transitiontree import TransitionTreeGuard
 from pmkoalas._logging import info, debug, InfoQueueProcessor, InfoIteratorProcessor
-
-#typing imports
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from pmkoalas.models.guards import Guard, GuardOutcomes
-    from pmkoalas.models.petrinet import LabelledPetriNet, PetriNetWithData
-    from pmkoalas.models.petrinet import Place, Transition
+from pmkoalas.models.petrinets.pn import LabelledPetriNet, PetriNetMarking
+from pmkoalas.models.petrinets.pn import AcceptingPetriNet, PetriNetSemantics
+from pmkoalas.models.petrinets.pn import Transition
+from pmkoalas.models.petrinets.guards import Guard, GuardOutcomes
+from pmkoalas.models.petrinets.dpn import AcceptingDataPetriNet
+from pmkoalas.models.petrinets.dpn import get_execution_semantics
 
 class PlayoutTransitionGuard(TransitionTreeGuard):
     """
@@ -41,107 +40,15 @@ class PlayoutTransitionGuard(TransitionTreeGuard):
     def __hash__(self) -> int:
         return hash(self.expanded_html_label())
 
-class PetriNetMarking():
-    """
-    Data structure for a marking in a petri net, i.e. a multiset of places.
-    """
-    
-    def __init__(self, model:'LabelledPetriNet', marking:Dict['Place',int]) -> None:
-        self._net = model
-        self._mark = deepcopy(marking)
-        # for each transition compute the incoming and outcoming places
-        self._incoming:Dict[Transition,Set[Place]] = dict()
-        self._outcoming:Dict[Transition,Set[Place]] = dict()
-        for trans in self._net.transitions:
-            arcs = self._net.arcs
-            incoming = [ arc for arc in arcs if  arc.to_node == trans ]
-            outcoming = [ arc for arc in arcs if arc.from_node == trans ]
-            self._incoming[trans] = [ arc.from_node for arc in incoming ]
-            self._outcoming[trans] = [ arc.to_node for arc in outcoming ]
-
-    def enabled(self) -> Set['Transition']:
-        """
-        returns the set of transitions that are enabled at this marking.
-        """
-        ret = set()
-        for trans in self._net.transitions:
-            enabled = True
-            for place in self._incoming[trans]:
-                enabled = enabled and self._mark[place] > 0
-            if (enabled):
-                ret.add(trans)
-        return ret
-
-    def can_fire(self) -> Set['Transition']:
-        """
-        returns the set of transitions that can fire from this marking.
-        """
-        return self.enabled()
-    
-    def remark(self, firing:'Transition') -> 'PetriNetMarking':
-        """
-        Returns a new marking, that is one step from this marking by firing
-        the given transition.
-        """
-        if firing not in self.can_fire():
-            raise ValueError("Given transition cannot fire from this marking.")
-        next_mark = deepcopy(self._mark)
-        for incoming in self._incoming[firing]:
-            next_mark[incoming] = next_mark[incoming] - 1
-        for outcoming in self._outcoming[firing]:
-            next_mark[outcoming] = next_mark[outcoming] + 1
-        return PetriNetMarking(self._net, next_mark)
-    
-    def contains(self, place:'Place') -> bool:
-        """
-        Returns true if the given place is in the marking.
-        """
-        if (place in self._mark.keys()):
-            return self._mark[place] > 0
-        return False
-    
-    def is_subset(self, other:'PetriNetMarking') -> bool:
-        """
-        Returns true if this marking is a subset of the other marking.
-        """
-        for place in self._mark:
-            if self._mark[place] > other._mark[place]:
-                return False
-        return True
-    
-    def reached_final(self) -> bool:
-        """
-        Returns true if the marking is the final marking of the net.
-        """
-        return self == self._net.final_marking
-    
-    # data-model functions
-    def __getitem__(self, place:'Place') -> int:
-        if (self.contains(place)):
-            return self._mark[place]
-        return 0
-
-    def __str__(self) -> str:
-        vals = [ (i,v) for i,v in self._mark.items() if v > 0 ]
-        return str(vals)
-    
-    def __eq__(self, other: object) -> bool:
-        if (isinstance(other, PetriNetMarking)):
-            return self._mark == other._mark
-        return False
-    
-    def __hash__(self) -> int:
-        return hash(tuple(sorted(self._mark.items(),key=lambda x: x[0].name)))
-    
 class PetriNetFiringSequence():
     """
     A data structure for a sequence of fired transitions.
     """
 
-    def __init__(self, marking:'PetriNetMarking', fired:List['Transition'],
+    def __init__(self, sem:PetriNetSemantics, fired:List['Transition'],
         final_marking:PetriNetMarking) -> None:
         self._final = final_marking
-        self._mark = deepcopy(marking)
+        self._mark = deepcopy(sem)
         self._seq = deepcopy(fired)
 
     def next(self) -> Set['Transition']:
@@ -298,8 +205,8 @@ def generate_traces_from_lpn(
     return EventLog(completed, f"Generated traces from LPN ({model.name})")
 
 
-def construct_playout_log(model:'PetriNetWithData', max_length:int, 
-        initial_marking:'PetriNetMarking', final_marking:'PetriNetMarking') \
+def construct_playout_log(model:AcceptingDataPetriNet, max_length:int, 
+        initial_marking:PetriNetMarking, final_marking:PetriNetMarking) \
         -> ComplexEventLog:
     """ 
     Constructs a log of play-out traces from a model with a length of 
@@ -307,11 +214,11 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
     """
     # importing here to remove circular dependencies.
     from pmkoalas.models.transitiontree import TransitionTreeMerge
-
+    exec_model = get_execution_semantics(model)
     playout_traces = list()
     completed:Set[PetriNetFiringSequence] = set()
     incomplete = [ 
-        PetriNetFiringSequence(initial_marking, list(), final_marking)
+        PetriNetFiringSequence(exec_model.semantics, list(), final_marking)
     ]
     seen = set()
     pbar = InfoQueueProcessor(itername="processed partials",
@@ -381,5 +288,5 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
         "meta:generated:by" : "pmkoalas",
         "meta:generator:version" : __version__
         }), 
-        f"playout log for {model._name}"
+        f"playout log for {model.net._name}"
     )

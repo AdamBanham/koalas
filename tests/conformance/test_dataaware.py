@@ -4,7 +4,7 @@ from os.path import join
 from os import environ
 
 from pmkoalas.read import read_xes_complex
-from pmkoalas.models.petrinet import parse_pnml_for_dpn
+from pmkoalas.models.petrinets.read import parse_pnml_for_dpn
 from pmkoalas.conformance.dataaware import compute_guard_precision
 from pmkoalas.conformance.dataaware import compute_guard_recall
 from pmkoalas.conformance.dataaware import compute_determinism

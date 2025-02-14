@@ -66,7 +66,7 @@ See also:
 from enum import Enum
 import re
 
-from pmkoalas.models.petrinet import *
+from pmkoalas.models.petrinets.pn import *
 from logging  import debug
 
 

@@ -1,6 +1,6 @@
 import unittest
 
-from pmkoalas.models.guards import Expression, GuardOutcomes
+from pmkoalas.models.petrinets.guards import Expression, GuardOutcomes
 
 LT_EXP = "d1 < 5"
 LT_EXP2 = "d1 &lt; 5"

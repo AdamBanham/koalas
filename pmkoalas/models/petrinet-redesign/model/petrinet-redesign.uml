@@ -5,6 +5,8 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_IEF5geqlEe-tFoh6goz9lA" value="1"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_IEF5guqlEe-tFoh6goz9lA" value="1"/>
     </ownedAttribute>
+    <ownedOperation xmi:id="_LWv-QOq_Ee-9gpc2Yz5-yQ" name="__sub__"/>
+    <ownedOperation xmi:id="_61bPEOrAEe-9gpc2Yz5-yQ" name="__lshift__"/>
   </packagedElement>
   <packagedElement xmi:type="uml:Interface" xmi:id="_FHPkUOqZEe-tFoh6goz9lA" name="Net">
     <ownedAttribute xmi:id="_CdrroOqaEe-tFoh6goz9lA" name="nodes">

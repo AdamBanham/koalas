@@ -7,7 +7,7 @@ from pmkoalas.discovery.alpha_miner import AlphaRelation,AlphaPair
 from pmkoalas.discovery.alpha_miner import AlphaPlace,AlphaFlowRelation
 from pmkoalas.discovery.alpha_miner import AlphaTransition
 from pmkoalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
-from pmkoalas.models.petrinet import Place,Transition,Arc,LabelledPetriNet
+from pmkoalas.models.petrinets.pn import Place,Transition,Arc,LabelledPetriNet
 from pmkoalas.dtlog import convert
 
 # simple log tests
@@ -1340,7 +1340,8 @@ class SingleThreadAlphaPlusTest(unittest.TestCase):
     def test_mine(self):
         miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
-        net = miner.discover(BOOK_LOG)
+        anet = miner.discover(BOOK_LOG)
+        net = anet.net
         for p in net.places:
             found_match = False
             for o in BOOK_LPN_PL:
@@ -1371,7 +1372,7 @@ class SingleThreadAlphaPlusTest(unittest.TestCase):
         miner = self.miner
         # following figure 2, the alpha+ miner should return the original
         # Petri net
-        net = miner.discover(alpha_plus_log_1)
+        net = miner.discover(alpha_plus_log_1).net
         # weakly test that two nets are equivalent
         self.weakly_compare(net, alpha_plus_lpn_1)
 
@@ -1379,7 +1380,7 @@ class SingleThreadAlphaPlusTest(unittest.TestCase):
         miner = self.miner
         # following figure 5, the alpha+ miner should return the original
         # Petri net
-        net = miner.discover(alpha_plus_log_2)
+        net = miner.discover(alpha_plus_log_2).net
         # weakly test that two nets are equivalent
         self.weakly_compare(net, alpha_plus_lpn_2)
 
@@ -1387,7 +1388,7 @@ class SingleThreadAlphaPlusTest(unittest.TestCase):
         miner = self.miner
         # following figure 5, the alpha+ miner should return the original
         # Petri net
-        net = miner.discover(alpha_plus_log_3)
+        net = miner.discover(alpha_plus_log_3).net
         # weakly test that two nets are equivalent
         self.weakly_compare(net, alpha_plus_lpn_3)
 
@@ -1395,7 +1396,7 @@ class SingleThreadAlphaPlusTest(unittest.TestCase):
         miner = self.miner
         # following figure 5, the alpha+ miner should return the original
         # Petri net
-        net = miner.discover(alpha_plus_log_4)
+        net = miner.discover(alpha_plus_log_4).net
         # weakly test that two nets are equivalent
         self.weakly_compare(net, alpha_plus_lpn_4)
 
@@ -1403,7 +1404,7 @@ class SingleThreadAlphaPlusTest(unittest.TestCase):
         miner = self.miner
         # following figure 5, the alpha+ miner should return the original
         # Petri net
-        net = miner.discover(alpha_plus_log_5)
+        net = miner.discover(alpha_plus_log_5).net
         # weakly test that two nets are equivalent
         self.weakly_compare(net, alpha_plus_lpn_5)
 

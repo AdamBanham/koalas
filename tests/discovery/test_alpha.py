@@ -6,7 +6,7 @@ from pmkoalas.discovery.alpha_miner import AlphaRelation,AlphaPair
 from pmkoalas.discovery.alpha_miner import AlphaPlace,AlphaFlowRelation
 from pmkoalas.discovery.alpha_miner import AlphaTransition
 from pmkoalas.discovery.alpha_miner import AlphaSinkPlace,AlphaStartPlace
-from pmkoalas.models.petrinet import Place,Transition,Arc
+from pmkoalas.models.petrinets.pn import Place,Transition,Arc
 from pmkoalas.dtlog import convert
 
 # simple log tests
@@ -257,7 +257,8 @@ class SingleThreadAlphaTest(unittest.TestCase):
     def test_mine(self):
         miner = self.miner
         # following p173 and L5 in Process Mining (2016;2ND ED) 
-        net = miner.discover(BOOK_LOG)
+        anet = miner.discover(BOOK_LOG)
+        net = anet.net
         for p in net.places:
             found_match = False
             for o in BOOK_LPN_PL:

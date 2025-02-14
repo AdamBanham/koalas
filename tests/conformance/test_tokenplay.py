@@ -4,7 +4,7 @@ from pmkoalas.models.pnfrag import parse_net_fragments
 from pmkoalas.simple import Trace
 from pmkoalas._logging import setLevel, info
 from logging import INFO,ERROR
-from pmkoalas.models.petrinet import Place
+from pmkoalas.models.petrinets.pn import Place
 from pmkoalas.conformance.tokenreplay import generate_traces_from_lpn
 
 test_lpn = parse_net_fragments(

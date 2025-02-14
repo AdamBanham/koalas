@@ -18,14 +18,17 @@ Implemented techniques include:
     - determinism
 """
 from pmkoalas.complex import ComplexEventLog
-from pmkoalas.models.petrinet import PetriNetWithData
-from pmkoalas.models.guards import GuardOutcomes
+from pmkoalas.models.petrinets.dpn import PetriNetWithData
+from pmkoalas.models.petrinets.dpn import GuardedTransition
+from pmkoalas.models.petrinets.guards import GuardOutcomes
+from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.models.transitiontree import TransitionTree
-from pmkoalas.conformance.matching import ManyMatching, find_all_paths
-from pmkoalas.conformance.matching import construct_many_matching, _computation_many_matching
-from pmkoalas.conformance.matching import ExpontentialPathWeighter
 from pmkoalas.models.transitiontree import construct_from_model
+from pmkoalas.conformance.matching import ManyMatching, find_all_paths
+from pmkoalas.conformance.matching import construct_many_matching
+from pmkoalas.conformance.matching import _computation_many_matching
+from pmkoalas.conformance.matching import ExpontentialPathWeighter
 from pmkoalas._logging import info, enable_logging
 from pmkoalas._logging import InfoIteratorProcessor
 
@@ -119,8 +122,6 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
-    from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
-    from pmkoalas.models.guards import GuardOutcomes
     total_weight = 0
     flow_weight = 0
     # partial worker 
@@ -238,8 +239,7 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
-    from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
-    from pmkoalas.models.guards import GuardOutcomes
+
     # partial worker 
     pool = Parallel(n_jobs=-2)
     def partial(tree, trace, instances, path, inst_w) -> float:
@@ -356,8 +356,6 @@ def compute_determinism(model:PetriNetWithData) -> float:
     indicates that no transition that is involved in a choice has a discovered
     precondition.
     """
-    # typing imports
-    from pmkoalas.models.petrinet import GuardedTransition
     # find all transitions that are in the postsets of places 
     # with two or more transitions
     dtrans:Set[GuardedTransition] = set()

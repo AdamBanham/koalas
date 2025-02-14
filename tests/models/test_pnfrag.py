@@ -1,10 +1,8 @@
 import doctest
 import unittest
 
-from pmkoalas.models.petrinet import *
+from pmkoalas.models.petrinets.pn import *
 from pmkoalas.models.pnfrag import *
-
-
 
 initialI = Place("I",1)
 
@@ -26,7 +24,8 @@ class PetriNetFragmentTest(unittest.TestCase):
                                                  Arc(tran_a,final)]),
                                      name = 'test' )
         result = self.parser.create_net("test","I -> [a] -> F")
-        self.assertEqual( expected, result )
+        result = result.create_net()
+        self.assertEqual(expected, result)
 
     def test_duplicate_arcs(self):
         expected = BuildablePetriNet("test_duplicate_arcs");
@@ -109,6 +108,7 @@ class PetriNetFragmentTest(unittest.TestCase):
                                                  Arc(tran_a,final)]),
                                      name = "weighted_transition" )
         net = self.parser.create_net("weighted_transition","I -> {a 0.4} -> F")
+        net = net.create_net()
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_with_id(self):

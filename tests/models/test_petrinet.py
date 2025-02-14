@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from random import choice
 
-from pmkoalas.models.petrinet import Place, Transition, Arc
+from pmkoalas.models.petrinets.pn import Place, Transition, Arc
+from pmkoalas.models.petrinets.dot import convert_net_to_dot
+from pmkoalas.models.petrinets.export import convert_net_to_xmlstr
+from pmkoalas.models.petrinets.export import export_net_to_pnml
+from pmkoalas.models.petrinets.read import parse_pnml_into_lpn
 from pmkoalas.models.pnfrag import *
 from logging import *
 
@@ -124,6 +128,17 @@ class PetriNetTest(unittest.TestCase):
         arc2 = eval(arc.__repr__())
         self.assertEqual(arc, arc2)
 
+    def test_place_eq(self):
+        p1 = Place("I", pid="1")
+        p1a = Place("I", pid="1")
+        self.assertEqual(p1, p1a, "places with same name and pid are not equal")
+        p2 = Place("F", pid="3")
+        p2a = Place("F", pid="3")
+        self.assertEqual(p2, p2a, "places with same name and pid are not equal")
+        groupa = set([p1, p2])
+        groupb = set([p1a, p2a])
+        self.assertEqual(groupa, groupb, "groups of places are not equal")
+
     def test_repr_net(self):
         # test that nets can be reproduced
         net = LabelledPetriNet(
@@ -214,4 +229,25 @@ class PetriNetTest(unittest.TestCase):
             export_net_to_pnml( net1, outfile ) 
         # can't guarantee output order
         self.assertCharactersEqual(expectedXML,xmlStr)
+
+    def test_reading_pnml(self):
+        net1 = LabelledPetriNet(
+            [Place("I", "place-1"), Place("p2","place-2"), 
+             Place("F", "place-3")],
+            [ Transition("tau", "transition-1", 1, True),
+             Transition("a", "transition-2", 1, False) ],
+            [
+                Arc(Place("I", "place-1"), Transition("tau", "transition-1", 1, True)),
+                Arc(Transition("tau", "transition-1", 1, True), Place("p2", "place-2")),
+                Arc(Place("p2", "place-2"), Transition("a", "transition-2", 1, False)),
+                Arc(Transition("a", "transition-2", 1, False), Place("F", "place-3"))
+            ],
+            "tester"
+        )
+        with tempfile.TemporaryDirectory() as outdir:
+            export_net_to_pnml( net1, outdir + "/dotTest.pnml" ) 
+            net2 = parse_pnml_into_lpn(outdir + "/dotTest.pnml")
+        self.assertEqual(net1, net2, 
+          "Exported and re-imported nets are not equal")
+
 
