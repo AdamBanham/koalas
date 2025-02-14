@@ -250,10 +250,13 @@ class ExpontentialPathWeighter():
         self._size = len(self._cands)
 
     def __call__(self, path:Path, trace:Trace) -> float:
+        debug(f"computing weight for path {path} and trace {trace}")
         if path in self._cands:
             cost = cost_of_path(path, trace)
+            debug(f"cost of path was {cost}")
             share = 1 / self.size
             offset = self.kappa ** cost
+            debug(f"offset was {offset}, return {share * offset}")
             return share * offset
         else:
             return 0
@@ -302,7 +305,7 @@ def construct_many_matching(log:Union[EventLog,ComplexEventLog],
     max_length = max(
         [len(trace) for trace,_ in log]
     )
-    allcads = find_all_paths(tree, max_length)
+    allcads = find_all_paths(tree, max_length+1)
     rets = Parallel(n_jobs=-2)(
         delayed(_computation_many_matching)(trace,tree,allcads)
         for trace,allcads

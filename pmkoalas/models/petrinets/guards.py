@@ -6,7 +6,6 @@ with data.
 from pmkoalas._logging import debug
 from pmkoalas.complex import ComplexTrace
 
-
 from pyparsing import (
     Word,
     nums,

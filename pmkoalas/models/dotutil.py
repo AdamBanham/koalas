@@ -7,7 +7,7 @@ from logging import info
 from typing import Dict
 from warnings import warn
 
-from pmkoalas.models.petrinet import LabelledPetriNet,Place
+from pmkoalas.models.petrinets.pn import LabelledPetriNet,Place
 
 DFENC='utf-8'
 
