@@ -29,8 +29,6 @@ class TestNetExport(unittest.TestCase):
             fname = join(tmpdirname, "test.pnml")
             export_net_to_pnml(NET,fname)
             net = parse_pnml_into_wpn(fname)
-            print(net)
-            print(NET)
             self.assertEqual(NET.places, net.places)
             self.assertEqual(NET.transitions, net.transitions)
             self.assertEqual(NET.arcs, net.arcs)
