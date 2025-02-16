@@ -22,7 +22,7 @@ class GuardedTransition(Transition):
                  guard: Guard,
                  tid: str = None, 
                  silent: bool = False):
-        super().__init__(name, tid, 1, silent)
+        super().__init__(name, tid, silent)
         self._guard = deepcopy(guard)
 
     @property
@@ -92,6 +92,10 @@ class AcceptingDataPetriNet(AcceptingPetriNet):
                  finals:Set[PetriNetMarking]):
         super().__init__(net, inital, finals)
 
+    @property
+    def net(self) -> PetriNetWithData:
+        return super().net
+
 class DataPetriNetSemantics(PetriNetSemantics):
     """
     An abstraction for the semantics of a data Petri net.
@@ -99,12 +103,29 @@ class DataPetriNetSemantics(PetriNetSemantics):
     def __init__(self, net: PetriNetWithData, curr: PetriNetMarking):
         super().__init__(net, curr)
 
+    def fireable(self) -> Set[GuardedTransition]:
+        return super().fireable()
+    
+    def peek(self, firing: GuardedTransition) -> 'DataPetriNetSemantics':
+        return super().peek(firing)
+    
+    def fire(self, firing: GuardedTransition) -> 'DataPetriNetSemantics':
+        return super().fire(firing)
+
 class ExecutableDataPetriNet(ExecutablePetriNet):
     """
     An abstraction for a data Petri net that can be executed.
     """
     def __init__(self, anet:AcceptingDataPetriNet, sem:DataPetriNetSemantics):
         super().__init__(anet, sem)
+
+    @property
+    def semantics(self) -> DataPetriNetSemantics:
+        return super().semantics
+    
+    @property
+    def anet(self) -> AcceptingDataPetriNet:
+        return super().anet
 
 def get_execution_semantics(anet:AcceptingDataPetriNet) -> ExecutableDataPetriNet:
     """

@@ -62,13 +62,14 @@ See also:
     - https://adamburkeware.net/2021/05/20/petri-net-fragments.html
 
 '''
+from pmkoalas.models.petrinets.pn import *
+from pmkoalas.models.petrinets.wpn import BuildablePetriNet
+from pmkoalas.models.petrinets.wpn import WeightedPetriNet
+from pmkoalas.models.petrinets.wpn import WeightedTransition
+from pmkoalas._logging  import debug
 
 from enum import Enum
 import re
-
-from pmkoalas.models.petrinets.pn import *
-from logging  import debug
-
 
 ID_LEXEME = '__'
 
@@ -108,7 +109,7 @@ class ParseException(Exception):
 def create_net(net_title="", net_text="") -> LabelledPetriNet:
     return PetriNetFragmentParser().create_net(net_title,net_text)
 
-def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
+def parse_net_fragments(net_title:str, *fragments:str) -> WeightedPetriNet:
     """
     Returns a Petri net that is the result of progressively parsing each 
     fragment.
@@ -120,7 +121,7 @@ def parse_net_fragments(net_title:str, *fragments:str) -> LabelledPetriNet:
         net = parser.create_net(net_title, fragments[0])
         for frag in fragments[1:]:
             parser.add_to_net(net, frag)
-    return net
+    return net.create_net()
 
 
 class PetriNetFragmentParser:
@@ -182,7 +183,7 @@ class PetriNetFragmentParser:
             return None
         n = self.id_lookup[nid]
         if node_type != type(n):
-            raise ParseException(f"New node {nid} duplicates existing node of wrong type")
+            raise ParseException(f"New node {nid} duplicates existing node of wrong type :: {type(n)} != {node_type}")
         return n
 
     def check_existing_place(self, label: str):
@@ -192,10 +193,10 @@ class PetriNetFragmentParser:
         return self.check_existing_node_by_id(pid,Place)
 
     def check_existing_transition(self,label: str):
-        return self.check_existing_node(label,Transition)
+        return self.check_existing_node(label,WeightedTransition)
 
     def check_existing_transition_by_id(self,tran_id):
-        return self.check_existing_node_by_id(tran_id,Transition)
+        return self.check_existing_node_by_id(tran_id,WeightedTransition)
 
     def petri_one_line_net(self):
         p1 = self.place()
@@ -276,10 +277,10 @@ class PetriNetFragmentParser:
             transition = self.check_existing_transition_by_id(tran_id)
         if not transition:
             if tran_id:
-                transition = Transition(label,tid=tran_id,silent=silent_tran)
+                transition = WeightedTransition(label,tid=tran_id,silent=silent_tran)
                 self.id_lookup[tran_id] = transition
             else:
-                transition = Transition(label,tid=self.next_id(),
+                transition = WeightedTransition(label,tid=self.next_id(),
                                         silent=silent_tran)
                 self.label_lookup[label] = transition
             self.net.add_transition(transition)
@@ -319,11 +320,11 @@ class PetriNetFragmentParser:
                             TokenInfo.ID_PREFIX)
         if not transition:
             if tran_id:
-                transition = Transition(label,tid=tran_id,silent=silent_tran,
+                transition = WeightedTransition(label,tid=tran_id,silent=silent_tran,
                                     weight=weight)
                 self.id_lookup[tran_id] = transition
             else:
-                transition = Transition(label,tid=self.next_id(),
+                transition = WeightedTransition(label,tid=self.next_id(),
                                          silent=silent_tran, weight=weight)
                 self.label_lookup[label] = transition
             self.net.add_transition(transition)

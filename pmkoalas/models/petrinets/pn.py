@@ -7,20 +7,12 @@ during testing.
 For material on Petri Nets, see:
     - Quick and dirty introduction on wikipedia 
     https://en.wikipedia.org/wiki/Petri_net
-    - Bause and Kritzinger (2002) - Stochastic Petri Nets: An Introduction 
-    to the Theory. Freely available textbook at
-    https://www.researchgate.net/publication/258705139_Stochastic_Petri_Nets_-An_Introduction_to_the_Theory
+   
 '''
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Union, FrozenSet, Dict, Set
+from typing import Union, FrozenSet, Dict, Set, Iterator
 from uuid import uuid4
-
-# Candidate to move to a utility package
-def steq(self,other):
-    if type(other) is type(self):
-        return self.__dict__ == other.__dict__
-    return False
 
 def verbosecmp(obj1:object,obj2:object) -> str:
     """
@@ -72,11 +64,12 @@ class Place:
 
     def __eq__(self,other) -> bool:
         if isinstance(other, type(self)):
-            return self._name == other._name and self._pid == other._pid
+            return self._name == other._name \
+                and str(self._pid) == str(other._pid)
         return False
 
     def __hash__(self) -> int:
-        return hash((self._name,self._pid))
+        return hash((self._name,str(self._pid)))
 
     def __str__(self) -> str:
         return f'({self.name})'  if self._pid is None \
@@ -89,10 +82,10 @@ class Place:
 class Transition:
     """
     This is hashable and identifable transition for a Petri net.
-    A transition has a name, an identifier, a possible weight and can be silent.
+    A transition has a name, an identifier, and can be silent.
     """
 
-    def __init__(self,name:str,tid:str=None,weight:float=1.0,silent:bool=False):
+    def __init__(self,name:str,tid:str=None,silent:bool=False):
         self._name = name
         # create an identifier.
         if (tid == None):
@@ -100,7 +93,6 @@ class Transition:
         else:
             self._tid = tid
         # add extras
-        self._weight = weight
         self._silent = silent
 
     @property 
@@ -119,45 +111,23 @@ class Transition:
     def nodeId(self) -> str:
         return self._tid
 
-    @property
-    def weight(self) -> float:
-        return self._weight
-
-    @weight.setter
-    def weight(self,value:float) -> None:
-        self._weight = value
-
     def __eq__(self,other) -> bool:
         if isinstance(other,type(self)):
-            return self.name == other.name and self.tid == other.tid and  \
-                   self.weight == other.weight and self._silent == other._silent
+            return self.name == other.name \
+                and str(self.tid) == str(other.tid) \
+                and self._silent == other._silent
         return False
 
     def __hash__(self) -> int:
-        return hash((self._name,self._tid,self._weight,self._silent))
+        return hash((self._name,str(self._tid),self._silent))
 
     def __str__(self) -> str:
-        return f'[{self.name} {self.weight}]'  if self._tid is None \
-               else f'[{self.name}({self._tid}) {self.weight}]'
+        return f'[{self.name}]'  if self._tid is None \
+               else f'[{self.name}({self._tid})]'
 
     def __repr__(self) -> str:
-        return f'Transition("{self.name}",tid="{self.tid}",weight={self.weight},' \
+        return f'Transition("{self.name}",tid="{self.tid}",' \
                + f'silent={self.silent})'
-
-
-SILENT_TRANSITION_DEFAULT_NAME='tau'
-def silent_transition(name=None,tid=None,weight=None):
-    tn = SILENT_TRANSITION_DEFAULT_NAME
-    if name:
-        tn = name
-    tw = 1
-    ttid = None
-    if tid:
-        ttid = tid
-    if weight:
-        tw = weight
-    return Transition(name=tn,weight=tw,tid=ttid,silent=True)
-
 
 class Arc:
     """
@@ -240,10 +210,10 @@ class LabelledPetriNet:
         """
         Returns the set of nodes that are reachable from the given node.
         """
-        if node in self._postset_cache:
+        if node in self._postset_cache.keys():
             return self._postset_cache[node]
         else:
-            raise ValueError(f"Node {node} not in the net.")
+            raise ValueError(f"Node {node} does not belong to the net \n({self}).")
     
     def _postset(self,node:Union[Place,Transition]
         ) -> FrozenSet[Union[Place,Transition]]:
@@ -259,10 +229,10 @@ class LabelledPetriNet:
         """
         Returns the set of nodes that can reach the given node.
         """
-        if node in self._preset_cache:
+        if node in self._preset_cache.keys():
             return self._preset_cache[node]
         else:
-            raise ValueError(f"Node {node} not in the net.")
+            raise ValueError(f"Node {node} does not belong to the net \n({self}).")
 
     def _preset(self,node:Union[Place,Transition]
         ) -> FrozenSet[Union[Place,Transition]]:
@@ -274,12 +244,7 @@ class LabelledPetriNet:
                           if arc.to_node == node])
 
     def __eq__(self,other) -> bool:
-        if isinstance(other,self.__class__):
-            print("Comparing nets")
-            print(f"{(self._name  == other._name)=}")
-            print(f"{(self._places  == other._places)=}")
-            print(f"{(self._transitions  == other._transitions)=}")
-            print(f"{(self._arcs  == other._arcs)=}")
+        if isinstance(other, type(self)):
             return self._name  == other._name and \
                    self._places == other._places and \
                    self._transitions == other._transitions and \
@@ -322,75 +287,6 @@ class LabelledPetriNet:
             _str += f"\t\t- {a}\n"
         return _str
 
-class BuildablePetriNet(LabelledPetriNet):
-    """
-    Allows for the builder design pattern to be used for constructing a 
-    Petri net. Users can add places, transitions and arcs through a single 
-    chain of method calls. See usage below.
-
-    Usage
-    -----
-    ```
-    # setup elements
-    buildable = BuildablePetriNet("dupe_tran_with_id")
-    initial_place = Place("I",1)
-    ta1 = Transition("a",1)
-    ta2 = Transition("a",2)
-    tb = Transition("b",3)
-    finalPlace = Place("F",2)
-    # build net
-    buildable.add_place(initialPlace) \\
-        .add_transition(ta1) \\
-        .add_transition(ta2) \\
-        .add_transition(tb) \\
-        .add_place(finalPlace) \\
-        .add_arc_between(initialPlace, ta1) \\
-        .add_arc_between(ta1,finalPlace) \\
-        .add_arc_between(initialPlace, ta2) \\
-        .add_arc_between(ta2,finalPlace) \\
-        .add_arc_between(initialPlace, tb) \\
-        .add_arc_between(tb,finalPlace) 
-    # get a state of build
-    net = buildable.create_net()
-    ```
-    """
-    def __init__(self,label:str=None):
-        super().__init__(set(),set(),set(),label)
-
-    def add_place(self,place:Place) -> 'BuildablePetriNet':
-        "Adds a place to the net."
-        self._places.add(place)
-        return self
-
-    def add_transition(self,tran:Transition) -> 'BuildablePetriNet':
-        "Adds a tranistion to the net."
-        self._transitions.add(tran)
-        return self
-
-    def add_arc(self,arc:Arc)-> 'BuildablePetriNet':
-        "Adds an arc to the net."
-        self._arcs.add(arc)
-        return self
-
-    def add_arc_between(self,from_node:Union[Place,Transition],
-                             to_node:Union[Place,Transition]
-                        ) -> 'BuildablePetriNet' :
-        "Constructs an arc between the given nodes and adds it to the net."
-        self.add_arc(Arc(from_node,to_node))
-        return self
-
-    def create_net(self) -> LabelledPetriNet:
-        "Returns a Petri net of the current built state"
-        return LabelledPetriNet(self._places,self._transitions,self._arcs,self._name)
-
-    def __eq__(self,other):
-        if isinstance(other,type(self)) or isinstance(other,LabelledPetriNet):
-            return self._name  == other._name and \
-                   self._places == other._places and \
-                   self._transitions == other._transitions and \
-                   self._arcs   == self._arcs
-        return False
-
 class PetriNetMarking():
     """
     Data structure for a marking in a petri net, i.e. a multiset of places.
@@ -403,11 +299,25 @@ class PetriNetMarking():
     def mark(self) -> Dict[Place,int]:
         return deepcopy(self._mark)
     
+    def contains(self, place:Place) -> bool:
+        """
+        Returns true if the place is in the marking.
+        """
+        return place in self
+    
     # data-model functions
     def __getitem__(self, place:Place) -> int:
         if (self.contains(place)):
             return self._mark[place]
         return 0
+    
+    def __contains__(self, place:Place) -> None:
+        if (isinstance(place, Place)):
+            return place in self._mark and self._mark[place] > 0
+        return False
+    
+    def __iter__(self) -> Iterator[Place]:
+        return iter([p for p in self._mark if self._mark[p] > 0])
     
     ## self + other returns a new marking with the sum of the two
     def __add__(self, other:'PetriNetMarking') -> 'PetriNetMarking':
@@ -415,7 +325,10 @@ class PetriNetMarking():
             return NotImplemented
         new_mark = deepcopy(self._mark)
         for place in other._mark:
-            new_mark[place] = new_mark[place] + other._mark[place]
+            if place in self:
+                new_mark[place] = new_mark[place] + other._mark[place]
+            else:
+                new_mark[place] = other._mark[place]
         return PetriNetMarking(new_mark)
     
     ## self - other returns a new marking with the difference of the two
@@ -423,17 +336,20 @@ class PetriNetMarking():
         if (not isinstance(other, type(self))):
             return NotImplemented
         new_mark = deepcopy(self._mark)
-        for place in other._mark:
-            new_mark[place] = max(
-                new_mark[place] - other._mark[place],
-                0)
+        for place in other:
+            if place in self:
+                new_mark[place] = max(
+                    new_mark[place] - other._mark[place],
+                    0)
+            else:
+                new_mark[place] = 0
         return PetriNetMarking(new_mark)
     
     ## self << other checks that self is a subset of other
     def __lshift__(self, other:'PetriNetMarking') -> 'PetriNetMarking':
         if (not isinstance(other, type(self))):
             return NotImplemented
-        for place in self._mark:
+        for place in self:
             if place not in other._mark:
                 return False
             if self._mark[place] > other._mark[place]:
@@ -446,7 +362,15 @@ class PetriNetMarking():
     
     def __eq__(self, other: object) -> bool:
         if (isinstance(other, type(self))):
-            return self._mark == other._mark
+            for place in self:
+                if place not in other:
+                    return False
+                if self[place] != other[place]:
+                    return False
+            for place in other:
+                if place not in self:
+                    return False
+            return True
         return False
     
     def __hash__(self) -> int:
@@ -502,13 +426,13 @@ class PetriNetSemantics():
         """
         ret = set()
         for tran in self._net.transitions:
-            postset = self._net.postset(tran)
-            postset = dict( (f,1) for f in postset )
-            if (self._curr << PetriNetMarking(postset)):
+            preset = self._net.preset(tran)
+            preset = dict((f,1) for f in preset)
+            if (PetriNetMarking(preset) << self._curr):
                 ret.add(tran)
         return ret
 
-    def peek(self, firing:Transition) -> PetriNetMarking:
+    def peek(self, firing:Transition) -> 'PetriNetSemantics':
         """
         Peeks at the next marking that results from firing the given transition.
         """
@@ -525,11 +449,11 @@ class PetriNetSemantics():
         """
         if (firing not in self._fires):
             raise ValueError("Given transition cannot fire from this marking.")
-        firing = dict( (f,1) for f in self._net.preset(firing) )
-        mark = self._curr - PetriNetMarking(firing)
-        firing = dict( (f,1) for f in self._net.postset(firing) )
-        mark = mark + PetriNetMarking(firing)
-        return PetriNetSemantics(self._net, mark)
+        pre = dict( (f,1) for f in self._net.preset(firing) )
+        mark = self._curr - PetriNetMarking(pre)
+        post = dict( (f,1) for f in self._net.postset(firing) )
+        mark = mark + PetriNetMarking(post)
+        return PetriNetSemantics(self._anet, mark)
 
     def reached(self, mark:PetriNetMarking) -> bool:
         """
@@ -581,6 +505,9 @@ class PetriNetSemantics():
         return False
 
     ## data-model functions
+    def __str__(self):
+        return f"{self._curr} -> {[ str(f) for f in self.fireable()]}"
+    
     def __eq__(self, other: object) -> bool:
         if (isinstance(other, type(self))):
             return self._mark == other._mark and self._anet == other._anet
@@ -602,7 +529,7 @@ class ExecutablePetriNet():
         return deepcopy(self._sem)
     
     @property
-    def net(self) -> AcceptingPetriNet:
+    def anet(self) -> AcceptingPetriNet:
         return deepcopy(self._anet)
     
     ## data model functions
@@ -613,3 +540,10 @@ class ExecutablePetriNet():
     
     def __hash__(self) -> int:
         return hash((self._anet,self._sem))
+    
+def get_execution_semantics(anet:AcceptingPetriNet) -> ExecutablePetriNet:
+    """
+    Constructs an executable Petri net from the given Petri net and initial marking.
+    """
+    sem = PetriNetSemantics(anet, anet.initial_marking)
+    return ExecutablePetriNet(anet, sem)

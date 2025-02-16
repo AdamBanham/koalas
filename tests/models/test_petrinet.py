@@ -19,30 +19,30 @@ expectedXML = '''<pnml>
       <text>dotTest</text>
     </name>
     <page id="page1">
-      <place id="place-4">
+      <place id="4">
         <name>
           <text>Student</text>
         </name>
       </place>
-      <place id="place-3">
+      <place id="3">
         <name>
           <text>Sweep</text>
         </name>
       </place>
-      <place id="place-1">
+      <place id="1">
         <name>
           <text>I</text>
         </name>
       </place>
-      <transition id="transition-2" invisible="true">
+      <transition id="2" invisible="true">
         <name>
           <text>tau</text>
         </name>
         <toolspecific tool="StochasticPetriNet" version="0.2" invisible="True" priority="1" weight="2.0" distributionType="IMMEDIATE" />
       </transition>
-      <arc source="transition-2" target="place-3" id="arc-1" />
-      <arc source="place-1" target="transition-2" id="arc-2" />
-      <arc source="transition-2" target="place-4" id="arc-3" />
+      <arc source="2" target="3" id="arc-1" />
+      <arc source="1" target="2" id="arc-2" />
+      <arc source="2" target="4" id="arc-3" />
     </page>
   </net>
 </pnml>
@@ -84,17 +84,15 @@ class PetriNetTest(unittest.TestCase):
         t = Transition("t1", silent=True)
         t2 = eval(t.__repr__())
         self.assertEqual(t, t2)
-        t = Transition("t1", weight=0.5)
+        t = Transition("t1", silent=False)
         t2 = eval(t.__repr__())
         self.assertEqual(t, t2)
-        t = Transition("t1", weight=0.25,silent=True)
-        t2 = eval(t.__repr__())
-        self.assertEqual(t, t2)
+
 
     def test_hash_transition(self):
         # test hashing works
         p = Transition("t1")
-        p2 = Transition("t2",weight=0.5, silent=True)
+        p2 = Transition("t2", silent=True)
         try:
             p.__hash__()
             p2.__hash__()
@@ -111,7 +109,7 @@ class PetriNetTest(unittest.TestCase):
     def test_repr_arc(self):
         # test that arcs can be reproduced
         t = Transition("t1")
-        t2 = Transition("t2", weight=1.0, silent=True)
+        t2 = Transition("t2", silent=True)
         p = Place("p1")
         p2 = Place("p2")
         # testing
@@ -148,18 +146,18 @@ class PetriNetTest(unittest.TestCase):
           ],
           transitions=[
             Transition("t1",tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
-                       weight=1.0,silent=False),
+                       silent=False),
           ],
           arcs=[
             Arc(from_node=Place("p1",
                         pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8"),
                 to_node=Transition("t1",
                         tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
-                                  weight=1.0,silent=False)
+                                  silent=False)
             ),
             Arc(from_node=Transition("t1",
                         tid="24747a8f-0f98-4f2a-9694-1a6687c01334",
-                                    weight=1.0,silent=False),
+                                    silent=False),
                 to_node=Place("p1",
                         pid="f9da4b8b-2ebe-4384-a2f1-ae484cf898c8")),
           ],
@@ -234,13 +232,13 @@ class PetriNetTest(unittest.TestCase):
         net1 = LabelledPetriNet(
             [Place("I", "place-1"), Place("p2","place-2"), 
              Place("F", "place-3")],
-            [ Transition("tau", "transition-1", 1, True),
-             Transition("a", "transition-2", 1, False) ],
+            [ Transition("tau", "transition-1", True),
+             Transition("a", "transition-2", False) ],
             [
-                Arc(Place("I", "place-1"), Transition("tau", "transition-1", 1, True)),
-                Arc(Transition("tau", "transition-1", 1, True), Place("p2", "place-2")),
-                Arc(Place("p2", "place-2"), Transition("a", "transition-2", 1, False)),
-                Arc(Transition("a", "transition-2", 1, False), Place("F", "place-3"))
+                Arc(Place("I", "place-1"), Transition("tau", "transition-1", True)),
+                Arc(Transition("tau", "transition-1", True), Place("p2", "place-2")),
+                Arc(Place("p2", "place-2"), Transition("a", "transition-2", False)),
+                Arc(Transition("a", "transition-2", False), Place("F", "place-3"))
             ],
             "tester"
         )
@@ -249,5 +247,95 @@ class PetriNetTest(unittest.TestCase):
             net2 = parse_pnml_into_lpn(outdir + "/dotTest.pnml")
         self.assertEqual(net1, net2, 
           "Exported and re-imported nets are not equal")
+        
+    def test_marking(self):
+        p1 = Place("I", "place-1")
+        p2 = Place("p2","place-2")
+        p3 = Place("F", "place-3")
+        p4 = Place("p4", "place-4")
+        marking = PetriNetMarking({p1: 1, p2: 0, p3: 0})
+        self.assertEqual(marking, deepcopy(marking))
+        self.assertIn(p1, marking)
+        self.assertNotIn(p2, marking)
+        self.assertNotIn(p3, marking)
+        self.assertTrue(marking.contains(p1))
+        self.assertFalse(marking.contains(p2))
+        self.assertFalse(marking.contains(p3))
+        result = marking + PetriNetMarking({p1: 1, p2: 1, p3: 1})
+        expect = PetriNetMarking({p1: 2, p2: 1, p3: 1})
+        self.assertEqual(result, expect)
+        result = result - PetriNetMarking({p1: 1, p2: 1, p3: 1})
+        expect = PetriNetMarking({p1: 1, p2: 0, p3: 0})
+        self.assertEqual(result, expect)
+        curr = PetriNetMarking({p1: 1, p2: 1, p3: 2})
+        other = PetriNetMarking({p1: 1, p2: 0, p3: 1})
+        self.assertTrue(other << curr)
+        self.assertFalse(curr << other)
+        marking = PetriNetMarking({p1: 1, p2: 0, p3: 3})
+        self.assertTrue(marking[p1] == 1)
+        self.assertTrue(marking[p2] == 0)
+        self.assertTrue(marking[p3] == 3)
+        curr = PetriNetMarking({p1: 1, p2: 1, p3: 1})
+        other = PetriNetMarking({p2: 1, p3: 0, p4: 1})
+        self.assertEqual(curr + other, 
+                          PetriNetMarking({p1: 1, p2: 2, p3: 1, p4: 1}))
+        self.assertEqual(curr - other,
+                         PetriNetMarking({p1: 1, p2: 0, p3: 1, p4: 0}))
+        
+    def test_semantics(self):
+        net = parse_net_fragments(
+            "foobar",
+            "I__1 -> [A__2] -> p2__4",
+            "I__1 -> [B__3] -> p2__4",
+            "p2__4 -> [C__5] -> F__6"
+        )
+        anet = AcceptingPetriNet(
+            net,
+            PetriNetMarking({Place("I",1): 1}),
+            [PetriNetMarking({Place("F",6): 1})]
+        )
+        execnet = get_execution_semantics(anet)
+        # the following walk should be possible and reach final
+        sem = execnet.semantics
+        self.assertEqual(sem.fireable(), set(
+            [WeightedTransition("A",2), WeightedTransition("B",3)])
+        )
+        sem = sem.fire(WeightedTransition("A",2))
+        self.assertEqual(sem.fireable(), set(
+            [WeightedTransition("C",5)])
+        )
+        sem = sem.fire(WeightedTransition("C",5))
+        self.assertEqual(sem.fireable(), set(
+            [])
+        )
+        self.assertTrue(sem.reached_final())
+        # the following walk should be possible and reach final
+        sem = execnet.semantics
+        sem = sem.fire(WeightedTransition("B",3))
+        sem = sem.fire(WeightedTransition("C",5))
+        self.assertTrue(sem.reached_final())
+        # the following walk should not be possible but does not reach final
+        sem = execnet.semantics
+        sem = sem.fire(WeightedTransition("A",2))
+        self.assertFalse(sem.reached_final())
+
+    @unittest.expectedFailure
+    def test_semantics_fail(self):
+        net = parse_net_fragments(
+            "foobar",
+            "I__1 -> [A__2] -> p2__4",
+            "I__1 -> [B__3] -> p2__4",
+            "p2__4 -> [C__5] -> F__6"
+        )
+        anet = AcceptingPetriNet(
+            net,
+            PetriNetMarking({Place("I",1): 1}),
+            [PetriNetMarking({Place("F",6): 1})]
+        )
+        execnet = get_execution_semantics(anet)
+        # the following walk should not be possible
+        sem = execnet.semantics
+        sem = sem.fire(Transition("C",2))
+
 
 

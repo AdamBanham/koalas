@@ -12,10 +12,12 @@ from pmkoalas.models.transitiontree import TransitionTreeGuard
 from pmkoalas._logging import info, debug, InfoQueueProcessor, InfoIteratorProcessor
 from pmkoalas.models.petrinets.pn import LabelledPetriNet, PetriNetMarking
 from pmkoalas.models.petrinets.pn import AcceptingPetriNet, PetriNetSemantics
+from pmkoalas.models.petrinets.pn import ExecutablePetriNet
 from pmkoalas.models.petrinets.pn import Transition
 from pmkoalas.models.petrinets.guards import Guard, GuardOutcomes
 from pmkoalas.models.petrinets.dpn import AcceptingDataPetriNet
 from pmkoalas.models.petrinets.dpn import get_execution_semantics
+from pmkoalas._struct import Stack
 
 class PlayoutTransitionGuard(TransitionTreeGuard):
     """
@@ -97,7 +99,7 @@ class PetriNetFiringSequence():
         """
         Returns true if the firing sequence reaches the final marking.
         """
-        return self._mark == self._final
+        return self._mark.reached(self._final)
     
     def __len__(self) -> int:
         return len([ f for f in self._seq if not f.silent])
@@ -165,7 +167,7 @@ class PlayoutTrace(ComplexTrace):
         return self[i].guard
     
 def generate_traces_from_lpn(
-        model:'LabelledPetriNet', max_length:int,
+        model:ExecutablePetriNet, max_length:int,
         strict:bool=False, updates_on:int=1000) \
     -> EventLog:
     """
@@ -174,35 +176,40 @@ def generate_traces_from_lpn(
     marking. If strict is set to True, only traces that reach the final
     marking are returned.
     """
-    inprogress:List[Tuple[Trace,PetriNetMarking]] = [ 
-        (Trace([]), deepcopy(model.initial_marking)) ]
+    inprogress:Stack[Tuple[Trace,PetriNetSemantics]] = Stack([ 
+        (Trace([]), model.semantics) ]
+    )
     completed = []
     pcount = 0
-    while len(inprogress) > 0:
-        trace, mark = inprogress.pop(0)
-        debug(f"processing trace {str(trace)} with marking {str(mark)}")
+    while not inprogress.is_empty():
+        top = inprogress.pop()
+        trace:Trace = top[0]
+        sem:PetriNetSemantics = top[1]
+        debug(f"processing trace {str(trace)} with marking {str(sem)}")
         if len(trace) == max_length:
             if strict:
-                if mark.reached_final():
+                if sem.reached_final():
                     completed.append(trace)
             else:
                 completed.append(trace)
         else:
-            if mark.reached_final():
+            if sem.reached_final():
                 completed.append(trace)
             else:
-                firable = mark.can_fire()
+                firable = sem.fireable()
+                debug("firable transitions :: " + str(firable))
                 for t in firable:
-                    new_mark = mark.remark(t)
+                    new_mark = sem.fire(t)
                     new_trace = Trace(trace.sequence + [t.name])
-                    inprogress.append((new_trace, new_mark))
+                    inprogress.push((new_trace, new_mark))
         pcount += 1
         if (pcount % updates_on == 0):
-            info(f"processing {len(inprogress)} partial executions of the lpn")
-            info(f"shortest trace :: {len(inprogress[0][0])}")
-            info(f"longest trace :: {len(inprogress[-1][0])}")
+            debug(f"processing {len(inprogress)} partial executions of the lpn")
+            debug(f"shortest trace :: {len(inprogress[0][0])}")
+            debug(f"longest trace :: {len(inprogress[-1][0])}")
             pcount = 0
-    return EventLog(completed, f"Generated traces from LPN ({model.name})")
+        info(f"generated traces :: {completed}")
+    return EventLog(completed, f"Generated traces from LPN ({model.anet.net.name})")
 
 
 def construct_playout_log(model:AcceptingDataPetriNet, max_length:int, 

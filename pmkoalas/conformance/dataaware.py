@@ -29,7 +29,7 @@ from pmkoalas.conformance.matching import ManyMatching, find_all_paths
 from pmkoalas.conformance.matching import construct_many_matching
 from pmkoalas.conformance.matching import _computation_many_matching
 from pmkoalas.conformance.matching import ExpontentialPathWeighter
-from pmkoalas._logging import info, enable_logging
+from pmkoalas._logging import info, enable_logging, debug
 from pmkoalas._logging import InfoIteratorProcessor
 
 from typing import Set
@@ -224,13 +224,32 @@ def _computation_guard_precision(tree:TransitionTree, matching:ManyMatching,
     """
     The actual computation of guard-precision using the structures.
     """
+    def equal_share_bookkeeping(flow, mathching, log):
+        bookkeeping = 0
+        for trace, instances in log:
+            weighter = ExpontentialPathWeighter(mathching[trace])
+            paths = mathching[trace]
+            for path in paths:
+                for step,i in zip(path, range(1, len(path)+1)):
+                    if step.offering() == flow.offering(): 
+                        i_w = 0
+                        for instance in instances:
+                            irveson = flow.guard().check(
+                                instance.get_state_as_of(i-1)
+                            ) == GuardOutcomes.TRUE
+                            i_w += weighter.share if irveson else 0
+                        bookkeeping += i_w
+                        break
+        return bookkeeping
     upper_sum = 0.0
     lower_sum = 0.0
     for flow in InfoIteratorProcessor(
         "processing flows",
         tree.flows()):
+        debug(f"processing flow {flow} :: {upper_sum=}/{lower_sum=}")
         upper_sum += compute_directed_bookkeeping(flow, matching, log)
-        lower_sum += compute_general_bookkeeping(flow, matching, log)
+        lower_sum += equal_share_bookkeeping(flow, matching, log)
+        debug(f"processed flow {flow} :: {upper_sum=}/{lower_sum=}")
     prec = (1 + upper_sum) / (1 + lower_sum) 
     info(f"computed guard precision : {prec:.3f}")
     return prec
@@ -247,20 +266,20 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
         lower_sum = 0.0
         instance_weight = inst_w(path, trace)
         for step,i in zip(path, range(1, len(path)+1)):
-                    if isinstance(step, TransitionTreeGuardFlow):
-                        other_flows = step.offering().outgoing(tree.flows())
-                        other_flows = other_flows.difference(set([step]))
-                        for instance in instances:
-                            irveson = step.guard().check(
-                                    instance.get_state_as_of(i-1)
-                                ) == GuardOutcomes.TRUE
-                            upper_sum += instance_weight * int(irveson)
-                            lower_sum += inst_w.share * int(irveson)
-                            for lflow in other_flows:
-                                irveson = lflow.guard().check(
-                                    instance.get_state_as_of(i-1)
-                                ) == GuardOutcomes.TRUE
-                                lower_sum += inst_w.share  * int(irveson)
+            if isinstance(step, TransitionTreeGuardFlow):
+                other_flows = step.offering().outgoing(tree.flows())
+                other_flows = other_flows.difference(set([step]))
+                for instance in instances:
+                    irveson = step.guard().check(
+                            instance.get_state_as_of(i-1)
+                        ) == GuardOutcomes.TRUE
+                    upper_sum += instance_weight * int(irveson)
+                    lower_sum += inst_w.share * int(irveson)
+                    for lflow in other_flows:
+                        irveson = lflow.guard().check(
+                            instance.get_state_as_of(i-1)
+                        ) == GuardOutcomes.TRUE
+                        lower_sum += inst_w.share  * int(irveson)
         return upper_sum, lower_sum
     # worker for inputs
     info("preparing work")

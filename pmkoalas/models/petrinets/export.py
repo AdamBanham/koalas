@@ -5,17 +5,27 @@ a pnml file.
 TODO: Craft the abstraction layer for a general net.
 """
 from pmkoalas.models.petrinets.pn import LabelledPetriNet
+from pmkoalas.models.petrinets.wpn import WeightedPetriNet
+from pmkoalas.models.petrinets.dpn import PetriNetWithData
 from pmkoalas.models.petrinets.pn import AcceptingPetriNet
-from pmkoalas.models.petrinets.dpn import PetriNetWithData, GuardedTransition
+from pmkoalas.models.petrinets.wpn import WeightedAcceptingPetriNet
+from pmkoalas.models.petrinets.dpn import AcceptingDataPetriNet
+from pmkoalas.models.petrinets.dpn import GuardedTransition
+from pmkoalas.models.petrinets.wpn import WeightedTransition
 
 from uuid import UUID
 import xml.etree.ElementTree as ET
+from typing import Union
+from warnings import warn
 
 ENCODING='unicode'
 PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
 
-def convert_net_to_xml(net:LabelledPetriNet,
-        include_prom_bits:bool=False       
+def convert_net_to_xml(
+        net:Union[
+            LabelledPetriNet,WeightedPetriNet,PetriNetWithData,
+            AcceptingPetriNet,WeightedAcceptingPetriNet,AcceptingDataPetriNet],
+        include_prom_bits:bool=True       
     ) -> ET.Element: 
     """
     Converts a given Petri net to an XML structure that conforms with the pnml
@@ -23,11 +33,22 @@ def convert_net_to_xml(net:LabelledPetriNet,
 
     See: http://www.pnml.org/version-2009/grammar/pnmlcoremodel.rng
     """
+    if (isinstance(net,AcceptingPetriNet)):
+        anet = net
+        net = net.net
+    else:
+        anet = net
     # handlers for UUID for prombits
     from random import Random
     rd = Random(1998)
-    def getUUID() -> str:
-        return str(UUID(int=rd.getrandbits(128), version=4))
+    def getUUID(given:str) -> str:
+        try:
+            uuid_obj = UUID(given, version=4)
+            if str(uuid_obj) == given:
+                return given
+            raise ValueError("given was not a valid UUID")
+        except Exception:
+            return str(UUID(int=rd.getrandbits(128), version=4))
     # the conversion
     root = ET.Element('pnml')
     net_node = ET.SubElement(root,'net', 
@@ -42,7 +63,10 @@ def convert_net_to_xml(net:LabelledPetriNet,
     for place in net.places:
          # work out the id for the transition
         if isinstance(place.pid, int):
-            pid = f"place-{place.pid}"
+            wstring = f"Place {place} has an integer id, this is not " \
+                +"recommended, importing into others may break."
+            warn(wstring)
+            pid = f"{place.pid}"
         else:
             pid = place.pid
         nodes[place] = pid
@@ -53,28 +77,32 @@ def convert_net_to_xml(net:LabelledPetriNet,
             text_node = ET.SubElement(name_node,'text')
             text_node.text = place.name
         if (include_prom_bits):
-            prom_node = ET.SubElement(
+            ET.SubElement(
                     placeNode, 'toolspecific',
                     attrib={
                         'tool' : "ProM",
                         'version' : "6.4",
-                        'localNodeID' : getUUID()
+                        'localNodeID' : getUUID(place.pid)
                     }
                 )
-        if isinstance(net,AcceptingPetriNet):
-            if net.initial_marking is not None and net.initial_marking.contains(place):
+        if isinstance(anet,AcceptingPetriNet):
+            if anet.initial_marking.contains(place):
                 imarking = ET.SubElement(placeNode,'initialMarking')
                 text_node = ET.SubElement(imarking,'text')
-                text_node.text = str(net.initial_marking._mark[place])
-            if net.final_marking is not None and net.final_marking.contains(place):
+                text_node.text = str(anet.initial_marking[place])
+            fmark = list(anet.final_markings)[0]
+            if fmark.contains(place):
                 fmarking = ET.SubElement(placeNode,'finalMarking')
                 text_node = ET.SubElement(fmarking,'text')
-                text_node.text = str(net.final_marking._mark[place])
+                text_node.text = str(fmark[place])
 
     for tran in net.transitions:
         # work out the id for the transition
         if isinstance(tran.tid, int):
-            tid = f"transition-{tran.tid}"
+            wstring = f"Transition {tran} has an integer id, this is not " \
+                +"recommended, importing into others may break."
+            warn(wstring)
+            tid = f"{tran.tid}"
         else:
             tid = tran.tid
         nodes[tran] = tid
@@ -102,17 +130,19 @@ def convert_net_to_xml(net:LabelledPetriNet,
                     'tool' : "ProM",
                     'version' : "6.4",
                     'activity' : "$invisible$" if tran.silent else "",
-                    'localNodeID' : getUUID()
+                    'localNodeID' : getUUID(tran.tid)
                 }
             )
         # include stochastic info
-        ts_node = ET.SubElement(tranNode,'toolspecific',
+        if isinstance(tran,WeightedTransition):
+            ET.SubElement(tranNode,'toolspecific',
                         attrib={ 'tool':'StochasticPetriNet',
-                                 'version':'0.2', 
-                                 'invisible': str(tran.silent),
-                                 'priority': '1',
-                                 'weight' : str(tran.weight),
-                                 'distributionType': 'IMMEDIATE'} )
+                                'version':'0.2', 
+                                'invisible': str(tran.silent),
+                                'priority': '1',
+                                'weight' : str(tran.weight),
+                                'distributionType': 'IMMEDIATE'} 
+            )
     arcid = 1
     for arc in net.arcs:
         aid = "arc-"+str(arcid)
@@ -127,7 +157,7 @@ def convert_net_to_xml(net:LabelledPetriNet,
                 attrib={
                     'tool' : "ProM",
                     'version' : "6.4",
-                    'localNodeID' : getUUID()
+                    'localNodeID' : getUUID(aid)
                 }
             )
             arctype = ET.SubElement(
@@ -162,7 +192,7 @@ def convert_net_to_xmlstr(
 
 def export_net_to_pnml(
         net:LabelledPetriNet,fname:str,
-        include_prom_bits:bool=False
+        include_prom_bits:bool=True
         ) -> None: 
     """
     Converts a given Petri net, to an XML structure conforming to the pnml 

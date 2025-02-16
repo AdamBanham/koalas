@@ -717,7 +717,7 @@ def construct_from_model(model:object, longest_playout:int, freduce:bool=True)\
         playout_log = construct_playout_log(
             model, longest_playout,
             model.initial_marking,
-            model._finals[0]
+            list(model.final_markings)[0]
         )
         return convert_playout_to_tree(playout_log, longest_playout, 
                                        freduce=freduce)
