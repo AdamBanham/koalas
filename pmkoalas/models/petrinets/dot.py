@@ -1,5 +1,5 @@
 """
-This module contains helpers to create peretty dot (graphviz) digraphs 
+This module contains helpers to create pretty dot (graphviz) digraphs 
 for petri-net-type structures.
 
 """

@@ -208,7 +208,7 @@ class WeightedPetriNetSemantics(PetriNetSemantics):
         ret = super().fire(tran)
         return WeightedPetriNetSemantics(ret._anet, ret._curr)
     
-class ExcutableWeightedPetriNet(ExecutablePetriNet):
+class ExecutableWeightedPetriNet(ExecutablePetriNet):
     """
     An executable weighted Petri net.
     """
