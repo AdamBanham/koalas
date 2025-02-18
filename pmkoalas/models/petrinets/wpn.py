@@ -229,4 +229,4 @@ def get_execution_semantics(wanet:WeightedAcceptingPetriNet):
     Returns the execution semantics of a given weighted Petri net.
     """
     sem = WeightedPetriNetSemantics(wanet, wanet.initial_marking)
-    return ExcutableWeightedPetriNet(wanet, sem)
+    return ExecutableWeightedPetriNet(wanet, sem)
