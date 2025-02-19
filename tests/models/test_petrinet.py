@@ -319,12 +319,12 @@ class PetriNetTest(unittest.TestCase):
         sem = sem.fire(WeightedTransition("A",2))
         self.assertFalse(sem.reached_final())
 
-    @unittest.expectedFailure
+    
     def test_semantics_fail(self):
         net = parse_net_fragments(
             "foobar",
-            "I__1 -> [A__2] -> p2__4",
-            "I__1 -> [B__3] -> p2__4",
+            "I__1  -> [A__2] -> p2__4",
+            "I__1  -> [B__3] -> p2__4",
             "p2__4 -> [C__5] -> F__6"
         )
         anet = AcceptingPetriNet(
@@ -335,7 +335,9 @@ class PetriNetTest(unittest.TestCase):
         execnet = get_execution_semantics(anet)
         # the following walk should not be possible
         sem = execnet.semantics
-        sem = sem.fire(Transition("C",2))
+        exmessage = "Given transition cannot fire from this marking."
+        with self.assertRaisesRegex(ValueError,exmessage):
+            sem = sem.fire(Transition("C",2))
 
 
 
