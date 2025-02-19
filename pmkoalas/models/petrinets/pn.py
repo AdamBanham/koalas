@@ -8,6 +8,32 @@ For material on Petri Nets, see:
     - Quick and dirty introduction on wikipedia 
     https://en.wikipedia.org/wiki/Petri_net
    
+Design Considerations:
+    - The `Place` and `Transition` classes are hashable and comparable.
+       - However, in order to support exporting and then re-importing a 
+         Petri net, we use an identify attribute (pid/tid)
+       - In python land, what you decide to use an identifier is up to you.
+         - There are good cases for using an integer, say 4, or string, 
+           say 'foo'.
+         - These simple options make testing easier and repr's more readable.
+       - However, if you plan to export and then reimport into ProM 
+         or another tool (say pm4py), then you need to ensure that you 
+         use a valid uuuid version 4 as the identifier. We offer support
+         in various ways, one way is to leave the tid/pid as None and it 
+         will be generated for you. 
+            - The ProM implementation puts all elements into a hashmap
+              based on the identifier, so it can silently break if you
+              are not careful.
+            - In many cases, you cannot even import without valid uuidv4s.
+            - Similarly for pm4py, the identifier plays an important role
+              if you plan to use their alignment tools.
+        - Note, that hashing in python land occurs over the attributes of
+          the node, so comparing a node with a identifier of an int 4 and
+          a string "4" will be the same. We convert down to a string for
+          identifiers to make life simple.
+        - Also, hashing in python is salted so caching the hash is not 
+          advised for threaded code. 
+          See: https://docs.python.org/3.13/using/cmdline.html#cmdoption-R
 '''
 from collections.abc import Iterable
 from copy import deepcopy

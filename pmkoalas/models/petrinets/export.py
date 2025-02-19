@@ -9,26 +9,20 @@ TODO: Craft the abstraction layer for a general net.
 """
 
 from pmkoalas.models.petrinets.pn import LabelledPetriNet
-from pmkoalas.models.petrinets.wpn import WeightedPetriNet
 from pmkoalas.models.petrinets.dpn import PetriNetWithData
 from pmkoalas.models.petrinets.pn import AcceptingPetriNet
-from pmkoalas.models.petrinets.wpn import WeightedAcceptingPetriNet
-from pmkoalas.models.petrinets.dpn import AcceptingDataPetriNet
 from pmkoalas.models.petrinets.dpn import GuardedTransition
 from pmkoalas.models.petrinets.wpn import WeightedTransition
 
 from uuid import UUID
 import xml.etree.ElementTree as ET
 from typing import Union
-from warnings import warn
 
 ENCODING='unicode'
 PNML_URL='http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
 
 def convert_net_to_xml(
-        net:Union[
-            LabelledPetriNet,WeightedPetriNet,PetriNetWithData,
-            AcceptingPetriNet,WeightedAcceptingPetriNet,AcceptingDataPetriNet],
+        net:Union[LabelledPetriNet,AcceptingPetriNet],
         include_prom_bits:bool=True       
     ) -> ET.Element: 
     """
@@ -67,9 +61,6 @@ def convert_net_to_xml(
     for place in net.places:
          # work out the id for the transition
         if isinstance(place.pid, int):
-            wstring = f"Place {place} has an integer id, this is not " \
-                +"recommended, importing into others may break."
-            warn(wstring)
             pid = f"{place.pid}"
         else:
             pid = place.pid
@@ -103,9 +94,6 @@ def convert_net_to_xml(
     for tran in net.transitions:
         # work out the id for the transition
         if isinstance(tran.tid, int):
-            wstring = f"Transition {tran} has an integer id, this is not " \
-                +"recommended, importing into others may break."
-            warn(wstring)
             tid = f"{tran.tid}"
         else:
             tid = tran.tid
