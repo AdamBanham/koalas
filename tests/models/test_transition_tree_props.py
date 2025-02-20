@@ -5,7 +5,7 @@ from pmkoalas.simple import Trace
 from pmkoalas.complex import ComplexEvent
 from pmkoalas.read import read_xes_simple,read_xes_complex
 
-from pmkoalas.models.guards import Guard, GuardOutcomes, Expression
+from pmkoalas.models.petrinets.guards import Guard, GuardOutcomes, Expression
 from pmkoalas.conformance.tokenreplay import PlayoutTransitionGuard
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex,TransitionTreeRoot

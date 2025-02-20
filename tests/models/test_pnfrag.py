@@ -1,10 +1,11 @@
 import doctest
 import unittest
 
-from pmkoalas.models.petrinet import *
+from pmkoalas.models.petrinets.pn import *
+from pmkoalas.models.petrinets.wpn import WeightedTransition, WeightedPetriNet
+from pmkoalas.models.petrinets.utils import silent_transition
+from pmkoalas.models.petrinets.wpn import BuildablePetriNet
 from pmkoalas.models.pnfrag import *
-
-
 
 initialI = Place("I",1)
 
@@ -18,21 +19,22 @@ class PetriNetFragmentTest(unittest.TestCase):
                "invalid", "I --> ~jerry [a] -> F")
 
     def test_ptp_fragment(self):
-        tran_a = Transition("a",2)
+        tran_a = WeightedTransition("a",2)
         final = Place("F",3)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a]),
                                      arcs = set([Arc(initialI,tran_a),
                                                  Arc(tran_a,final)]),
                                      name = 'test' )
         result = self.parser.create_net("test","I -> [a] -> F")
-        self.assertEqual( expected, result )
+        result = result.create_net()
+        self.assertEqual(expected, result)
 
     def test_duplicate_arcs(self):
         expected = BuildablePetriNet("test_duplicate_arcs");
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta = Transition("a",2)
+        ta = WeightedTransition("a",2)
         expected.add_transition(ta)
         finalPlace = Place("F",3)
         expected.add_place(finalPlace)
@@ -47,7 +49,7 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("tran_with_id")
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta = Transition("a",1)
+        ta = WeightedTransition("a",1)
         expected.add_transition(ta)
         finalPlace = Place("F",2)
         expected.add_place(finalPlace)
@@ -61,9 +63,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("dupe_tran_with_id")
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta1 = Transition("a",1)
+        ta1 = WeightedTransition("a",1)
         expected.add_transition(ta1)
-        ta2 = Transition("a",2)
+        ta2 = WeightedTransition("a",2)
         expected.add_transition(ta2)
         finalPlace = Place("F",2)
         expected.add_place(finalPlace)
@@ -79,9 +81,9 @@ class PetriNetFragmentTest(unittest.TestCase):
     def test_dupe_tran_with_partial_id(self):
         expected = BuildablePetriNet("dupe_tran_with_id")
         initialPlace = Place("I",1)
-        ta1 = Transition("a",1)
-        ta2 = Transition("a",2)
-        tb = Transition("b",3)
+        ta1 = WeightedTransition("a",1)
+        ta2 = WeightedTransition("a",2)
+        tb = WeightedTransition("b",3)
         finalPlace = Place("F",2)
         expected.add_place(initialPlace) \
             .add_transition(ta1) \
@@ -101,20 +103,21 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition(self):
-        tran_a = Transition("a",weight=0.4,tid=2)
+        tran_a = WeightedTransition("a",weight=0.4,tid=2)
         final = Place("F",3)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a]),
                                      arcs = set([Arc(initialI,tran_a),
                                                  Arc(tran_a,final)]),
                                      name = "weighted_transition" )
         net = self.parser.create_net("weighted_transition","I -> {a 0.4} -> F")
+        net = net.create_net()
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_with_id(self):
-        tran_a = Transition("a",weight=0.4,tid=1)
+        tran_a = WeightedTransition("a",weight=0.4,tid=1)
         final = Place("F",2)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a]),
                                      arcs = set([Arc(initialI,tran_a),
                                                  Arc(tran_a,final)]),
@@ -125,10 +128,10 @@ class PetriNetFragmentTest(unittest.TestCase):
 
 
     def test_weighted_transition_with_dupes(self):
-        tran_a1 = Transition("a",weight=0.4,tid=1)
-        tran_a2 = Transition("a",weight=0.5,tid=2)
+        tran_a1 = WeightedTransition("a",weight=0.4,tid=1)
+        tran_a2 = WeightedTransition("a",weight=0.5,tid=2)
         final = Place("F",2)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a1,tran_a2]),
                                      arcs = set([Arc(initialI,tran_a1),
                                                  Arc(tran_a1,final),
@@ -141,12 +144,12 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_id_backrefs(self):
-        tran_a1 = Transition("a",tid=1)
-        tran_a2 = Transition("a",tid=2)
-        tranB  = Transition("b",tid=4)
+        tran_a1 = WeightedTransition("a",tid=1)
+        tran_a2 = WeightedTransition("a",tid=2)
+        tranB  = WeightedTransition("b",tid=4)
         p1    = Place("p1",3)
         final = Place("F",2)
-        expected = LabelledPetriNet( places = set([initialI,p1,final]),
+        expected = WeightedPetriNet( places = set([initialI,p1,final]),
                                      transitions = set([tran_a1,tran_a2,tranB]),
                                      arcs = set([Arc(initialI,tran_a1),
                                                  Arc(tran_a1,final),
@@ -163,12 +166,12 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_id_backrefs_weighted(self):
-        tran_a1 = Transition("a",tid=1,weight=0.4)
-        tran_a2 = Transition("a",tid=2,weight=0.5)
-        tranB  = Transition("b",tid=4)
+        tran_a1 = WeightedTransition("a",tid=1,weight=0.4)
+        tran_a2 = WeightedTransition("a",tid=2,weight=0.5)
+        tranB  = WeightedTransition("b",tid=4)
         p1    = Place("p1",3)
         final = Place("F",2)
-        expected = LabelledPetriNet( places = set([initialI,p1,final]),
+        expected = WeightedPetriNet( places = set([initialI,p1,final]),
                                      transitions = set([tran_a1,tran_a2,tranB]),
                                      arcs = set([Arc(initialI,tran_a1),
                                                  Arc(tran_a1,final),
@@ -185,9 +188,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_above_ten(self):
-        tran_a = Transition("a",weight=10.4,tid=2)
+        tran_a = WeightedTransition("a",weight=10.4,tid=2)
         final = Place("F",3)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a]),
                                      arcs = set([Arc(initialI,tran_a),
                                                  Arc(tran_a,final)]),
@@ -197,9 +200,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_weighted_transition_default_weight(self):
-        tran_a = Transition("a",tid=2)
+        tran_a = WeightedTransition("a",tid=2)
         final = Place("F",3)
-        expected = LabelledPetriNet( 
+        expected = WeightedPetriNet( 
                     places = set([initialI,final]),
                     transitions = set([tran_a]),
                     arcs = set([Arc(initialI,tran_a),
@@ -214,11 +217,11 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("two_transition_fragment")
         initialPlace = Place("initialPlace",1)
         expected.add_place(initialPlace)
-        t1 = Transition("transition1",2)
+        t1 = WeightedTransition("transition1",2)
         expected.add_transition(t1)
         mp = Place("mp",3)
         expected.add_place(mp)
-        t2 = Transition("transition2",4)
+        t2 = WeightedTransition("transition2",4)
         expected.add_transition(t2)
         finalPlace = Place("finalPlace",5)
         expected.add_place(finalPlace)
@@ -236,11 +239,11 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("trailing_whitespace")
         initialPlace = Place("initialPlace",1)
         expected.add_place(initialPlace)
-        t1 = Transition("transition1",2)
+        t1 = WeightedTransition("transition1",2)
         expected.add_transition(t1)
         mp = Place("mp",3)
         expected.add_place(mp)
-        t2 = Transition("transition2",4)
+        t2 = WeightedTransition("transition2",4)
         expected.add_transition(t2)
         finalPlace = Place("finalPlace",5)
         expected.add_place(finalPlace)
@@ -257,9 +260,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("blog_example")
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta = Transition("a",2)
+        ta = WeightedTransition("a",2)
         expected.add_transition(ta)
-        tb = Transition("b",4)
+        tb = WeightedTransition("b",4)
         expected.add_transition(tb)
         finalPlace = Place("F",3)
         expected.add_place(finalPlace)
@@ -286,9 +289,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("multi_edge")
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta = Transition("a",2)
+        ta = WeightedTransition("a",2)
         expected.add_transition(ta)
-        tb = Transition("b",4)
+        tb = WeightedTransition("b",4)
         expected.add_transition(tb)
         finalPlace = Place("F",3)
         expected.add_place(finalPlace)
@@ -314,7 +317,7 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("silent_transition")
         initialPlace = Place("initialPlace",1)
         expected.add_place(initialPlace)
-        t1 = Transition("transition1",2)
+        t1 = WeightedTransition("transition1",2)
         expected.add_transition(t1)
         mp = Place("mp",3)
         expected.add_place(mp)
@@ -335,7 +338,7 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("silent_weighted_transition")
         initialPlace = Place("initialPlace",1)
         expected.add_place(initialPlace)
-        t1 = Transition("transition1",2)
+        t1 = WeightedTransition("transition1",2)
         expected.add_transition(t1)
         mp = Place("mp",3)
         expected.add_place(mp)
@@ -357,7 +360,7 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("silent_transition")
         initialPlace = Place("initialPlace",1)
         expected.add_place(initialPlace)
-        t1 = Transition("transition1",2)
+        t1 = WeightedTransition("transition1",2)
         expected.add_transition(t1)
         mp = Place("mp",3)
         expected.add_place(mp)
@@ -384,7 +387,7 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("place_with_id")
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta = Transition("a",2)
+        ta = WeightedTransition("a",2)
         expected.add_transition(ta)
         finalPlace = Place("F",5)
         expected.add_place(finalPlace)
@@ -399,9 +402,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         expected = BuildablePetriNet("place_with_id")
         initialPlace = Place("I",1)
         expected.add_place(initialPlace)
-        ta = Transition("a",2)
+        ta = WeightedTransition("a",2)
         expected.add_transition(ta)
-        tb = Transition("b",3)
+        tb = WeightedTransition("b",3)
         expected.add_transition(tb)
         finalPlace = Place("F",5)
         expected.add_place(finalPlace)
@@ -415,9 +418,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, net, verbosecmp(expected,net))
 
     def test_parse_net_fragments_function(self):
-        tran_a = Transition("a",2)
+        tran_a = WeightedTransition("a",2)
         final = Place("F",3)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a]),
                                      arcs = set([Arc(initialI,tran_a),
                                                  Arc(tran_a,final)]),
@@ -426,9 +429,9 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, result )
 
     def test_create_net_function(self):
-        tran_a = Transition("a",2)
+        tran_a = WeightedTransition("a",2)
         final = Place("F",3)
-        expected = LabelledPetriNet( places = set([initialI,final]),
+        expected = WeightedPetriNet( places = set([initialI,final]),
                                      transitions = set([tran_a]),
                                      arcs = set([Arc(initialI,tran_a),
                                                  Arc(tran_a,final)]),
@@ -437,29 +440,29 @@ class PetriNetFragmentTest(unittest.TestCase):
         self.assertEqual( expected, result )
 
     def test_spaces_in_labels(self):
-        expected_net_parsed_with_spaces = LabelledPetriNet(
+        expected_net_parsed_with_spaces = WeightedPetriNet(
                 places=[
                         Place("F",pid=3),
                         Place("p",pid=1),
                         Place("I",pid=1),
                 ],
                 transitions=[
-                        Transition("tau",tid=2,weight=1.0,silent=True),
-                        Transition("Create Fine",tid=2,weight=1.0,silent=False),
-                        Transition("Create Finer",tid=3,weight=0.3,silent=False),
+                        WeightedTransition("tau",tid=2,weight=1.0,silent=True),
+                        WeightedTransition("Create Fine",tid=2,weight=1.0,silent=False),
+                        WeightedTransition("Create Finer",tid=3,weight=0.3,silent=False),
                 ],
                 arcs=[
-                        Arc(from_node=Transition("tau",tid=2,weight=1.0,
+                        Arc(from_node=WeightedTransition("tau",tid=2,weight=1.0,
                             silent=True),to_node=Place("F",pid=3)),
-                        Arc(from_node=Place("I",pid=1),to_node=Transition(
+                        Arc(from_node=Place("I",pid=1),to_node=WeightedTransition(
                             "Create Finer",tid=3,weight=0.3,silent=False)),
-                        Arc(from_node=Place("I",pid=1),to_node=Transition(
+                        Arc(from_node=Place("I",pid=1),to_node=WeightedTransition(
                             "Create Fine",tid=2,weight=1.0,silent=False)),
-                        Arc(from_node=Transition("Create Finer",tid=3,weight=0.3,
+                        Arc(from_node=WeightedTransition("Create Finer",tid=3,weight=0.3,
                             silent=False),to_node=Place("p",pid=1)),
-                        Arc(from_node=Place("p",pid=1),to_node=Transition("tau",
+                        Arc(from_node=Place("p",pid=1),to_node=WeightedTransition("tau",
                             tid=2,weight=1.0,silent=True)),
-                        Arc(from_node=Transition("Create Fine",tid=2,weight=1.0,
+                        Arc(from_node=WeightedTransition("Create Fine",tid=2,weight=1.0,
                             silent=False),to_node=Place("p",pid=1)),
                 ],
                 name='ROAD FINES NORMATIVE MODEL'

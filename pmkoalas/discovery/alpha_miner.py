@@ -15,7 +15,8 @@ from copy import deepcopy,copy
 from pmkoalas.simple import EventLog
 from pmkoalas._logging import info,debug
 from pmkoalas.directly import DirectlyFollowPair
-from pmkoalas.models.petrinet import LabelledPetriNet, Arc
+from pmkoalas.models.petrinets.pn import LabelledPetriNet, Arc
+from pmkoalas.models.petrinets.pn import PetriNetMarking, AcceptingPetriNet
 from pmkoalas.discovery.meta import DiscoveryTechnique
 
 class AlphaRelationType(Enum):
@@ -358,7 +359,7 @@ class AlphaMinerInstance(DiscoveryTechnique):
         info("Footprint matrix mined.")
         return deepcopy(self._matrix)
 
-    def discover(self, log:EventLog) -> LabelledPetriNet:
+    def discover(self, log:EventLog) -> AcceptingPetriNet:
         """
         Mines a petri net based on the given event log, using
         the alpha miner discovery technique.
@@ -400,7 +401,7 @@ class AlphaMinerInstance(DiscoveryTechnique):
         TL = set([ AlphaTransition(t) for t in TL])
         self._matrix = None
         info("Alpha Miner Returning Petri Net")
-        from pmkoalas.models.petrinet import Place, Transition, Arc
+        from pmkoalas.models.petrinets.pn import Place, Transition, Arc
         places = dict()
         transitions = dict()
         for place in PL:
@@ -408,7 +409,8 @@ class AlphaMinerInstance(DiscoveryTechnique):
         for transition in TL:
             transitions[transition.name] = Transition(transition.name)
         net = LabelledPetriNet(
-            places.values(), transitions.values(),
+            set( p for p in places.values()), 
+            set(t for t in transitions.values()),
             [Arc(
                 places[f.src.name] if 
                 isinstance(f.src, AlphaPlace) 
@@ -435,9 +437,10 @@ class AlphaMinerInstance(DiscoveryTechnique):
                 imark[place] = 1
             if len(out_arcs) == 0:
                 fmark[place] = 1
-        net.set_initial_marking(imark)
-        net.set_final_marking(fmark)
-        return net
+        imark = PetriNetMarking(imark)
+        fmark = PetriNetMarking(fmark)
+        anet = AcceptingPetriNet(net, imark, [fmark])
+        return anet
 
     def _step_one(self, log:EventLog) -> Set[str]:
         """
@@ -732,7 +735,7 @@ class AlphaMinerPlusInstance(DiscoveryTechnique):
         is called but mines ordering relations that capture length-two loops,
         as described in Def. 4.4 of the article.
         """
-        from pmkoalas.models.petrinet import Transition,Arc, Place
+        from pmkoalas.models.petrinets.pn import Transition,Arc, Place
         self._matrix = None
         _ = self.mine_footprint_matrix(log)
         #step one 
@@ -818,8 +821,11 @@ class AlphaMinerPlusInstance(DiscoveryTechnique):
                 imark[place] = 1
             if len(out_arcs) == 0:
                 fmark[place] = 1
-        net.set_initial_marking(imark)
-        net.set_final_marking(fmark)
+        net = AcceptingPetriNet(
+            net,
+            PetriNetMarking(imark),
+            [PetriNetMarking(fmark)]
+        )
         return net 
     
     def _step_one(self, log:EventLog) -> Set[str]:
@@ -852,7 +858,7 @@ class AlphaMinerPlusInstance(DiscoveryTechnique):
         Returns a set of flow relations that capture the ordering relations
         that capture length-one loops.
         """
-        from pmkoalas.models.petrinet import Place,Transition,Arc
+        from pmkoalas.models.petrinets.pn import Place,Transition,Arc
         flows = set()
         for t in doubles:
             places_A = set(
@@ -901,7 +907,7 @@ class AlphaMinerPlusInstance(DiscoveryTechnique):
         """
         miner = AlphaMinerInstance(min_inst=self._min_inst,optimised=self._opt)
         miner.mine_footprint_matrix = self.mine_footprint_matrix
-        return miner.discover(log)
+        return miner.discover(log).net
         
     
 

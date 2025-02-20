@@ -18,15 +18,18 @@ Implemented techniques include:
     - determinism
 """
 from pmkoalas.complex import ComplexEventLog
-from pmkoalas.models.petrinet import PetriNetWithData
-from pmkoalas.models.guards import GuardOutcomes
+from pmkoalas.models.petrinets.dpn import PetriNetWithData
+from pmkoalas.models.petrinets.dpn import GuardedTransition
+from pmkoalas.models.petrinets.guards import GuardOutcomes
+from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.models.transitiontree import TransitionTree
-from pmkoalas.conformance.matching import ManyMatching, find_all_paths
-from pmkoalas.conformance.matching import construct_many_matching, _computation_many_matching
-from pmkoalas.conformance.matching import ExpontentialPathWeighter
 from pmkoalas.models.transitiontree import construct_from_model
-from pmkoalas._logging import info, enable_logging
+from pmkoalas.conformance.matching import ManyMatching, find_all_paths
+from pmkoalas.conformance.matching import construct_many_matching
+from pmkoalas.conformance.matching import _computation_many_matching
+from pmkoalas.conformance.matching import ExpontentialPathWeighter
+from pmkoalas._logging import info, enable_logging, debug
 from pmkoalas._logging import InfoIteratorProcessor
 
 from typing import Set
@@ -119,8 +122,6 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
-    from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
-    from pmkoalas.models.guards import GuardOutcomes
     total_weight = 0
     flow_weight = 0
     # partial worker 
@@ -223,13 +224,32 @@ def _computation_guard_precision(tree:TransitionTree, matching:ManyMatching,
     """
     The actual computation of guard-precision using the structures.
     """
+    def equal_share_bookkeeping(flow, mathching, log):
+        bookkeeping = 0
+        for trace, instances in log:
+            weighter = ExpontentialPathWeighter(mathching[trace])
+            paths = mathching[trace]
+            for path in paths:
+                for step,i in zip(path, range(1, len(path)+1)):
+                    if step.offering() == flow.offering(): 
+                        i_w = 0
+                        for instance in instances:
+                            irveson = flow.guard().check(
+                                instance.get_state_as_of(i-1)
+                            ) == GuardOutcomes.TRUE
+                            i_w += weighter.share if irveson else 0
+                        bookkeeping += i_w
+                        break
+        return bookkeeping
     upper_sum = 0.0
     lower_sum = 0.0
     for flow in InfoIteratorProcessor(
         "processing flows",
         tree.flows()):
+        debug(f"processing flow {flow} :: {upper_sum=}/{lower_sum=}")
         upper_sum += compute_directed_bookkeeping(flow, matching, log)
-        lower_sum += compute_general_bookkeeping(flow, matching, log)
+        lower_sum += equal_share_bookkeeping(flow, matching, log)
+        debug(f"processed flow {flow} :: {upper_sum=}/{lower_sum=}")
     prec = (1 + upper_sum) / (1 + lower_sum) 
     info(f"computed guard precision : {prec:.3f}")
     return prec
@@ -238,8 +258,7 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
-    from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
-    from pmkoalas.models.guards import GuardOutcomes
+
     # partial worker 
     pool = Parallel(n_jobs=-2)
     def partial(tree, trace, instances, path, inst_w) -> float:
@@ -247,20 +266,20 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
         lower_sum = 0.0
         instance_weight = inst_w(path, trace)
         for step,i in zip(path, range(1, len(path)+1)):
-                    if isinstance(step, TransitionTreeGuardFlow):
-                        other_flows = step.offering().outgoing(tree.flows())
-                        other_flows = other_flows.difference(set([step]))
-                        for instance in instances:
-                            irveson = step.guard().check(
-                                    instance.get_state_as_of(i-1)
-                                ) == GuardOutcomes.TRUE
-                            upper_sum += instance_weight * int(irveson)
-                            lower_sum += inst_w.share * int(irveson)
-                            for lflow in other_flows:
-                                irveson = lflow.guard().check(
-                                    instance.get_state_as_of(i-1)
-                                ) == GuardOutcomes.TRUE
-                                lower_sum += inst_w.share  * int(irveson)
+            if isinstance(step, TransitionTreeGuardFlow):
+                other_flows = step.offering().outgoing(tree.flows())
+                other_flows = other_flows.difference(set([step]))
+                for instance in instances:
+                    irveson = step.guard().check(
+                            instance.get_state_as_of(i-1)
+                        ) == GuardOutcomes.TRUE
+                    upper_sum += instance_weight * int(irveson)
+                    lower_sum += inst_w.share * int(irveson)
+                    for lflow in other_flows:
+                        irveson = lflow.guard().check(
+                            instance.get_state_as_of(i-1)
+                        ) == GuardOutcomes.TRUE
+                        lower_sum += inst_w.share  * int(irveson)
         return upper_sum, lower_sum
     # worker for inputs
     info("preparing work")
@@ -356,8 +375,6 @@ def compute_determinism(model:PetriNetWithData) -> float:
     indicates that no transition that is involved in a choice has a discovered
     precondition.
     """
-    # typing imports
-    from pmkoalas.models.petrinet import GuardedTransition
     # find all transitions that are in the postsets of places 
     # with two or more transitions
     dtrans:Set[GuardedTransition] = set()

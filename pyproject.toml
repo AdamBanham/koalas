@@ -26,7 +26,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [ 
-  'xmlschema'
+  'xmlschema',
+  'coverage'
 ]
 
 [tool.setuptools]
@@ -34,8 +35,13 @@ packages = [
 "pmkoalas",
 "pmkoalas.discovery",
 "pmkoalas.models",
+"pmkoalas.models.petrinets",
 "pmkoalas.conformance",
 ]
+
+[tool.coverage.run]
+branch = true
+source = ["./pmkoalas"]
 
 [project.urls]
 "Homepage" = "https://github.com/AdamBanham/koalas"

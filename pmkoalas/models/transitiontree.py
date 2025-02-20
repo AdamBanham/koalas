@@ -710,14 +710,14 @@ def construct_from_model(model:object, longest_playout:int, freduce:bool=True)\
     flow exists between nodes.
     """
     # import here to avoid cirular dependenies
-    from pmkoalas.models.petrinet import LabelledPetriNet
+    from pmkoalas.models.petrinets.pn import AcceptingPetriNet
     from pmkoalas.conformance.tokenreplay import construct_playout_log
     # the work
-    if (issubclass(type(model), LabelledPetriNet)):
+    if (isinstance(model, AcceptingPetriNet)):
         playout_log = construct_playout_log(
             model, longest_playout,
             model.initial_marking,
-            model.final_marking
+            list(model.final_markings)[0]
         )
         return convert_playout_to_tree(playout_log, longest_playout, 
                                        freduce=freduce)

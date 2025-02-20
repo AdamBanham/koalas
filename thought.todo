@@ -1,16 +1,18 @@
-# Features
+# Potential Features
 
-- Exporting a log ?? 
-    - a progress bar for exporting?
+- Importing and Export Petri net types
+    - currently a far bit of code is just repeated
+    - it would be nice if a pattern was used to make importing and exporting
+      easier to extend
+    - a suggestion was to use a chain of responsiblity to build out a pattern.
 
-- helpful error messages for reader
+- helpful error messages for reading XES log
     - what attribute
     - what event #
     - what trace #
     - to encourage helpful repair
-
-- decorators 
-    - debug parameter to turn on and off logging
+    - a low memory version as importing via element tree can be impossible for
+      extra large logs, like zippo's xes log for mimic iii/iv
 
 - validate XML files output by lib against XSD schema for XES
     - appears that BPIC logs and OpenXES do not conform to the schema
