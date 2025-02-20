@@ -1,12 +1,6 @@
 """
 This module contains the abstraction layer that reads an arbitrary pnml file.
 """
-
-"""
-List of things that might never be done or touched, but are nice to look at:
-TODO: Craft the abstraction layer for reading pnml files.
-"""
-
 from pmkoalas.models.petrinets.pn import LabelledPetriNet, Place
 from pmkoalas.models.petrinets.pn import Transition, Arc
 from pmkoalas.models.petrinets.pn import AcceptingPetriNet, PetriNetMarking

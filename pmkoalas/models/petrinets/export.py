@@ -2,12 +2,6 @@
 This model contains the base abstraction layers for exporting a net into
 a pnml file.
 """
-
-"""
-List of things that might never be done or touched, but are nice to look at:
-TODO: Craft the abstraction layer for a general net.
-"""
-
 from pmkoalas.models.petrinets.pn import LabelledPetriNet
 from pmkoalas.models.petrinets.dpn import PetriNetWithData
 from pmkoalas.models.petrinets.pn import AcceptingPetriNet
