@@ -5,12 +5,11 @@ matchings.
 from typing import Any, Union, Dict, List, Set, Iterable, Tuple
 from copy import deepcopy
 
-from joblib import Parallel, delayed, parallel_backend
+from joblib import Parallel, delayed
 
 from pmkoalas.models.transitiontree import TransitionTreeFlow
 from pmkoalas.models.transitiontree import TransitionTree
 from pmkoalas.models.transitiontree import TransitionTreeVertex
-from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.complex import ComplexEventLog
 from pmkoalas._logging import info, InfoIteratorProcessor,InfoQueueProcessor
@@ -135,42 +134,22 @@ def find_path_in_tree(tree:TransitionTree, tgt:TransitionTreeVertex)\
     """
     Constructs a path from the root to the given node in a tree.
     """
-    def handle_sig(sigma, k):
-        ret = "<"
-        for i in range(k):
-            ret += sigma[i] + ","
-        return ret[:-1] + ">"
     seq = []
-    last = tree.root()
-    curr = 0
-    sigma = tgt.sigma_sequence[1:-1].split(',')
-    info(f"looking for path to {tgt}")
-    while last != tgt:
-        info(f"current node :: {str(last)}")
-        step = False
-        curr += 1
-        pos = last.child
-        if pos.sigma_sequence == handle_sig(sigma,curr):
-            info(f"found step :: {pos}")
-            seq.append(pos.flow)
-            last = pos
-            step = True
-        # else check siblings
-        else:
-            info(f"looking at siblings")
-            pos = last.child.sibling
-            while pos is not None:
-                info(f"current sibling :: {pos}")
-                if pos.sigma_sequence == handle_sig(sigma,curr):
-                    info(f"found step :: {pos}")
-                    seq.append(pos.flow)
-                    last = pos
-                    step = True
-                    break
-                pos = pos.sibling
-        assert step, f"unable to find step for {last} in {tgt}"
-        info(f"Current seq :: {seq}")
-    info(f"found path :: {seq} to  {tgt}")
+    breakdown = Trace([])
+    goal = tgt.sigma_sequence().sequence
+    while breakdown != tgt.sigma_sequence():
+        step = Trace(breakdown.sequence + [goal.pop(0)])
+        found = False
+        for flow in tree.flows():
+            if flow.offering().sigma_sequence() == breakdown:
+                if flow.next().sigma_sequence() == step:
+                    seq.append(flow)
+                    breakdown = step 
+                    found = True 
+                    break 
+        if (not found):
+            raise ValueError("Unable to find a interconnected "\
+                             +"sequence of flows.")
     return Path(seq)
 
 def mutate_path_with_skips(path:Path, k:int) -> Set[Path]:
@@ -192,27 +171,16 @@ def mutate_path_with_skips(path:Path, k:int) -> Set[Path]:
             ret = ret.union(adding)
             adding = set()
             for muter in mutaters:
-                debug(f"mutating :: {muter}")
+                info(f"mutating :: {muter}")
                 for i in range(len(muter)+1):
                     spath = muter.sequence[:i] + [Skipper()] + muter.sequence[i:]
                     spath = Path(spath)
                     if (len(spath) <= k) and spath not in ret:
                         adding.add(spath)
-                        debug(f"adding new path to mutations :: {spath}")
+                        info(f"adding new path to mutations :: {spath}")
                         log_que.extent(1)
                 log_que.update(1)
         return ret
-    
-class DummyFlow(TransitionTreeGuardFlow):
-    """
-    A dummy flow for the root of a tree.
-    """
-    def __init__(self, source, act, target, guard, next_terminal):
-        super().__init__(source, act, target, guard)
-        self._terminal = next_terminal
-
-    def next_terminal(self) -> bool:
-        return self._terminal
 
 def find_all_paths(tree:TransitionTree, k:int) -> Set[Path]:
     """
@@ -220,66 +188,14 @@ def find_all_paths(tree:TransitionTree, k:int) -> Set[Path]:
     """
     seen_paths = set()
     # construct all paths to nodes of at most length k
-    last = tree.root()
-    unchecked = [([],last)]
-    complete_paths = []
-    K = 0
-    while len(unchecked) > 0 and K < k:
-        tmp = []
-        info(f"checking level :: {K}")
-        debug(f"unchecked size :: {len(unchecked)}")
-        for seq, checking in unchecked:
-            debug("checking :: " + str(checking.sigma_sequence))
-            next_level = checking.child
-            # add child to unchecked
-            if next_level is not None:
-                flow = DummyFlow(
-                    next_level.flow.offering(), 
-                    next_level.flow.activity(), 
-                    next_level.flow.next(), 
-                    next_level.flow.guard(),
-                    tree[next_level.flow.next()].terminal
-                )
-                tmp.append((seq + [flow], next_level))
-                if (next_level.terminal):
-                    complete_paths.append(Path(seq + [flow]))
-            else:
-                debug(f"no child for {checking}")
-                continue
-            # check for siblings of next level
-            siblings = next_level.sibling
-            while siblings is not None:
-                flow = DummyFlow(
-                    siblings.flow.offering(), 
-                    siblings.flow.activity(), 
-                    siblings.flow.next(), 
-                    next_level.flow.guard(),
-                    tree[siblings.flow.next()].terminal
-                )
-                # add sibling to unchecked
-                tmp.append((seq + [flow], siblings))
-                if (siblings.terminal):
-                    complete_paths.append(Path(seq + [flow]))
-                siblings = siblings.sibling
-        unchecked = tmp
-        K += 1  
-    info("handing unfinished paths...")
-    if len(unchecked) > 0:
-        for partial,_ in InfoIteratorProcessor(
-            "processing partials",unchecked):
-            complete_paths.append(Path(partial))
-    seen_paths = seen_paths.union(complete_paths)
-    info("starting mutation process...")
+    nodes = [ v for v in tree.vertices() if len(v.sigma_sequence()) <= k]
+    complete_paths = [ find_path_in_tree(tree,n) for n in nodes]
+    seen_paths = seen_paths.union(set(complete_paths))
     # constuct all paths with skips 
-    pool = Parallel(n_jobs=-3, return_as='generator_unordered')
-    paths = InfoIteratorProcessor("processing mutations", 
-        [ path for path in seen_paths ], stack=8)
-    worked = pool(
-        delayed(mutate_path_with_skips)(path, k) 
-        for path in paths)
-    for mutations in worked:
-        seen_paths = seen_paths.union(mutations)
-    info("computed all paths with mutations...")
+    for path in InfoIteratorProcessor("computing all mutations", 
+                                      [ path for path in complete_paths ]):
+        mutate = mutate_path_with_skips(path, k)
+        seen_paths = seen_paths.union(mutate)
     return seen_paths
 
 def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
@@ -296,7 +212,7 @@ def cost_of_path(path:Path, trace:Trace, root_is_terminal:bool=False) -> int:
         else:
             act_cost += 0 if act == actf.activity() else 1
     if (len(path.noskips) > 0 ):
-        term_cost = 0 if path.noskips[-1].next_terminal else 1
+        term_cost = 0 if path.noskips[-1].next().terminal() else 1
     else:
         term_cost = 0 if root_is_terminal else 1
     return len_cost + act_cost + term_cost
@@ -307,23 +223,18 @@ def find_least_costy_paths(paths:Set[Path], trace:Trace,
     Finds the subset of the given paths that are least costy.
     """
     ret = set()
-    info("computing least costy paths...")
-    def partial(path):
-        return path, cost_of_path(path, trace, root_is_terminal=root_is_terminal)
-    costing = [
-        partial(path)
+    costing = dict( 
+        (path, cost_of_path(path, trace, root_is_terminal=root_is_terminal))
         for path 
-        in InfoIteratorProcessor(f"computing costings for {trace}", paths, stack=6)
-    ]
-    info(f"sorting coistings...")
-    costing = sorted(costing, key=lambda x: x[1])
-    info(f"sorted coistings...")
-    ideal = costing[0][1]
-    i = 0
-    while costing[i][1] == ideal:
-        ret.add(costing[i][0])
-        i += 1
-    info(f"found ideal cost :: {ideal} for trace :: {trace} with num of paths :: {len(ret)}")
+        in paths
+    )
+    ideal = -1
+    while len(ret) == 0:
+        ideal += 1
+        ret = set()
+        for path,cost in costing.items():
+            if cost == ideal:
+                ret.add(path) 
     return ret 
     
 class ExpontentialPathWeighter():
@@ -392,8 +303,7 @@ def construct_many_matching(log:Union[EventLog,ComplexEventLog],
         [len(trace) for trace,_ in log]
     )
     allcads = find_all_paths(tree, max_length)
-    rets = Parallel(n_jobs=-2,
-                    return_as='generator_unordered')( 
+    rets = Parallel(n_jobs=-2)(
         delayed(_computation_many_matching)(trace,tree,allcads)
         for trace,allcads
         in InfoIteratorProcessor(

@@ -184,7 +184,7 @@ class ExpressionParser():
         try :
             self._result = self._expr.parseString(self._org_exp)[0]
         except Exception as e:
-            print(f"Failed to parse the following string :: {self._org_exp}")
+            debug(f"Failed to parse the following string :: {self._org_exp}")
             raise e
 
     def get_observed_vars(self):

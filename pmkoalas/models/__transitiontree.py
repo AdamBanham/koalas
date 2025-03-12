@@ -3,23 +3,16 @@ This module outlines a data structure for transitions tree as proposed by Hidder
  Dumas, M., van der Aalst, W.M.P., ter Hofstede, A.H.M., Verelst, J.: When are two
  workflows the same? In: CATS. ACS (2005); These trees can be modified for future work.
 """
-from typing import Any, Set, List, Tuple, Union, Dict
+from typing import Any, Set, List, Tuple, Union
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import reduce
 from os import path,mkdir
-from joblib import Parallel, delayed
 
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.complex import ComplexEvent, ComplexEventLog
 from pmkoalas._logging import info, InfoQueueProcessor, InfoIteratorProcessor
 
-from pmkoalas._struct import Stack
-
-#typing imports
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from pmkoalas.conformance.tokenreplay import PlayoutTrace
 class TransitionTreeVertex():
     """
     Data class for a vertex in a transition tree.
@@ -27,65 +20,20 @@ class TransitionTreeVertex():
 
     VERTEX_FORMAT = "v_{id}"
 
-    __slots__ = ['_label', '_partial', '_end', '_sibling', '_child', '_flow']
-
     def __init__(self, id:int, partial_trace:Trace, end:bool=False) -> None:
         self._label = self.VERTEX_FORMAT.format(id=id)
-        self._partial = str(partial_trace)
+        self._partial = deepcopy(partial_trace)
         self._end = end
-        self._sibling = None 
-        self._child = None
-        self._flow = None
     
-    @property
+    # properties
     def id(self) -> str:
         " returns a identifier for this vertex."
         return self._label
     
-    @property
     def sigma_sequence(self) -> Trace:
         " returns the unique partial trace from root to this vertex."
         return deepcopy(self._partial)
     
-    @property
-    def sibling(self) -> 'TransitionTreeVertex':
-        " returns the sibling of this vertex."
-        return self._sibling
-    
-    @sibling.setter
-    def sibling(self, sibling:'TransitionTreeVertex') -> None:
-        " sets the sibling of this vertex."
-        self._sibling = sibling
-
-    @property
-    def child(self) -> 'TransitionTreeVertex':
-        " returns the child of this vertex."
-        return self._child
-    
-    @child.setter
-    def child(self, child:'TransitionTreeVertex') -> None:
-        " sets the child of this vertex."
-        self._child = child
-
-    @property
-    def terminal(self) -> bool:
-        """ 
-        returns a boolean to say if this vertex is signals the end of the 
-        process execution.
-        """
-        return self._end
-    
-    @property
-    def flow(self) -> 'TransitionTreeFlow':
-        " returns the flow that is incoming to this vertex."
-        return self._flow
-    
-    @flow.setter
-    def flow(self, flow:'TransitionTreeFlow') -> None:
-        " sets the flow that is incoming to this vertex."
-        self._flow = flow
-
-
     def is_root(self) -> bool:
         " returns a boolean to say if this vertex is the root."
         return False
@@ -94,17 +42,20 @@ class TransitionTreeVertex():
         " makes vertex terminal."
         self._end = True
     
+    def terminal(self) -> bool:
+        """ 
+        returns a boolean to say if this vertex is signals the end of the 
+        process execution.
+        """
+        return self._end
+    
     # utility functions
-    def outgoing(self) -> Set['TransitionTreeFlow']:
+    def outgoing(self, flows:Set['TransitionTreeFlow']) -> Set['TransitionTreeFlow']:
         " returns the set of flows that are outgoing from this vertex."
         out = set()
-        next_level = self.child
-        if (next_level != None):
-            out.add(next_level)
-            sibling = next_level.sibling
-            while (sibling != None):
-                out.add(sibling.flow)
-                sibling = sibling.sibling
+        for f in flows:
+            if (f.offering() == self):
+                out.add(f)
         return out
     
     def html_label(self) -> str:
@@ -114,7 +65,7 @@ class TransitionTreeVertex():
     
     # data model functions
     def __str__(self) -> str:
-        return self.id
+        return self.id()
 
     def __eq__(self, __o: object) -> bool:
         if (isinstance(__o, TransitionTreeVertex)):
@@ -122,7 +73,7 @@ class TransitionTreeVertex():
         return False
     
     def __hash__(self) -> int:
-        return hash((self.sigma_sequence))
+        return hash((self.sigma_sequence().__hash__()))
     
 class TransitionTreeRoot(TransitionTreeVertex):
     """
@@ -161,20 +112,18 @@ class TransitionTreeFlow():
     Template for a flow between two vertices in a transition tree.
     """
 
-    __slots__ = ['_source', '_act', '_target']
-
-    def __init__(self, source:str, 
+    def __init__(self, source:TransitionTreeVertex, 
                  act:str, 
-                 target:str) -> None:
+                 target:TransitionTreeVertex) -> None:
         self._source = source
         self._act = act 
         self._target = target
 
-    def offering(self) -> str:
+    def offering(self) -> TransitionTreeVertex:
         " returns the vertex that offers this flow."
         return self._source
     
-    def next(self) -> str:
+    def next(self) -> TransitionTreeVertex:
         " returns the vertex that this flow is directed towards."
         return self._target
     
@@ -225,9 +174,9 @@ class TransitionTreePopulationFlow(TransitionTreeFlow):
     A implementation for a flow with an exact population of data attribute mappings.
     """
 
-    def __init__(self, source:str, 
+    def __init__(self, source:TransitionTreeVertex, 
                  act:str, 
-                 target:str, 
+                 target:TransitionTreeVertex, 
                  population:List[ComplexEvent]) -> None:
         super().__init__(source, act, target)
         self._pop = deepcopy(population)
@@ -408,9 +357,9 @@ class TransitionTreeGuardFlow(TransitionTreeFlow):
     
     def __hash__(self) -> int:
         return hash(tuple([
-            str(self.offering()),
+            self.offering(),
             hash(self.activity())+self.guard().__hash__(),
-            str(self.next())
+            self.next()
         ]))
     
     def __str__(self):
@@ -434,54 +383,57 @@ class TransitionTree():
     without cycles. See 'When are two  workflows the same?' In: CATS. ACS (2005).
     """
 
-    __slots__ = ["_vertices", "_root", "_flows", "_termainals", "_attrs"]
-
     def __init__(self, 
-                 vertices:Dict[str, TransitionTreeVertex], 
+                 vertices:Set[TransitionTreeVertex], 
                  root:TransitionTreeRoot,
-                ) -> None:
+                 flows:Set[TransitionTreeFlow]) -> None:
+        info(f"constructing transition tree with {len(vertices)} vertices  "\
+             +f" and {len(flows)} flows.")
         # check types and input
-        if not (isinstance(vertices, dict)) or vertices == None:
+        if not (isinstance(vertices, set)) or vertices == None:
             raise ValueError(f"Unexpected vertices, was expecting a set but got"+
                              f" {type(vertices)}.")
         elif not (isinstance(root, TransitionTreeRoot)) or root == None:
             raise ValueError(f"Unexpected root, was expecting a "+
                              f"`TransitionTreeRoot` but got {type(root)}.")
+        elif not (isinstance(flows, set)) or flows == None:
+            raise ValueError("Unexpected flows, was expecting a set but got "+
+                             f"{type(flows)}")
         # create copies
-        info(f"constructing transition tree with {len(vertices)} vertices")
-        self._vertices = vertices
-        self._root = root
-        info("precomputing transition tree properties.")
+        self._vertices = deepcopy(vertices)
+        self._root = deepcopy(root) 
+        self._flows = deepcopy(flows)
+        self._terminals = set([ v for v in self._vertices if v.terminal()])
         # precompute
-        self._termainals = set([ v for v in self._vertices.values() if v.terminal ])
-        self._attrs = set([ a
-                           for v in self._vertices.values() 
-                           if v.flow != None
-                           for a in v.flow.attributes()])
-        # self._pops = [ 
-        #     f.population() 
-        #     for g in self._flows.values() for f in g
-        #     if isinstance(f, TransitionTreePopulationFlow)
-        # ]
-        # self._guards = set([
-        #     f.guard()
-        #     for g in self._flows.values() for f in g
-        #     if isinstance(f, TransitionTreeGuardFlow)
-        # ])
-        info("tree construction complete.") 
+        info("precomputing tree information.")
+        self._attrs = set([ a for f in self._flows for a in f.attributes() ])
+        self._pops = [ 
+            f.population() 
+            for f 
+            in self._flows 
+            if isinstance(f, TransitionTreePopulationFlow)
+        ]
+        self._guards = set([
+            f.guard()
+            for f 
+            in self._flows
+            if isinstance(f, TransitionTreeGuardFlow)
+        ])
+        info(f"tree contains {len(self._terminals)} terminals.")
+        info("tree information precomputed.")
 
     # properties
     def vertices(self) -> Set[TransitionTreeVertex]:
         """
         returns the full set of vertices that are defined by this transition tree.
         """ 
-        return self._vertices.values()
+        return self._vertices
     
     def terminals(self) -> Set[TransitionTreeVertex]:
         """
         returns the set of vertices that are terminal in this tree.
         """
-        return self._termainals
+        return self._terminals
 
     def root(self) -> TransitionTreeRoot:
         """
@@ -523,14 +475,14 @@ class TransitionTree():
         """
         returns a set of attribute names that are used within the information attached to flows.
         """ 
-        return self._attrs
+        return deepcopy(self._attrs)
 
     def guards(self) -> Set:
         """
         returns the set of guards used in flows, that imply a population of data 
         attribute mappings.
         """
-        return self._guards
+        return deepcopy(self._guards)
 
     def choices(self) -> Set:
         """
@@ -624,9 +576,7 @@ class TransitionTree():
             # close and write footer
             f.write(FILE_FOOTER)
             
-    # data model functions
-    def __getitem__(self, key:str) -> TransitionTreeVertex:
-        return self._vertices[key]
+    # comparision functions
 
 def apply_flow_reduction(tree:TransitionTree):
     """
@@ -679,7 +629,6 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
     """
     # import here to avoid cirular dependenies
     from pmkoalas.conformance.tokenreplay import PlayoutEnd
-    from pmkoalas.conformance.tokenreplay import PlayoutTrace
     # construct root
     root = TransitionPlayoutRoot()
     # holder for ids
@@ -692,133 +641,59 @@ def convert_playout_to_tree(playout_log:ComplexEventLog, k:int ,
             self._counter += 1
             return self._counter
     idder = Idder()
-    # constuct tree
-    ## perform binary tree construction
-    ## create subsets based on the parent and the next activity
-    ### if a node's subset is all empty traces then it is terminal
-    ### otherwise recursive call on the subset
-    #### (python hates recursion :/)
-    def make_group(others:List[PlayoutTrace]
-        ) -> List[Tuple[str, List[PlayoutTrace]]]:
-        ret = dict()
-        if (len(others) > 5):
-            def work(o:PlayoutTrace):
-                if (len(o) < 1):
-                    return None,None
-                if o[0].activity() == 'halt':
-                    return None,None
-                act = o[0].activity()
-                updated = o
-                return act, updated
-            partials = Parallel(n_jobs=-2,
-                return_as='generator_unordered')(
-                delayed(work)(o)
-                for o in others
-            )
-            for act, o in partials:
-                if act is not None:
-                    if act in ret.keys():
-                        ret[act].append(o)
-                    else:
-                        ret[act] = [o] 
-        else:
-            for o in others:
-                if (len(o) < 1):
-                    continue
-                if o[0].activity() == 'halt':
-                    continue
-                act = o[0].activity()
-                updated = o
-                if act in ret.keys():
-                    ret[act].append(updated)
-                else:
-                    ret[act] = [updated] 
-        return list(ret.items())
-    def consume(parent:TransitionTreeVertex, 
-                others:List[PlayoutTrace]
-        ) -> List[TransitionTreeGuardFlow]:
-
-        def handle_seq(seq:List[str]) -> str:
-            return str(Trace(seq))
-
-        ret = list()
-        is_terminal = False
-        curr_seq = parent.sigma_sequence[1:-1].split(',')
-        for i in range(0, len(others)):
-            o = others[i]
-            if len(o) > 1:
-                if o[1].activity() == 'halt':
-                    is_terminal = True
-            act = o[0].activity()
-            next_seq = curr_seq + [act]
-            flow = TransitionTreeGuardFlow(
-                        handle_seq(curr_seq),
-                        act,
-                        handle_seq(next_seq),
-                        o.guard(0)
+    # constuct nodes
+    nodes = set()
+    pbar = InfoQueueProcessor("built nodes of tree", 
+                              starting_size=len(playout_log)
+    )
+    for _,instances in playout_log:
+        for trace in instances:
+            for i in range(0, min([k+1, len(trace)])):
+                nodes.add(trace.acut(i+1))
+            pbar.update()
+    map_nodes = dict(
+        (node, TransitionPlayoutVertex(idder(), node))
+        for node
+        in nodes
+    )
+    map_nodes[Trace([])] = root
+    nodes.add(root)
+    # construct flows
+    flows = set()
+    pbar = InfoQueueProcessor("built flows of tree",
+                              starting_size=len(playout_log)
+    )
+    for _,instances in playout_log:
+        for trace in instances:
+            for i in range(0,min([k+1, len(trace)])):
+                flows.add(
+                    TransitionTreeGuardFlow(
+                        map_nodes[trace.acut(i)],
+                        trace.act(i),
+                        map_nodes[trace.acut(i+1)],
+                        trace.guard(i)
                     )
-            others[i] = PlayoutTrace(
-                [ s for s in o][1:],
-                data=o.data()
-            )
-            ret.append(flow)
-        return ret, is_terminal
-    # event loop to process nodes
-    instances = [ trace for _,instances in playout_log for trace in instances]
-    stack = Stack([(root, instances)])
-    ret_vertices = {
-    }
-    while (not stack.is_empty()):
-        parent, others = stack.pop()
-        curr_sig = [ s for s in parent.sigma_sequence[1:-1].split(',') if len(s) > 0]
-        ret_vertices[str(parent.sigma_sequence)] = parent
-        sigma = Trace(curr_sig)
-        info(f"processing stack :: working on :: {str(parent)}--{sigma}:: size of stack :: {str(len(others))}")
-        if len(sigma) > k+2:
-            break
-        # look for groups
-        groups = make_group(others)
-        last = None
-        # process groups
-        for act, group in groups:
-            info("working on group for :: "+str(act))
-            next = TransitionPlayoutVertex(idder(),
-                Trace(curr_sig + [act])
-            )
-            ret_vertices[str(next.sigma_sequence)] = next
-            info("created new node of :: "+str(next.sigma_sequence))
-            if (parent.child == None):
-                parent.child = next
-            elif (last != None):
-                last.sibling = next
-            # consume and construct flows
-            flows, is_terminal = consume(parent, group)
-            if freduce and len(flows) > 1:
-                flow = TransitionTreeGuardFlow(
-                        parent.sigma_sequence,
-                        act,
-                        next.sigma_sequence,
-                        TransitionTreeJoin( 
-                            flows
-                        )
-                    )
-                next.flow = flow
-            elif len(flows) == 1:
-                next.flow = flows[0]
-            elif len(flows) > 1:
-                next.flow = flows
-            # work out if the child is terminal
-            if (is_terminal):
-                next.set_as_terminal()
-            # update stack and rem for next possible sibling
-            last = next
-            stack.push((next, group))
-    del stack
+                )    
+            pbar.update()
+    # set final nodes
+    pbar = InfoQueueProcessor("check for terminals",
+                              starting_size=len(playout_log)
+    )
+    for _,instances in playout_log:
+        for trace in instances:
+            i = min([k+1, len(trace)-1])
+            act = trace[i].activity()
+            if act == 'halt':
+                map_nodes[trace.acut(i)].set_as_terminal()
+            pbar.update()
     # construct tree
     tree = TransitionTree(
-        ret_vertices,
-        ret_vertices[str(root.sigma_sequence)]
+        set(list(map_nodes.values())),
+        root,
+        flows 
     )
+    if (freduce):
+        tree = apply_flow_reduction(tree)
     info("constructed tree.")
     return tree
 

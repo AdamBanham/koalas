@@ -5,7 +5,7 @@ a trace and an event log in complex form, which considers the
 data perspective.
 """
 from __future__ import annotations # required for typing checks
-from typing import Mapping, Iterable, Set, List, Tuple
+from typing import Mapping, Iterable, Set, List, Tuple, Iterator
 from copy import deepcopy
 from time import time
 
@@ -23,6 +23,8 @@ class ComplexEvent():
     A complex form of an event, an atomic change in the state
     of a process.
     """
+
+    __slots__ = ["_act", "_map"]
 
     STR_FORMAT = "(e : {act}|{map})"
 
@@ -82,6 +84,8 @@ class ComplexTrace():
     A complex form of sequence of complex events, where a trace
     can have a invariant mapping attached for trace level attributes.
     """
+
+    __slots__ = ["_sequence", "_len", "_map", "_hash", "_acts"]
 
     def __init__(self, events:Iterable[ComplexEvent], 
                  data: Mapping[str,object] = None) -> None:
@@ -311,7 +315,7 @@ class ComplexEventLog():
     def __len__(self) -> int:
         return self.get_population_size()
     
-    def __iter__(self) -> Iterable[Tuple[Trace,List[ComplexTrace]]]:
+    def __iter__(self) -> Iterator[Tuple[Trace,List[ComplexTrace]]]:
         for strace, collector in self._instances.items():
             yield deepcopy(strace), deepcopy(collector)
 

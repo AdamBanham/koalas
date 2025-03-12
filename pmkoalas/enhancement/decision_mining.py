@@ -539,7 +539,7 @@ def _populate_problems(log:ComplexEventLog,
     step two: populate the classification problems with examples from
     alignments.
     """
-    pool = Parallel(n_jobs=6, verbose=10, return_as='generator_unordered',
+    pool = Parallel(n_jobs=6, return_as='generator_unordered',
                     batch_size=1, backend='loky')
     # TODO: this for loop could be parallelised for a speedup
     # the work of the outer loop
@@ -582,7 +582,7 @@ def _populate_problems(log:ComplexEventLog,
             with parallel_backend("loky", inner_max_num_threads=6):
                 # decide on workload pattern
                 if (len(contexters) > 240):
-                        extracts = Parallel(n_jobs=6, verbose=5,
+                        extracts = Parallel(n_jobs=6,
                                             pre_dispatch='3*n_jobs',
                                             batch_size=25,
                                             return_as='generator_unordered')(
@@ -591,7 +591,7 @@ def _populate_problems(log:ComplexEventLog,
                         )
                 else:
                     batchsize = int(len(contexters)/6)
-                    extracts = Parallel(n_jobs=6, verbose=5,
+                    extracts = Parallel(n_jobs=6,
                                         pre_dispatch='2 * n_jobs',
                                         batch_size=batchsize,
                                         return_as='generator_unordered')(
@@ -653,7 +653,7 @@ def _populate_problems(log:ComplexEventLog,
         [ (trace,instances) for trace,instances in log],
         key=lambda x: len(x[1]),
         reverse=True)
-    contexts = Parallel(n_jobs=-1, verbose=5,)(
+    contexts = Parallel(n_jobs=-1,)(
         delayed(contextulise)(instances, alignment[trace], problems)
         for trace,instances in InfoIteratorProcessor(
             'processing alignments', orderwork, stack=11, 
@@ -720,7 +720,7 @@ def mine_guards_for_lpn(lpn: LabelledPetriNet, log: ComplexEventLog,
     resulting_types = dict()
     info("step three, solving classification problems...")
     for prob in problems:
-        print(prob.describe())
+        info(prob.describe())
         mapping,var_types = prob.solve()
         # translate the solution into guards for transitions
         for k,v in mapping.items():

@@ -4,12 +4,12 @@ of Petri nets.
 """
 from copy import deepcopy
 from typing import Dict, Iterable, Mapping,Set,List,Tuple
-from joblib import Parallel, delayed
 
 from pmkoalas import __version__
 from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
 from pmkoalas.simple import Trace, EventLog
-from pmkoalas._logging import info, debug, InfoQueueProcessor
+from pmkoalas._logging import info, debug, InfoQueueProcessor, InfoIteratorProcessor
+from pmkoalas._logging import enable_logging
 from pmkoalas.models.transitiontree import TransitionTreeGuard
 
 #typing imports
@@ -24,8 +24,6 @@ class PlayoutTransitionGuard(TransitionTreeGuard):
     Template for taking a guard off a transition in a petri net and converting
     it into the semantics for a transition tree.
     """
-
-    __slots__ = ['_guard', '_id']
 
     def __init__(self, guard:'Guard', id:str=None) -> None:
         super().__init__()
@@ -48,8 +46,6 @@ class PetriNetMarking():
     """
     Data structure for a marking in a petri net, i.e. a multiset of places.
     """
-
-    __slots__ = ['_net', '_mark', '_incoming', '_outcoming']
     
     def __init__(self, model:'LabelledPetriNet', marking:Dict['Place',int]) -> None:
         self._net = model
@@ -142,14 +138,12 @@ class PetriNetMarking():
         return hash(tuple(sorted(self._mark.items(),key=lambda x: x[0].name)))
     
     def __repr__(self):
-        return f"PetriNetMarking(\n\t{repr(self._net)},\n\t{repr(self._mark)})"
+        return f"PetriNetMarking(\n\t{repr(self._net)},\n\t{repr(self._mark)}\n)"
     
 class PetriNetFiringSequence():
     """
     A data structure for a sequence of fired transitions.
     """
-
-    __slots__ = ['_final', '_mark', '_seq']
 
     def __init__(self, marking:'PetriNetMarking', fired:List['Transition'],
         final_marking:PetriNetMarking) -> None:
@@ -210,21 +204,6 @@ class PetriNetFiringSequence():
     
     def __hash__(self) -> int:
         return hash( tuple(self._seq + [self.reached_final()]))
-    
-    def __eq__(self, value):
-        if isinstance(value, PetriNetFiringSequence):
-            return self._mark == value._mark and self._seq == value._seq \
-                and self._final == value._final
-        return False
-    
-    def __repr__(self):
-        _repr = f"PetriNetFiringSequence(\n"
-        _repr += f"\t{repr(self._mark)},\n"
-        _repr += f"\t{repr(self._seq)},\n"
-        _repr += f"\t{repr(self._final)}\n"
-        _repr += ")"
-        open("debug.txt", "a").write(_repr)
-        return _repr
 
 
 class PlayoutEvent(ComplexEvent):
@@ -245,7 +224,7 @@ class PlayoutEnd(PlayoutEvent):
     """
 
     def __init__(self) -> None:
-        from pmkoalas.models._transitiontree import TransitionTreeGuard
+        from pmkoalas.models.transitiontree import TransitionTreeGuard
         super().__init__("halt", TransitionTreeGuard())
     
 
@@ -265,13 +244,13 @@ class PlayoutTrace(ComplexTrace):
         Returns the cut of activity sequence of this playout up to the
         i-th step (if it exists).
         """
-        seq = self.simplify().sequence
         ret = []
-        while i > 0 and len(seq) > 0:
-            head = seq.pop(0)
-            ret.append(head)
+        while i > 0 and len(self) > 0:
             i -= 1
-        return Trace(ret)
+            act = self.act(i)
+            if (act != "halt"):
+                ret.append(act)
+        return Trace(ret[::-1])
     
     def act(self, i:int) -> str:
         """
@@ -378,14 +357,14 @@ def generate_traces_from_lpn(
                         inprogress.append((new_trace, new_mark))
             pcount += 1
             if (pcount % updates_on == 0):
-                debug(f"processing {len(inprogress)} partial executions of the lpn")
-                debug(f"shortest trace :: {len(inprogress[0][0])}/{max_length}")
-                debug(f"longest trace :: {len(inprogress[-1][0])}/{max_length}")
-                debug(f"generated {len(completed)} executions that have reached the final marking")
+                info(f"processing {len(inprogress)} partial executions of the lpn")
+                info(f"shortest trace :: {len(inprogress[0][0])}/{max_length}")
+                info(f"longest trace :: {len(inprogress[-1][0])}/{max_length}")
+                info(f"generated {len(completed)} executions that have reached the final marking")
                 pcount = 0
     return EventLog(completed, f"Generated traces from LPN ({model.name})")
 
-
+@enable_logging
 def construct_playout_log(model:'PetriNetWithData', max_length:int, 
         initial_marking:'PetriNetMarking', final_marking:'PetriNetMarking') \
         -> ComplexEventLog:
@@ -396,7 +375,7 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
     # importing here to remove circular dependencies.
     from pmkoalas.models.transitiontree import TransitionTreeMerge
 
-    playout_traces = []
+    playout_traces = list()
     completed:Set[PetriNetFiringSequence] = set()
     incomplete = [ 
         PetriNetFiringSequence(initial_marking, list(), final_marking)
@@ -405,57 +384,24 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
     pbar = InfoQueueProcessor(itername="processed partials",
                                  starting_size=len(incomplete)
     )
-    guard_id = 1
-    guard_ids = {}
-    for tran in model.transitions:
-        if tran.guard not in guard_ids:
-            guard_ids[tran.guard] = guard_id
-            guard_id += 1
-    # step one firing executions until we get to max length
-    pool = Parallel(n_jobs=-2, return_as='generator_unordered')
-    def work(select:PetriNetFiringSequence, max_length:int
-        ) -> List[PetriNetFiringSequence]:
+    while len(incomplete) > 0:
+        select = incomplete.pop(0)
+        if (len(select) > 0):
+            completed.add(select)
+        seen.add(select)
         potentials = list()
         for firing in select.next():
-            pot = select.fire(firing)
-            if len(pot) <= max_length:
-                potentials.append(pot)
-        return potentials
-    def grab_next(incomplete,pbar, completed):
-        for select in incomplete:
-            pbar.update() 
-            if len(select) > 0:
-                completed.add(select)
-            yield select
-    while len(incomplete) > 0:
-        params = incomplete
-        incomplete = []
-        seen = seen.union(set(params))
-        if (len(params) < 4):
-            info(f"using serial processing ({len(params)})")
-            partials = [work(select, max_length) for select in grab_next(params, pbar, completed)]
-        else:
-            info(f"using parallel processing ({len(params)})")
-            partials = pool(delayed(work)(select, max_length) 
-                for select in grab_next(params, pbar, completed)
-            )
-        for potentials in partials:
-            for pot in potentials:
-                if pot not in seen:
-                    if pot.reached_final():
-                        completed.add(pot)
-                        pbar.update()
-                    else:
-                        incomplete.append(pot)
-                    pbar.extent(1)
-                
-    # step two: now for each completed trace, we need to produce a complex trace
-    def grab_next(queue):
-        trace_id = 1
-        for comp in queue:
-            yield comp, trace_id
-            trace_id += 1
-    def make_playout(comp:PetriNetFiringSequence, trace_id, guard_ids) -> PlayoutTrace:
+            potentials.append(select.fire(firing))
+        for pot in potentials:
+            if pot not in seen and len(pot) <= max_length:
+                incomplete.append(pot)
+                pbar.extent(1)
+        pbar.update()        
+    # now for each completed trace, we need to produce a complex trace
+    trace_id = 1
+    guard_id = 1
+    guard_ids = {}
+    for comp in InfoIteratorProcessor("play-out traces", completed):
         trace_map = {
             "concept:name" : f"play-out trace {trace_id}"
         }
@@ -464,6 +410,9 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
         # build sequence of fired transitions
         ## but profilerate guards on silence, without recording them
         for fired in comp.fired():
+            if fired.guard not in guard_ids:
+                guard_ids[fired.guard] = guard_id
+                guard_id += 1
             if fired.silent:
                 if leftover_guard == None:
                     leftover_guard = PlayoutTransitionGuard(
@@ -486,22 +435,18 @@ def construct_playout_log(model:'PetriNetWithData', max_length:int,
         # add halt symbol if required
         if comp.reached_final():
             trace_seq.append(PlayoutEnd())
-        return PlayoutTrace(trace_seq, trace_map)
-    pool = Parallel(n_jobs=-2, return_as='generator_unordered')
-    partials = pool(delayed(make_playout)(comp, trace_id, guard_ids) 
-        for comp, trace_id in grab_next(completed)
-    )
-    # construct trace and store
-    for done in partials:
+        # construct trace and store
         playout_traces.append(
-            done
+            PlayoutTrace(
+                trace_seq,
+                trace_map
+            )
         )
-    info("made playout traces")
-    ret = ComplexEventLog(playout_traces, dict({
+        trace_id += 1
+    info("made playout log")
+    return ComplexEventLog(playout_traces, dict({
         "meta:generated:by" : "pmkoalas",
         "meta:generator:version" : __version__
         }), 
         f"playout log for {model._name}"
     )
-    info("made playout log")
-    return ret

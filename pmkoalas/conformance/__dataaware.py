@@ -119,7 +119,7 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
-    from pmkoalas.models._transitiontree import TransitionTreeGuardFlow
+    from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
     from pmkoalas.models.guards import GuardOutcomes
     total_weight = 0
     flow_weight = 0
@@ -130,12 +130,12 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
         total_weight = 0
         instance_weight = inst_w(path, trace)
         for step,i in zip(path, range(1, len(path)+1)):
-            if isinstance(step, TransitionTreeGuardFlow):
-                for instance in instances:
-                    irveson = step.guard().check(
-                            instance.get_state_as_of(i-1)
-                        ) == GuardOutcomes.TRUE
-                    flow_weight += instance_weight * int(irveson)
+                    if isinstance(step, TransitionTreeGuardFlow):
+                        for instance in instances:
+                            irveson = step.guard().check(
+                                    instance.get_state_as_of(i-1)
+                                ) == GuardOutcomes.TRUE
+                            flow_weight += instance_weight * int(irveson)
         total_weight += inst_w.share * len(trace) * len(instances)
         return flow_weight, total_weight
     # worker for inputs
@@ -147,12 +147,8 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
         return trace, instances, candidates
     # computation of work
     max_k = max([len(trace) for trace,_ in log])
-    if (precomputed_matching == None):
-        allcads = find_all_paths(tree, max_k)
-        info(f"size of all candidates given {max_k=} :: {len(allcads)}")
-    else:
-        allcads = set()
-    info("preparing work")
+    allcads = find_all_paths(tree, max_k)
+    info(f"size of all candidates given {max_k=} :: {len(allcads)}")
     inputs = list(pool( 
         delayed(params)
         (trace, instances, tree,
@@ -160,7 +156,6 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
         for trace,instances 
         in log 
     ))
-    info("params #1 prepped.")
     inputs = [
         (trace, instances, path, ExpontentialPathWeighter(matching))
         for trace, instances, matching
@@ -168,16 +163,15 @@ def _optimised_guard_recall(log:ComplexEventLog, tree:TransitionTree,
         for path 
         in matching
     ]
-    info("params #2 prepped.")
-    info("computing weights")
-    weights =[
-        partial(traces, instances, path, inst_w)
+    weights = pool( 
+        delayed(partial)
+        (traces, instances, path, inst_w)
         for traces, instances, path, inst_w 
         in InfoIteratorProcessor("processing variant-paths for guard-recall", 
             inputs,
             stack=8
         )
-    ]
+    )
     info("completed processing.")
     info(f"computed weights across flows (flow,total) :: {weights}")
     flow_weight += sum(
@@ -240,33 +234,28 @@ def _computation_guard_precision(tree:TransitionTree, matching:ManyMatching,
     info(f"computed guard precision : {prec:.3f}")
     return prec
 
-def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree,
-        precomputed_matching:ManyMatching=None) -> float:
+def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree):
     """
     The computation of guard recall, whereby we only loop over the log once.
     """
-    from pmkoalas.models._transitiontree import TransitionTreeGuardFlow
+    from pmkoalas.models.transitiontree import TransitionTreeGuardFlow
     from pmkoalas.models.guards import GuardOutcomes
     # partial worker 
-    param_pool = Parallel(n_jobs=-2)
-    pool = Parallel(n_jobs=-2,
-                    return_as='generator_unordered')
+    pool = Parallel(n_jobs=-2)
     def partial(tree, trace, instances, path, inst_w) -> float:
         upper_sum = 0.0
         lower_sum = 0.0
         instance_weight = inst_w(path, trace)
         for step,i in zip(path, range(1, len(path)+1)):
                     if isinstance(step, TransitionTreeGuardFlow):
-                        sib = tree[step._source].child
-                        other_flows = set()
-                        while sib != None:
-                            other_flows.add(sib.flow)
-                            sib = sib.sibling
+                        other_flows = step.offering().outgoing(tree.flows())
+                        other_flows = other_flows.difference(set([step]))
                         for instance in instances:
                             irveson = step.guard().check(
                                     instance.get_state_as_of(i-1)
                                 ) == GuardOutcomes.TRUE
                             upper_sum += instance_weight * int(irveson)
+                            lower_sum += inst_w.share * int(irveson)
                             for lflow in other_flows:
                                 irveson = lflow.guard().check(
                                     instance.get_state_as_of(i-1)
@@ -276,51 +265,53 @@ def _optimised_guard_precision(log:ComplexEventLog, tree:TransitionTree,
     # worker for inputs
     info("preparing work")
     max_length = max([ len(trace) for trace,_ in log])
-    if (precomputed_matching == None):
-        allcads = find_all_paths(tree, max_length)
-    else:
-        allcads = set()
-    info("preparing work...")
-    def params(trace):
-        if precomputed_matching != None:
-            candidates = precomputed_matching[trace]
-        else:
-            _,candidates = _computation_many_matching(trace, tree, 
-                set([ cad for cad in allcads if len(cad) <= len(trace)]))
-        return trace, candidates
+    allcads = find_all_paths(tree, max_length)
+    def params(trace, instances, tree, allcads):
+        _,candidates = _computation_many_matching(trace, tree, allcads)
+        return tree, trace, instances, candidates
     # computation of work
-    inputs = param_pool( 
-    delayed(params)
-        (trace)
-        for trace, _ 
-        in InfoIteratorProcessor("!---prepping params---!",
-            log,stack=8, size=log.get_nvariants())
-    )
-    info("launching work...")
-    weights = pool(
-        delayed(partial)
-        (tree, trace, log.seen_instances_for(trace), path, ExpontentialPathWeighter(matching))
-        for trace, matching
-        in InfoIteratorProcessor("processing variant-paths for guard-precision", 
-            inputs,
-            stack=8,
-            size=log.get_nvariants()
+    inputs = list(pool( 
+        delayed(params)
+        (trace, instances, tree, 
+         set([ cad for cad in allcads if len(cad) <= len(trace)])
         )
+        for trace,instances 
+        in log 
+    ))
+    inputs = [
+        (tree, trace, instances, path, ExpontentialPathWeighter(matching))
+        for tree, trace, instances, matching
+        in inputs 
         for path 
         in matching
+    ]
+    weights = pool( 
+        delayed(partial)
+        (tree, traces, instances, path, inst_w)
+        for tree, traces, instances, path, inst_w 
+        in InfoIteratorProcessor("processing variant-paths for guard-precision", 
+            inputs,
+            stack=8
+        )
     )
-    upper_sum = 0.0
-    lower_sum = 0.0
-    for up,low in weights:
-        upper_sum += up
-        lower_sum += low
-    info("completed processing...")
+    info("completed processing.")
+    info(f"computed weights across flows (upper,lower) :: {weights}")
+    upper_sum = sum(
+        up 
+        for up,low 
+        in weights
+    )
+    lower_sum = sum( 
+        low 
+        for up,low 
+        in weights
+    )
     prec = (1 + upper_sum) / (1 + lower_sum)
     info(f"computed guard precision of {prec:.3f}")
     return prec
 
 def compute_guard_precision(log:ComplexEventLog, model:PetriNetWithData,
-    optimised:bool=True, precomputed_matching:ManyMatching=None) -> float:
+    optimised:bool=True ) -> float:
     """
     Quanitfies the quality between an event log and a data-aware process model 
     using guard-precision, where a data-aware process model is a Petri net with 
@@ -336,9 +327,8 @@ def compute_guard_precision(log:ComplexEventLog, model:PetriNetWithData,
     long = len(long)
     # prepare model
     tree = construct_from_model(model, longest_playout=long)
-    if (optimised):
-        return _optimised_guard_precision(log, tree, 
-                precomputed_matching=precomputed_matching)
+    if optimised:
+        return _optimised_guard_precision(log, tree)
     else:
         matching = construct_many_matching(log, tree)
         # compute measure

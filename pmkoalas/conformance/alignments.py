@@ -283,7 +283,7 @@ def find_alignments_for_variants_pm4py(log:EventLog, lpn:LabelledPetriNet) \
             debug(fm)
             debug(im)
             knet = parse_pnml_into_lpn(net_file, use_localnode_id=False)
-            export_net_to_pnml(knet, "dummy.pnml", True)
+            # export_net_to_pnml(knet, "dummy.pnml", True)
             plog = xes_importer.apply(log_file)
             # call the dogs breakfeast of alignment tuples from pm4py
             aligned_traces = alignments.apply(plog, net, im, fm, 
