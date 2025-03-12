@@ -64,31 +64,31 @@ class DecisionMiningTest(unittest.TestCase):
         if (not False):
             self.ali = find_alignments_for_variants(self.log, self.lpn, 'pm4py')
 
-    @unittest.skipIf(False, "testing can take up to 90s")
+    @unittest.skipIf(SKIP_SLOW, "testing can take up to 90s")
     def test_postset_mining(self):
         dpn = mine_guards_for_lpn(self.lpn, self.log, 
             alignment=self.ali,
             identification="postset",
             expansion='earnest')
-        export_net_to_pnml(dpn, 
-            "postset_earnst.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "postset_earnst.pnml",
+        #     include_prom_bits=True)
         
         dpn = mine_guards_for_lpn(self.lpn, self.log, 
             alignment=self.ali,
             identification="postset", 
             expansion='shortcut')
-        export_net_to_pnml(dpn, 
-            "postset_shortcut.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "postset_shortcut.pnml",
+        #     include_prom_bits=True)
         
         dpn = mine_guards_for_lpn(self.lpn, self.log,
             alignment=self.ali,
             identification="postset", 
             expansion='duplicate')
-        export_net_to_pnml(dpn, 
-            "postset_duplicate.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "postset_duplicate.pnml",
+        #     include_prom_bits=True)
     
     
     @unittest.skipIf(SKIP_SLOW, "testing can take up to 90s")
@@ -97,25 +97,25 @@ class DecisionMiningTest(unittest.TestCase):
             alignment=self.ali,
             identification="marking",
             expansion='earnest')
-        export_net_to_pnml(dpn, 
-            "marking_earnst.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "marking_earnst.pnml",
+        #     include_prom_bits=True)
         
         dpn = mine_guards_for_lpn(self.lpn, self.log, 
             alignment=self.ali,
             identification="marking",
             expansion='shortcut')
-        export_net_to_pnml(dpn, 
-            "marking_shortcut.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "marking_shortcut.pnml",
+        #     include_prom_bits=True)
         
         dpn = mine_guards_for_lpn(self.lpn, self.log, 
             alignment=self.ali,
             identification="marking",
             expansion='duplicate')
-        export_net_to_pnml(dpn, 
-            "marking_duplicate.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "marking_duplicate.pnml",
+        #     include_prom_bits=True)
     
     @unittest.skipIf(SKIP_SLOW, "testing can take up to 90s")
     def test_regions_mining(self):
@@ -123,25 +123,25 @@ class DecisionMiningTest(unittest.TestCase):
             alignment=self.ali,
             identification="regions",
             expansion='earnest')
-        export_net_to_pnml(dpn, 
-            "regions_earnst.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "regions_earnst.pnml",
+        #     include_prom_bits=True)
         
         dpn = mine_guards_for_lpn(self.lpn, self.log, 
             alignment=self.ali,
             identification="regions",
             expansion='shortcut')
-        export_net_to_pnml(dpn, 
-            "regions_shortcut.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "regions_shortcut.pnml",
+        #     include_prom_bits=True)
         
         dpn = mine_guards_for_lpn(self.lpn, self.log, 
             alignment=self.ali,
             identification="regions",
             expansion='duplicate')
-        export_net_to_pnml(dpn, 
-            "regions_duplicate.pnml",
-            include_prom_bits=True)
+        # export_net_to_pnml(dpn, 
+        #     "regions_duplicate.pnml",
+        #     include_prom_bits=True)
         
     def test_earnst_expansion(self):
         expanded = _earnst_expansion(problem_net, problem_prone_aligment)
