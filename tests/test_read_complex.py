@@ -5,6 +5,7 @@ from datetime import datetime
 from pmkoalas.read import read_xes_simple,read_xes_complex
 from pmkoalas.simple import EventLog,Trace
 from pmkoalas.complex import ComplexEventLog, ComplexTrace, ComplexEvent
+from pmkoalas._logging import info
 
 SSMALL = path.join(".","tests","small_01.xes")
 WSMALL = path.join(".","tests","small_02.xes")
@@ -108,7 +109,7 @@ class DTLogTest(unittest.TestCase):
     def nottest_read_bad(self):
         with self.failUnlessRaises(Exception): 
             log = read_xes_complex(path.join(".","tests","small_bad.xes")) 
-            print(f"{log}")
+            info(f"{log}")
 
 if __name__ == '__main__':
     unittest.main()

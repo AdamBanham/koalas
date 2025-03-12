@@ -40,6 +40,8 @@ LARGE_TEST_STATE = {
 # Difficult experession that should parse
 d_exps = [
     "((exogenous:t1:TAS:4h:transform:slope&gt;41.44)&amp;&amp;(exogenous:t1:TAS:4h:transform:slope&lt;=105.84))",
+    "((totalPaymentAmount <= 20.340)&&((amount <= 34.300)&&((amount > 28.150))))",
+    "((totalPaymentAmount > 20.340)&&(totalPaymentAmount <= 35.500)||((totalPaymentAmount <= 20.340)&&((amount > 34.300)||(amount <= 34.300)&&(amount <= 28.150))))",
 ]
 
 class GuardTests(unittest.TestCase):

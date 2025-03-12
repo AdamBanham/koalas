@@ -3,15 +3,15 @@ import unittest
 from pmkoalas.simple import Trace, EventLog
 from pmkoalas.dtlog import convert
 
-from pmkoalas.conformance.matching import Path, Skipper, cost_of_path
-from pmkoalas.conformance.matching import find_least_costy_paths
-from pmkoalas.conformance.matching import ManyMatching, ExpontentialPathWeighter
-from pmkoalas.conformance.matching import construct_many_matching
+from pmkoalas.conformance.__matching import Path, Skipper, cost_of_path
+from pmkoalas.conformance.__matching import find_least_costy_paths
+from pmkoalas.conformance.__matching import ManyMatching, ExpontentialPathWeighter
+from pmkoalas.conformance.__matching import construct_many_matching
 
-from pmkoalas.models.transitiontree import TransitionTreeRoot
-from pmkoalas.models.transitiontree import TransitionTreeVertex
-from pmkoalas.models.transitiontree import TransitionTreeFlow
-from pmkoalas.models.transitiontree import TransitionTree
+from pmkoalas.models.__transitiontree import TransitionTreeRoot
+from pmkoalas.models.__transitiontree import TransitionTreeVertex
+from pmkoalas.models.__transitiontree import TransitionTreeFlow
+from pmkoalas.models.__transitiontree import TransitionTree
 
 # dummy tree
 TROOT = TransitionTreeRoot()

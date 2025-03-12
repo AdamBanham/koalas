@@ -63,7 +63,6 @@ class DecisionMiningTest(unittest.TestCase):
         self.lpn = parse_pnml_into_lpn(RF_PNML_FILE)
         if (not False):
             self.ali = find_alignments_for_variants(self.log, self.lpn, 'pm4py')
-        setLevel(INFO)
 
     @unittest.skipIf(False, "testing can take up to 90s")
     def test_postset_mining(self):
