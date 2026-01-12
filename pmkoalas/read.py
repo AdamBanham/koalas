@@ -100,23 +100,15 @@ def find_element(root:Element, find:str, use_namespace:bool) -> List[Element]:
 def read_xes_complex(filepath:str,
                     label_attribute=XES_CONCEPT) -> ComplexEventLog:
     """
-    Reads an XES formatted event log and creates a simplified event log
-    object. Traces from the event log are sorted by the sort_attribute
-    (time:timestamp by default) before making the sequence of labels
-    (concept:name by default).
+    Reads an XES formatted event log and creates a complex event log
+    object. 
 
     Parameters
     ----------
     filepath: `str`
     \t the filepath to the xes file to read.
-    sort_attribute: `str`=`time:timestamp`
-    \t the xes attribute to sort on.
     label_attribute: `str`=`concept:name`
     \t the xes attribute for the process label for an event
-    debug: `bool`=`True`
-    \t whether to print debug messages or not
-    sort: `bool`=`False`
-    \t whether to sort activity labels by another xes attribute or not
     """ 
 
     # check that file exists
@@ -167,11 +159,9 @@ def read_xes_complex(filepath:str,
         events = find_element(trace, "event", use_namespace)
         for id,event in enumerate(events):
             label = None 
-            sorter = None 
             map = dict()
             for child in event.iter():
                 key = child.attrib.get('key')
-                # print(key)
                 if (key == label_attribute):
                     label = XesAttribute(find_xes_type(child.tag), 
                                         key, child.attrib.get("value"))
@@ -183,7 +173,7 @@ def read_xes_complex(filepath:str,
                         key, 
                         child.attrib.get("value")                        
                     ).get()
-            extract = EventExtract(id, label , sorter, map)
+            extract = EventExtract(id, label , sorter=None, map=map)
             trace_ins.append(extract)
         # handle complex event construction
         # collect any trace level attributes
