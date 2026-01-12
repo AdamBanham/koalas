@@ -625,7 +625,7 @@ def find_strongly_connected_components(graph: DependencyGraph) -> List[Set[Depen
     components = []
 
     def strongconnect(node: DependencyNode):
-        nonlocal index_counter, low_link, index, stack, on_stack, components
+        nonlocal index_counter, low_link, index, stack, on_stack, components # noqa: F824
         index[node] = index_counter
         low_link[node] = index_counter
         index_counter += 1
