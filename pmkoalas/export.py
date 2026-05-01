@@ -46,11 +46,6 @@ def export_to_xes_simple(filepath:str, log:EventLog) -> None:
 
     info(f"exporting log of size :: {len(log)}")
 
-    # check filepath
-    if (not os.path.exists(os.path.dirname(filepath))):
-        os.makedirs(os.path.dirname(filepath),exist_ok=True)
-
-        info(f"made directory for :: {filepath}")
 
     with open(filepath,"wb") as flog:
         # add log element
@@ -152,12 +147,6 @@ def export_to_xes_complex(filepath:str, log:ComplexEventLog) -> None:
         raise ValueError(f"Was expecting a complex event log, but was given :: {type(log)}")
 
     info(f"exporting log of size :: {len(log)}")
-
-    # check filepath
-    if (not os.path.exists(os.path.dirname(filepath))):
-        os.makedirs(os.path.dirname(filepath),exist_ok=True)
-
-        info(f"made directory for :: {filepath}")
 
     with open(filepath,"wb") as flog:
         # add log element
