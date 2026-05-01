@@ -11,7 +11,7 @@ from pmkoalas import dtlog, export
 def traces_to_xes(traces,log_fname):
     log = dtlog.convert( *traces) 
     export.export_to_xes_simple( log_fname, log )
-    print(f'Wrote {len(traces)} to {log_fname}')
+    print(f'Wrote {len(traces)} traces to {log_fname}')
 
 
 DESCRIPTION = \
